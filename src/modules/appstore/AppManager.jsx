@@ -3,9 +3,19 @@
  *
  * GET/POST /api/admin/apps
  * PUT/DELETE /api/admin/apps/:appId
+ *
+ * These routes read and write the `apps` table. There is a second, separate
+ * catalogue — `platform_apps`, seeded from the JSON manifests in
+ * cybercheck-login/apps/ — which the owner-facing dashboard's store reads.
+ * The two are not the same table and do not sync. Which one should be
+ * canonical is an open decision; see docs/ENDPOINT-STATUS.md. Until it is
+ * settled this screen stays on /api/admin/apps, and the notice below makes the
+ * split visible rather than leaving an admin to wonder why an app they added
+ * never appeared in a business's store.
  */
 
 import { CrudSection } from '../../ui/CrudSection.jsx';
+import { Notice } from '../../ui/primitives.jsx';
 import { appsResource } from '../../api/resources.js';
 import { columns, fields } from '../../lib/fields.jsx';
 
@@ -65,6 +75,20 @@ export default function AppManager() {
       emptyTitle="No apps"
       emptyDescription="The store is empty."
       searchPlaceholder="Search apps…"
+      // Rendered above the table so the two-catalogue split is visible at the
+      // point where it would otherwise cause confusion.
+      children={
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Notice tone="warning" title="There are two app catalogues">
+            This screen edits the <code className="mono">apps</code> table via{' '}
+            <code className="mono">/api/admin/apps</code>. The owner-facing dashboard&apos;s store
+            reads a different table, <code className="mono">platform_apps</code>, seeded from the
+            JSON manifests in <code className="mono">cybercheck-login/apps/</code>. They do not
+            sync, so an app added here will not appear in a business&apos;s store. Which catalogue
+            should be canonical is still to be decided.
+          </Notice>
+        </div>
+      }
       columns={[
         {
           key: 'name',

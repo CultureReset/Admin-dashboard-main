@@ -79,6 +79,51 @@ exist while a working route was available; this app uses the working one.
 - **`entity` exposes `parent_slug` on the API but stores `parent_entity_slug`.**
   The API translates between them; this app uses the API's field name.
 
+## Open question: two app catalogues
+
+There are two separate app catalogues in the platform and they do not sync.
+
+| | Admin dashboard (this app) | Owner dashboard |
+|---|---|---|
+| Table | `apps` | `platform_apps` |
+| Route | `GET/POST/PUT/DELETE /api/admin/apps` | `GET /api/owner/apps` |
+| Source | edited by hand in App Manager | seeded from the 69 JSON manifests in `cybercheck-login/apps/` |
+| Status | live in `gcr-api-clean` | route not deployed; table not created |
+
+An app added in this dashboard's **App Manager** therefore does **not** appear
+in a business's store, and vice versa. Installs are also split: this app writes
+`site_apps` via `POST /api/admin/site-apps`, while the owner dashboard writes
+`entity_modules`.
+
+Decision taken for now: **leave App Manager on `/api/admin/apps`**, because it
+is the catalogue the deployed API actually serves. The App Manager screen shows
+a notice making the split visible, so nobody wonders why an app they added
+never reached a store.
+
+This needs resolving before the owner dashboard ships. Rewiring App Manager to
+`platform_apps` is not currently possible from here — there is no `/api/admin/*`
+route against that table, and adding one means changing `gcr-api-clean`.
+
+## Related: the owner dashboard
+
+A separate owner-facing dashboard exists as its own package (`dashboard-shell`,
+`routes/owner.js`, `sql/owner_dashboard.sql`, `scripts/seed-app-catalog.mjs`).
+It is a different product from this admin dashboard and is **deliberately not
+part of this repo**. Notes relevant here:
+
+- It mounts at `/api/owner`, which does not exist in `gcr-api-clean` today
+  (`routes/owner.js` is absent and nothing is mounted at that prefix).
+- It reads the whole business in one call, `GET /api/owner/business`, sweeping
+  every table with an `entity_slug` column server-side. The table list comes
+  from an `owner_schema()` SQL function rather than a hardcoded list.
+- It covers writes with three generic routes — `POST/PATCH/DELETE
+  /api/owner/data/:table` — scoping every one by a slug taken off the JWT, never
+  off the request.
+
+That last pattern is a reasonable model if this admin dashboard ever needs
+generic table access. It is not adopted here, because the admin API exposes
+specific, differently-shaped routes per resource and this app is wired to those.
+
 ## Re-running the check
 
 The analysis compares paths extracted from `admin.html` against routes
