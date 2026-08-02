@@ -1,202 +1,192 @@
 /**
- * Review requests and responses.
+ * Reviews for one business — the public read model.
  *
- * GET  /api/reviews          reviews collected
- * GET  /api/reviews/stats    summary counters
- * GET  /api/reviews/requests requests sent
- * POST /api/reviews/request  send a new request
+ * GET /api/reviews/:slug         approved reviews, paginated
+ * GET /api/reviews/:slug/stats   rating breakdown
+ *
+ * Both routes are slug-scoped. `routes/reviews.js` has no collection route,
+ * so there is no "all reviews across the platform" view to build here.
+ *
+ * The legacy dashboard also drove an SMS review-request flow against
+ * /api/reviews/request, /api/reviews/requests and /api/reviews/webhook/pos.
+ * None of those exist. Worse, they do not 404 — they match the slug routes, so
+ * `POST /api/reviews/request` would have created a review against a business
+ * named "request". That flow is not reproduced here; the notice below says so
+ * rather than offering a button that corrupts data.
  */
 
-import { useState } from 'react';
-import { Badge, Button, Card, ErrorState, LoadingBlock, PageHeader, Stat } from '../../ui/primitives.jsx';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, Notice, PageHeader, Stat } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
-import { SchemaForm } from '../../ui/SchemaForm.jsx';
-import { Modal } from '../../ui/Modal.jsx';
-import { useToast } from '../../ui/Toast.jsx';
-import { useAsync } from '../../hooks/useAsync.js';
+import { useAsync, usePersistentState } from '../../hooks/useAsync.js';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
 import { api, unwrapList } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
-import { columns, fields, formatNumber } from '../../lib/fields.jsx';
-
-const requestSchema = [
-  fields.text('customer_name', 'Customer name', { span: 2 }),
-  fields.tel('phone', 'Phone', { help: 'Where the request is texted.' }),
-  fields.email('email', 'Email'),
-  fields.textarea('message', 'Custom message', { rows: 3 }),
-];
-
-const TABS = [
-  { id: 'reviews', label: 'Reviews' },
-  { id: 'requests', label: 'Requests sent' },
-];
+import { columns, formatNumber } from '../../lib/fields.jsx';
 
 export default function Reviews() {
-  const toast = useToast();
-  const [tab, setTab] = useState('reviews');
-  const [requesting, setRequesting] = useState(false);
-  const [slug, setSlug] = useState(null);
-
-  const statsQuery = useAsync(async () => api.get(endpoints.reviews.stats()), [], {
-    initialData: null,
-  });
+  const [slug, setSlug] = usePersistentState('cc_admin_entity', null);
 
   const reviewsQuery = useAsync(
-    async () => unwrapList(await api.get(endpoints.reviews.list()), ['reviews']),
-    [],
+    async () => {
+      if (!slug) return [];
+      const payload = await api.get(endpoints.reviews.bySlug(slug), {
+        auth: false,
+        query: { limit: 200 },
+      });
+      return unwrapList(payload, ['reviews']);
+    },
+    [slug],
     { initialData: [] },
   );
 
-  const requestsQuery = useAsync(
-    async () => unwrapList(await api.get(endpoints.reviews.requests()), ['requests']),
-    [],
-    { initialData: [] },
+  const statsQuery = useAsync(
+    async () => {
+      if (!slug) return null;
+      return api.get(endpoints.reviews.statsBySlug(slug), { auth: false });
+    },
+    [slug],
+    { initialData: null },
   );
 
-  const sendRequest = async (values) => {
-    await api.post(endpoints.reviews.request(), { ...values, entity_slug: slug || undefined });
-    toast.success('Review request sent.');
-    setRequesting(false);
-    await requestsQuery.reload();
-  };
-
+  const reviews = reviewsQuery.data || [];
   const stats = statsQuery.data || {};
+
+  const average = useMemo(() => {
+    if (typeof stats.average === 'number') return stats.average;
+    if (reviews.length === 0) return null;
+    const total = reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+    return total / reviews.length;
+  }, [stats, reviews]);
+
+  const breakdown = useMemo(() => {
+    // Prefer the API's own breakdown; fall back to counting what we loaded.
+    if (stats.breakdown && typeof stats.breakdown === 'object') return stats.breakdown;
+    const out = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    for (const review of reviews) {
+      const bucket = Math.round(Number(review.rating) || 0);
+      if (out[bucket] !== undefined) out[bucket] += 1;
+    }
+    return out;
+  }, [stats, reviews]);
+
+  const refresh = () => {
+    reviewsQuery.reload();
+    statsQuery.reload();
+  };
 
   return (
     <>
       <PageHeader
         title="Reviews"
-        description="Review requests sent to customers, and the reviews that came back."
-        actions={
-          <>
-            <Button
-              onClick={() => {
-                statsQuery.reload();
-                reviewsQuery.reload();
-                requestsQuery.reload();
-              }}
-            >
-              Refresh
-            </Button>
-            <Button variant="primary" onClick={() => setRequesting(true)}>
-              Request a review
-            </Button>
-          </>
-        }
+        description="Approved public reviews for one business, as visitors see them."
+        actions={slug && <Button onClick={refresh} disabled={reviewsQuery.loading}>Refresh</Button>}
       />
 
-      {statsQuery.loading && <LoadingBlock />}
-      {statsQuery.error && !statsQuery.error.isMissingEndpoint && (
-        <ErrorState error={statsQuery.error} onRetry={statsQuery.reload} />
-      )}
-      {!statsQuery.loading && !statsQuery.error && (
-        <div className="grid-auto" style={{ marginBottom: 'var(--space-5)' }}>
-          {Object.entries(stats)
-            .filter(([, value]) => typeof value !== 'object')
-            .map(([key, value]) => (
-              <Stat
-                key={key}
-                label={key.replace(/_/g, ' ')}
-                value={typeof value === 'number' ? formatNumber(value) : String(value)}
-              />
-            ))}
-        </div>
-      )}
+      <Notice tone="info" title="What this screen is, and is not">
+        <p>
+          This is the <strong>public</strong> read model — approved reviews only, for one business.
+          To add, edit, unapprove, or delete reviews, use{' '}
+          <Link to="/engagement/reviews">Engagement → Reviews</Link>, which is backed by the admin
+          router and shows unapproved rows too.
+        </p>
+        <p style={{ marginTop: 8 }}>
+          The SMS review-request flow the previous dashboard offered has no API behind it —{' '}
+          <code className="mono">/api/reviews/request</code> and{' '}
+          <code className="mono">/api/reviews/requests</code> do not exist. It is not reproduced
+          here.
+        </p>
+      </Notice>
 
-      <div className="ui-tabs__bar" role="tablist" style={{ marginBottom: 'var(--space-4)' }}>
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={`ui-tabs__tab ${tab === item.id ? 'is-active' : ''}`}
-            onClick={() => setTab(item.id)}
-          >
-            {item.label}
-            <span className="ui-tabs__badge">
-              {item.id === 'reviews'
-                ? (reviewsQuery.data || []).length
-                : (requestsQuery.data || []).length}
-            </span>
-          </button>
-        ))}
-      </div>
+      <div style={{ height: 'var(--space-4)' }} />
 
-      <Card padded={false}>
-        <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
-          {tab === 'reviews' ? (
-            <DataTable
-              columns={[
-                columns.primary('author_name', 'Author', 'source'),
-                {
-                  key: 'rating',
-                  header: 'Rating',
-                  align: 'right',
-                  render: (row) =>
-                    row.rating != null ? (
-                      <Badge tone={Number(row.rating) >= 4 ? 'success' : Number(row.rating) >= 3 ? 'warning' : 'danger'}>
-                        {Number(row.rating).toFixed(1)} ★
-                      </Badge>
-                    ) : (
-                      <span className="faint">—</span>
-                    ),
-                },
-                columns.text('review_text', 'Review'),
-                columns.text('entity_slug', 'Business'),
-                columns.dateTime('created_at', 'Received'),
-              ]}
-              rows={reviewsQuery.data || []}
-              loading={reviewsQuery.loading}
-              error={reviewsQuery.error}
-              onRetry={reviewsQuery.reload}
-              rowKey={(row, index) => row.id ?? index}
-              searchPlaceholder="Search reviews…"
-              emptyTitle="No reviews"
-              initialSort={{ key: 'created_at', direction: 'desc' }}
-            />
-          ) : (
-            <DataTable
-              columns={[
-                columns.primary('customer_name', 'Customer', 'phone'),
-                columns.text('entity_slug', 'Business'),
-                columns.status('status', 'Status', {
-                  sent: 'info',
-                  delivered: 'success',
-                  failed: 'danger',
-                  clicked: 'primary',
-                }),
-                columns.dateTime('created_at', 'Sent'),
-              ]}
-              rows={requestsQuery.data || []}
-              loading={requestsQuery.loading}
-              error={requestsQuery.error}
-              onRetry={requestsQuery.reload}
-              rowKey={(row, index) => row.id ?? index}
-              searchPlaceholder="Search requests…"
-              emptyTitle="No requests sent"
-              initialSort={{ key: 'created_at', direction: 'desc' }}
-            />
-          )}
-        </div>
+      <Card title="Business">
+        <EntityPicker value={slug} onChange={setSlug} label="Show reviews for" />
       </Card>
 
-      <Modal
-        open={requesting}
-        onClose={() => setRequesting(false)}
-        title="Request a review"
-        description="Sends the customer a link asking them to leave a review."
-      >
-        <div className="stack">
-          <EntityPicker value={slug} onChange={setSlug} label="Business (optional)" />
-          <SchemaForm
-            schema={requestSchema}
-            onSubmit={sendRequest}
-            onCancel={() => setRequesting(false)}
-            submitLabel="Send request"
-          />
-        </div>
-      </Modal>
+      {slug && (
+        <>
+          <div className="grid-auto" style={{ margin: 'var(--space-5) 0' }}>
+            <Stat
+              label="Approved reviews"
+              value={reviewsQuery.loading ? '…' : formatNumber(stats.total ?? reviews.length)}
+              tone="primary"
+            />
+            <Stat
+              label="Average rating"
+              value={average != null ? `${average.toFixed(2)} ★` : '—'}
+              tone={average >= 4 ? 'success' : average >= 3 ? 'warning' : average != null ? 'danger' : 'neutral'}
+            />
+            {[5, 4, 3, 2, 1].map((score) => (
+              <Stat key={score} label={`${score} star`} value={breakdown[score] ?? 0} />
+            ))}
+          </div>
+
+          <Card padded={false} title="Approved reviews">
+            <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
+              {statsQuery.error && !statsQuery.error.isMissingEndpoint && (
+                <>
+                  <ErrorState error={statsQuery.error} onRetry={statsQuery.reload} />
+                  <div style={{ height: 'var(--space-3)' }} />
+                </>
+              )}
+              {reviewsQuery.loading && <LoadingBlock />}
+              {reviewsQuery.error && (
+                <ErrorState error={reviewsQuery.error} onRetry={reviewsQuery.reload} />
+              )}
+              {!reviewsQuery.loading && !reviewsQuery.error && reviews.length === 0 && (
+                <EmptyState
+                  icon="⭐"
+                  title="No approved reviews"
+                  description="This business has no reviews that have been approved for public display."
+                />
+              )}
+              {!reviewsQuery.loading && !reviewsQuery.error && reviews.length > 0 && (
+                <DataTable
+                  columns={[
+                    columns.primary('author_name', 'Author', 'source'),
+                    {
+                      key: 'rating',
+                      header: 'Rating',
+                      align: 'right',
+                      render: (row) =>
+                        row.rating != null ? (
+                          <Badge
+                            tone={
+                              Number(row.rating) >= 4
+                                ? 'success'
+                                : Number(row.rating) >= 3
+                                  ? 'warning'
+                                  : 'danger'
+                            }
+                          >
+                            {Number(row.rating).toFixed(1)} ★
+                          </Badge>
+                        ) : (
+                          <span className="faint">—</span>
+                        ),
+                    },
+                    columns.text('review_text', 'Review'),
+                    columns.dateTime('created_at', 'Received'),
+                  ]}
+                  rows={reviews}
+                  rowKey={(row, index) => row.id ?? index}
+                  searchPlaceholder="Search reviews…"
+                  initialSort={{ key: 'created_at', direction: 'desc' }}
+                />
+              )}
+            </div>
+          </Card>
+        </>
+      )}
+
+      {!slug && (
+        <>
+          <div style={{ height: 'var(--space-4)' }} />
+          <div className="entity-picker__prompt">Pick a business to see its public reviews.</div>
+        </>
+      )}
     </>
   );
 }

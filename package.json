@@ -8,7 +8,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "oxlint src"
+    "lint": "oxlint src",
+    "audit:endpoints": "node scripts/audit-endpoints.mjs",
+    "sections:map": "node scripts/generate-section-map.mjs",
+    "sections:check": "node scripts/generate-section-map.mjs --check",
+    "verify": "npm run lint && npm run audit:endpoints && npm run sections:check && npm run build"
   },
   "dependencies": {
     "react": "^19.2.8",

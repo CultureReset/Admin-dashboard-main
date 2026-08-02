@@ -50,6 +50,16 @@ const definitions = [
     description: 'Platform totals and quick links across GCR, Trip Swipe, and CyberCheck.',
     load: () => import('./home/Overview.jsx'),
   },
+  {
+    id: 'sections',
+    label: 'All Sections',
+    icon: '🗂️',
+    group: 'home',
+    path: '/sections',
+    description:
+      'Every screen in this dashboard, what it does, and the API routes behind it — with a live probe.',
+    load: () => import('./home/Sections.jsx'),
+  },
 
   // ------------------------------------------------------------ menu & qr --
   {
@@ -585,6 +595,16 @@ const definitions = [
     status: 'partial',
     description: 'Third-party connections and the keys behind them.',
     load: () => import('./platform/Integrations.jsx'),
+  },
+  {
+    id: 'people',
+    label: 'People',
+    icon: '🧑‍🤝‍🧑',
+    group: 'platform',
+    path: '/platform/people',
+    description:
+      'Everyone across the platform — admins, business accounts, customers, tourists, and claimants — in one list.',
+    load: () => import('./platform/People.jsx'),
   },
   {
     id: 'users',

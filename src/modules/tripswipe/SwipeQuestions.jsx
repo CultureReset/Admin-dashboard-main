@@ -11,8 +11,6 @@ import { Button } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { setupQuestionsResource } from '../../api/resources.js';
-import { api } from '../../api/client.js';
-import { endpoints } from '../../api/endpoints.js';
 import { columns, fields } from '../../lib/fields.jsx';
 
 const schema = {
@@ -52,18 +50,31 @@ export default function SwipeQuestions() {
   const [reloadKey, setReloadKey] = useState(0);
 
   /**
-   * Renumber sort_order to a clean 0..n-1 sequence. Useful after questions
-   * have been added and deleted enough times that the numbers have gaps.
+   * Renumber sort_order to a clean 0..n-1 sequence, one row at a time.
+   *
+   * The API has a bulk `PUT /api/admin/setup-questions/reorder`, but it is
+   * registered *after* `PUT /:id` in routes/setup-questions.js. Express matches
+   * in registration order, so a call to /reorder lands in the `:id` handler
+   * with id="reorder" and silently updates nothing. Until that ordering is
+   * fixed in the API, updating each row individually is the path that actually
+   * works.
    */
   const normalizeOrder = async () => {
     setReordering(true);
     try {
       const rows = await setupQuestionsResource.list();
-      const ordered = [...rows]
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-        .map((row, index) => ({ id: row.id, sort_order: index }));
-      await api.put(endpoints.setupQuestions.reorder(), { questions: ordered });
-      toast.success('Question order renumbered.');
+      const ordered = [...rows].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+      let changed = 0;
+      for (const [index, row] of ordered.entries()) {
+        if (row.sort_order === index) continue;
+        await setupQuestionsResource.update(row.id, { ...row, sort_order: index });
+        changed += 1;
+      }
+
+      toast.success(
+        changed === 0 ? 'Order was already sequential.' : `Renumbered ${changed} questions.`,
+      );
       setReloadKey((n) => n + 1);
     } catch (err) {
       toast.error(err);

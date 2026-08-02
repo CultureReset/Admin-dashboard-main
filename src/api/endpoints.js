@@ -239,8 +239,6 @@ export const endpoints = {
     photos: () => `${ADMIN}/gcr/import-photos`,
     sectionBased: () => `${ADMIN}/gcr/import-section-based`,
     gcrItems: () => `${ADMIN}/gcr/import-gcr-items`,
-    /** UNVERIFIED — legacy CSV path, absent from the gcr-api-clean checkout. */
-    csv: () => `${ADMIN}/gcr/import-csv`,
   },
 
   // ----------------------------------------------------------- ai tools ---
@@ -253,11 +251,12 @@ export const endpoints = {
     saveParsedItems: () => `${ADMIN}/gcr/save-parsed-items`,
     ragStatus: () => `${ADMIN}/rag-status`,
     backfillPhotoAnalysis: () => `${ADMIN}/gcr/backfill-photo-analysis`,
-    /** Provider registry lives at its own mount, not under /api/admin. */
-    providers: () => '/api/ai-provider',
-    /** UNVERIFIED — chat history persistence is not in the checkout. */
-    chatHistory: () => `${ADMIN}/ai-chat-history`,
-    chatHistorySave: () => `${ADMIN}/ai-chat-history/save`,
+    /**
+     * The provider registry comes back on the ai-config response as
+     * `providers`. `/api/ai-provider` is NOT a registry endpoint — it exposes
+     * only `POST /call`, so a GET there 404s. Read providers from here.
+     */
+    providers: () => `${ADMIN}/ai-config`,
   },
 
   // -------------------------------------------------------- engagement ---
@@ -398,18 +397,54 @@ export const endpoints = {
     businessLead: (id) => `${ADMIN}/business-leads/${seg(id)}`,
   },
 
+  /**
+   * Bookings. There is no cross-business list route anywhere in the API —
+   * `routes/bookings.js` is entirely slug-scoped and is really about
+   * `entity_availability`, not a booking ledger.
+   *
+   * Three parallel booking models exist in gcr-api-clean:
+   *   1. entity_availability          — routes/bookings.js
+   *   2. bookable_resources/booking_events — routes/rentals.js, routes/services.js
+   *   3. offerings/bookings/booking_calendar — routes/platform.js, whose header
+   *      declares itself canonical ("ONE universal booking")
+   * Only (3) is owner-scoped and therefore unreachable with an admin token.
+   */
   bookings: {
-    /** Bookings mount at their own prefix, not under /api/admin. */
-    list: () => '/api/bookings',
-    detail: (id) => `/api/bookings/${seg(id)}`,
+    /** Availability for one date. */
+    availability: (slug) => `/api/bookings/${seg(slug)}/availability`,
+    /** Availability across a date range — the closest thing to a calendar. */
+    dateRange: (slug) => `/api/bookings/${seg(slug)}/date-range`,
+    /** One booking, by id, for a business. */
+    detail: (slug, id) => `/api/bookings/${seg(slug)}/${seg(id)}`,
+    create: (slug) => `/api/bookings/${seg(slug)}`,
+    /** Resource-based models, used by the rentals and services apps. */
+    rentals: () => '/api/rentals',
+    rentalBookings: (slug) => `/api/rentals/${seg(slug)}/bookings`,
+    services: () => '/api/services',
+    serviceBookings: (slug) => `/api/services/${seg(slug)}/bookings`,
   },
 
+  /**
+   * Public review routes. Every one is slug-scoped — `routes/reviews.js` has
+   * no collection route at all.
+   *
+   * This matters more than it looks: `/api/reviews/stats` and
+   * `/api/reviews/requests` do not 404, they match `GET /:slug` and quietly
+   * return an empty result for a business that does not exist, and
+   * `POST /api/reviews/request` would match `POST /:slug` and *create a
+   * review* against a business named "request". The legacy dashboard called
+   * all three. They are gone from here rather than left to fail silently.
+   *
+   * For full admin review management (including unapproved rows) use
+   * `collections.reviews`, which is backed by the admin router.
+   */
   reviews: {
-    list: () => '/api/reviews',
-    stats: () => '/api/reviews/stats',
-    requests: () => '/api/reviews/requests',
-    request: () => '/api/reviews/request',
-    detail: (id) => `/api/reviews/${seg(id)}`,
+    /** Approved reviews for one business, paginated. */
+    bySlug: (slug) => `/api/reviews/${seg(slug)}`,
+    /** Rating breakdown for one business. */
+    statsBySlug: (slug) => `/api/reviews/${seg(slug)}/stats`,
+    create: (slug) => `/api/reviews/${seg(slug)}`,
+    item: (slug, id) => `/api/reviews/${seg(slug)}/${seg(id)}`,
   },
 
   updateLinks: {

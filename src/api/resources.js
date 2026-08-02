@@ -288,18 +288,9 @@ export const customersResource = createResource({
   listKeys: ['customers'],
 });
 
-export const reviewRequestsResource = createResource({
-  name: 'Review request',
-  listPath: () => ep.reviews.requests(),
-  listKeys: ['requests', 'review_requests'],
-});
-
-export const platformReviewsResource = createResource({
-  name: 'Review',
-  listPath: () => ep.reviews.list(),
-  itemPath: (id) => ep.reviews.detail(id),
-  listKeys: ['reviews'],
-});
+// Note: there is no platform-wide review resource. `routes/reviews.js` is
+// slug-scoped with no collection route, so reviews are read per business —
+// see `entityReviewsResource` below for the admin-side CRUD.
 
 /* --------------------------------------------- per-entity collections -- */
 

@@ -25,8 +25,13 @@ export default function AiSettings() {
   const [rehostUrls, setRehostUrls] = useState('');
   const [rehosting, setRehosting] = useState(false);
 
+  // The registry rides along on the ai-config response. `/api/ai-provider`
+  // only exposes POST /call, so a GET there would 404.
   const providersQuery = useAsync(
-    async () => api.get(endpoints.ai.providers()),
+    async () => {
+      const payload = await api.get(endpoints.ai.providers());
+      return payload?.providers ?? {};
+    },
     [],
     { initialData: null },
   );
@@ -110,7 +115,7 @@ export default function AiSettings() {
       <div className="stack">
         <Card
           title="Providers"
-          subtitle="Reported by /api/ai-provider."
+          subtitle="The models each provider offers, as reported by /api/admin/ai-config."
           actions={<Button size="sm" onClick={providersQuery.reload}>Refresh</Button>}
         >
           {providersQuery.loading && <LoadingBlock />}

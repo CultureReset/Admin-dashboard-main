@@ -1,0 +1,397 @@
+{
+  "generatedFrom": "src/modules/registry.js + each section's import graph",
+  "sections": {
+    "overview": [
+      "ads.list",
+      "claims.list",
+      "entities.list",
+      "rails.list"
+    ],
+    "sections": [],
+    "menu-builder": [
+      "drinks.item",
+      "drinks.items",
+      "drinks.sections",
+      "entities.list",
+      "entities.publicDetail",
+      "happyHour.item",
+      "happyHour.items",
+      "happyHour.sections",
+      "menu.item",
+      "menu.items",
+      "menu.section",
+      "menu.sections"
+    ],
+    "qr-menus": [
+      "entities.list",
+      "menu.editorQrMenu"
+    ],
+    "qr-tracker": [
+      "qr.create",
+      "qr.detail",
+      "qr.list",
+      "qr.location",
+      "qr.locations",
+      "qr.scans",
+      "qr.statsSummary"
+    ],
+    "reviews": [
+      "entities.list",
+      "reviews.bySlug",
+      "reviews.statsBySlug"
+    ],
+    "referral-partners": [
+      "qr.partner",
+      "qr.partnerStats",
+      "qr.partners"
+    ],
+    "daily-update-links": [
+      "entities.list",
+      "updateLinks.generate",
+      "updateLinks.sendSms",
+      "updateLinks.today"
+    ],
+    "menu-editors-hub": [
+      "entities.list",
+      "menu.editorData"
+    ],
+    "gcr-businesses": [
+      "entities.create",
+      "entities.list",
+      "entities.remove"
+    ],
+    "gcr-entity-editor": [
+      "collections.blog",
+      "collections.faqs",
+      "collections.policies",
+      "collections.pricingItems",
+      "collections.requirements",
+      "collections.reviews",
+      "collections.schedules",
+      "collections.secondaryHours",
+      "collections.team",
+      "collections.whatsIncluded",
+      "drinks.item",
+      "drinks.items",
+      "drinks.sections",
+      "entities.detail",
+      "entities.happyHour",
+      "entities.hours",
+      "entities.list",
+      "entities.patch",
+      "entities.photo",
+      "entities.photos",
+      "entities.publicDetail",
+      "entities.reindex",
+      "entities.uploadImage",
+      "events.create",
+      "events.update",
+      "happyHour.item",
+      "happyHour.items",
+      "happyHour.sections",
+      "menu.item",
+      "menu.items",
+      "menu.section",
+      "menu.sections",
+      "sections.clear",
+      "sections.list",
+      "sections.replace",
+      "specials.create",
+      "specials.update"
+    ],
+    "gcr-entity-editor-slug": [
+      "collections.blog",
+      "collections.faqs",
+      "collections.policies",
+      "collections.pricingItems",
+      "collections.requirements",
+      "collections.reviews",
+      "collections.schedules",
+      "collections.secondaryHours",
+      "collections.team",
+      "collections.whatsIncluded",
+      "drinks.item",
+      "drinks.items",
+      "drinks.sections",
+      "entities.detail",
+      "entities.happyHour",
+      "entities.hours",
+      "entities.list",
+      "entities.patch",
+      "entities.photo",
+      "entities.photos",
+      "entities.publicDetail",
+      "entities.reindex",
+      "entities.uploadImage",
+      "events.create",
+      "events.update",
+      "happyHour.item",
+      "happyHour.items",
+      "happyHour.sections",
+      "menu.item",
+      "menu.items",
+      "menu.section",
+      "menu.sections",
+      "sections.clear",
+      "sections.list",
+      "sections.replace",
+      "specials.create",
+      "specials.update"
+    ],
+    "gcr-site-editor": [
+      "unverified.categoryCard",
+      "unverified.categoryCards",
+      "unverified.siteConfigHero"
+    ],
+    "gcr-claims": [
+      "claims.list",
+      "claims.update"
+    ],
+    "gcr-events": [
+      "entities.list",
+      "events.backfillTypes",
+      "events.create",
+      "events.list",
+      "events.remove",
+      "events.update"
+    ],
+    "gcr-artists": [
+      "artists.create",
+      "artists.list",
+      "artists.photo",
+      "artists.update"
+    ],
+    "artist-profiles": [
+      "artists.publicList",
+      "artists.queue",
+      "artists.queueItem"
+    ],
+    "gcr-specials": [
+      "entities.list",
+      "specials.create",
+      "specials.list",
+      "specials.remove",
+      "specials.update"
+    ],
+    "gcr-ads": [
+      "ads.create",
+      "ads.list",
+      "ads.update"
+    ],
+    "gcr-rails": [
+      "entities.list",
+      "rails.create",
+      "rails.item",
+      "rails.items",
+      "rails.list",
+      "rails.remove",
+      "rails.update"
+    ],
+    "ai-config": [
+      "ai.config",
+      "ai.configTask"
+    ],
+    "gcr-coupons": [
+      "coupons.create",
+      "coupons.list",
+      "coupons.remove"
+    ],
+    "gcr-seo": [
+      "entities.detail",
+      "entities.list",
+      "entities.patch"
+    ],
+    "bulk-upload": [
+      "entities.list",
+      "imports.drinks",
+      "imports.entity",
+      "imports.events",
+      "imports.menu",
+      "imports.photos",
+      "imports.specials"
+    ],
+    "bulk-events": [
+      "entities.list",
+      "imports.events"
+    ],
+    "ai-chat": [
+      "ai.ask"
+    ],
+    "ai-organize": [
+      "ai.organize",
+      "ai.parseRawData",
+      "ai.saveParsedItems",
+      "entities.list"
+    ],
+    "rag-index": [
+      "ai.ragStatus",
+      "entities.list",
+      "entities.reindex"
+    ],
+    "ai-settings": [
+      "ai.backfillPhotoAnalysis",
+      "ai.providers",
+      "entities.list",
+      "photos.rehost",
+      "photos.repair",
+      "photos.repairStatus"
+    ],
+    "gcr-analytics": [
+      "analytics.gcr",
+      "analytics.platform"
+    ],
+    "gcr-reviews": [
+      "collections.reviews",
+      "entities.list"
+    ],
+    "gcr-customers": [
+      "customers.list"
+    ],
+    "gcr-messaging": [
+      "entities.list",
+      "unverified.messaging"
+    ],
+    "gcr-social": [
+      "entities.list",
+      "socialPosts.create",
+      "socialPosts.list",
+      "socialPosts.scrape",
+      "socialPosts.update"
+    ],
+    "tripswipe-overview": [
+      "tourists.list",
+      "tripswipe.promoCards",
+      "tripswipe.settings",
+      "tripswipe.sponsored"
+    ],
+    "tripswipe-businesses": [
+      "entities.list",
+      "tripswipe.settings",
+      "tripswipe.settingsForSlug"
+    ],
+    "tripswipe-tourists": [
+      "tourists.detail",
+      "tourists.list",
+      "tourists.preferences",
+      "tourists.recomputePreferences",
+      "tourists.remove",
+      "tourists.removeItinerary",
+      "tourists.removeSave"
+    ],
+    "tripswipe-analytics": [
+      "analytics.gcr",
+      "analytics.platform",
+      "analytics.tripswipe"
+    ],
+    "tripswipe-ai": [
+      "ai.ragStatus",
+      "analytics.gcr",
+      "analytics.platform",
+      "analytics.tripswipe"
+    ],
+    "tripswipe-concierge-test": [
+      "tourists.list",
+      "tripswipe.conciergeChat"
+    ],
+    "trip-swipe-questions": [
+      "setupQuestions.create",
+      "setupQuestions.list",
+      "setupQuestions.update"
+    ],
+    "tripswipe-sponsored": [
+      "tripswipe.sponsored",
+      "tripswipe.sponsoredItem"
+    ],
+    "tripswipe-tonight": [
+      "tripswipe.promoCard",
+      "tripswipe.promoCards"
+    ],
+    "tripswipe-points": [
+      "unverified.pointsConfig"
+    ],
+    "tripswipe-sms-qr": [
+      "sms.qrCode",
+      "sms.qrCodeScans",
+      "sms.qrCodes"
+    ],
+    "platform-auth": [
+      "unverified.authConfig"
+    ],
+    "trip-swipe-button": [
+      "tripswipe.buttonConfig"
+    ],
+    "sms-settings": [
+      "sms.config"
+    ],
+    "sms-blasts": [
+      "sms.blast",
+      "sms.blastPreview",
+      "sms.blasts"
+    ],
+    "business-leads": [
+      "leads.businessLead",
+      "leads.businessLeads"
+    ],
+    "community-photos": [
+      "photos.community",
+      "photos.communityItem"
+    ],
+    "app-manager": [
+      "apps.create",
+      "apps.list",
+      "apps.update"
+    ],
+    "biz-apps": [
+      "apps.list",
+      "apps.siteApps",
+      "businesses.list"
+    ],
+    "businesses": [
+      "businesses.invite",
+      "businesses.linkUser",
+      "businesses.list",
+      "entities.list"
+    ],
+    "leads": [
+      "leads.salesLead",
+      "leads.salesLeads"
+    ],
+    "bookings": [
+      "bookings.dateRange",
+      "bookings.rentalBookings",
+      "bookings.serviceBookings",
+      "entities.list"
+    ],
+    "sales-pages": [
+      "businesses.invite",
+      "entities.list"
+    ],
+    "ar-hunts": [
+      "arHunts.captures",
+      "arHunts.create",
+      "arHunts.list",
+      "arHunts.update"
+    ],
+    "integrations": [
+      "unverified.setConnection"
+    ],
+    "people": [
+      "auth.users",
+      "businesses.list",
+      "claims.list",
+      "customers.list",
+      "entities.list",
+      "tourists.list"
+    ],
+    "users": [
+      "auth.users"
+    ],
+    "api-keys": [
+      "unverified.saveApiKey"
+    ],
+    "settings": [
+      "auth.login",
+      "auth.verify"
+    ]
+  }
+}

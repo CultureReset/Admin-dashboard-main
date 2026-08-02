@@ -26,7 +26,9 @@ const INTEGRATIONS = [
   { id: 'square', name: 'Square', purpose: 'In-person payments', probe: '/api/square/config' },
   { id: 'fareharbor', name: 'FareHarbor', purpose: 'Activity booking sync', probe: '/api/integrations/fareharbor/status' },
   { id: 'sms', name: 'SMS', purpose: 'Outbound text messaging', probe: '/api/sms/qr-codes' },
-  { id: 'ai', name: 'AI providers', purpose: 'Model routing', probe: '/api/ai-provider' },
+  // Probe ai-config, not /api/ai-provider — the latter is POST /call only, so
+  // a GET would report "not mounted" for a router that is in fact mounted.
+  { id: 'ai', name: 'AI providers', purpose: 'Model routing', probe: '/api/admin/ai-config' },
   { id: 'analytics', name: 'Analytics', purpose: 'Pageview and event tracking', probe: '/api/analytics/stats' },
   { id: 'qr', name: 'QR codes', purpose: 'Scan tracking and redirects', probe: '/api/qr/stats/summary' },
   { id: 'platform', name: 'Booking engine', purpose: 'Universal booking records', probe: '/api/platform/registry' },
