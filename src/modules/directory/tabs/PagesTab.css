@@ -1,0 +1,68 @@
+.pages-primary {
+  max-width: 340px;
+}
+
+.pages-primary .ui-input--select {
+  width: 100%;
+}
+
+.pages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-3);
+}
+
+.pages-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.pages-chip:hover:not(:disabled) {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+
+.pages-chip.is-on {
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
+  color: var(--primary);
+}
+
+.pages-chip.is-primary {
+  cursor: default;
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+
+.pages-chip__label {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.pages-chip__slug {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.pages-chip__tag {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  opacity: 0.8;
+}

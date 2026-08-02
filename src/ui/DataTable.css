@@ -1,0 +1,126 @@
+/* Styles for src/ui/DataTable.jsx */
+
+.ui-table-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ui-table__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Wide tables scroll inside their own container — the page never scrolls sideways. */
+.ui-table__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ui-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-elevated);
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ui-table thead th.is-sortable {
+  cursor: pointer;
+}
+
+.ui-table thead th.is-sortable:hover {
+  color: var(--text);
+}
+
+.ui-table__th {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ui-table__sort {
+  font-size: 9px;
+  color: var(--primary);
+}
+
+.ui-table tbody td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--card-border);
+  vertical-align: middle;
+  max-width: 420px;
+}
+
+.ui-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ui-table tbody tr.is-clickable {
+  cursor: pointer;
+}
+
+.ui-table tbody tr:hover {
+  background: var(--bg-elevated);
+}
+
+.ui-table--dense tbody td {
+  padding: 7px 12px;
+}
+
+.ui-table--dense thead th {
+  padding: 7px 12px;
+}
+
+.ui-table__pager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 12.5px;
+  flex-wrap: wrap;
+}
+
+/* Cell helpers used by column renderers. */
+.ui-cell-actions {
+  display: inline-flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.ui-cell-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  display: block;
+}
+
+.ui-cell-primary {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ui-cell-sub {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}

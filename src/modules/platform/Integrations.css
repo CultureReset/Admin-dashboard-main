@@ -1,0 +1,41 @@
+.integrations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.integration {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+}
+
+.integration__body {
+  min-width: 0;
+}
+
+.integration__name {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.integration__purpose {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.integration__probe {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+.integration__status {
+  flex: none;
+}

@@ -1,0 +1,119 @@
+/*
+ * Design tokens.
+ *
+ * Every colour, radius, and spacing step in the app comes from a custom
+ * property defined here. Components never contain colour literals, so
+ * re-theming (or adding a light mode) is a change to this file alone.
+ *
+ * Dark is the default, matching the existing dashboard. `[data-theme]` on the
+ * root element overrides it, and the media query handles users who have never
+ * touched the toggle.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0d1117;
+  --bg-elevated: #131a23;
+  --sidebar-bg: #0a0e14;
+  --card-bg: #161d27;
+  --card-border: #232c3a;
+  --input-bg: #0f151d;
+  --overlay: rgba(3, 6, 11, 0.72);
+
+  /* Text */
+  --text: #e6edf5;
+  --text-muted: #8b97a8;
+  --text-faint: #5c6879;
+
+  /* Brand + intent */
+  --primary: #7c6af7;
+  --primary-hover: #6d59f0;
+  --primary-soft: rgba(124, 106, 247, 0.14);
+  --primary-border: rgba(124, 106, 247, 0.36);
+
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.13);
+  --success-border: rgba(34, 197, 94, 0.32);
+
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.13);
+  --warning-border: rgba(245, 158, 11, 0.32);
+
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-soft: rgba(239, 68, 68, 0.13);
+  --danger-border: rgba(239, 68, 68, 0.32);
+
+  --info: #38bdf8;
+  --info-soft: rgba(56, 189, 248, 0.13);
+  --info-border: rgba(56, 189, 248, 0.32);
+
+  /* Geometry */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 20px 55px rgba(0, 0, 0, 0.48);
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --sidebar-width: 252px;
+  --topbar-height: 58px;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f4f6fa;
+  --bg-elevated: #ffffff;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --card-border: #e2e7ef;
+  --input-bg: #ffffff;
+  --overlay: rgba(15, 23, 42, 0.42);
+
+  --text: #16202e;
+  --text-muted: #5d6b7f;
+  --text-faint: #8794a6;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.07);
+  --shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
+  --shadow-lg: 0 20px 55px rgba(15, 23, 42, 0.16);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+
+    --bg: #f4f6fa;
+    --bg-elevated: #ffffff;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --card-border: #e2e7ef;
+    --input-bg: #ffffff;
+    --overlay: rgba(15, 23, 42, 0.42);
+
+    --text: #16202e;
+    --text-muted: #5d6b7f;
+    --text-faint: #8794a6;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.07);
+    --shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
+    --shadow-lg: 0 20px 55px rgba(15, 23, 42, 0.16);
+  }
+}

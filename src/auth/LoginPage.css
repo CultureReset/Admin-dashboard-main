@@ -1,0 +1,92 @@
+/* Styles for src/auth/LoginPage.jsx */
+
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: var(--bg);
+}
+
+.login__card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.login__brand {
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+
+.login__logo {
+  font-size: 30px;
+  color: var(--primary);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.login__title {
+  font-size: 20px;
+}
+
+.login__sub {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.login__error {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login__field span {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.login__field input {
+  padding: 11px 13px;
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.login__field input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.login__submit {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.login__api {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}

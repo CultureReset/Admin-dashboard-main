@@ -1,0 +1,70 @@
+/* Styles for src/ui/Tabs.jsx */
+
+.ui-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.ui-tabs__bar {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0;
+  scrollbar-width: none;
+}
+
+.ui-tabs__bar::-webkit-scrollbar {
+  display: none;
+}
+
+.ui-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ui-tabs__tab:hover {
+  color: var(--text);
+}
+
+.ui-tabs__tab.is-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.ui-tabs__icon {
+  font-size: 14px;
+}
+
+.ui-tabs__badge {
+  background: var(--card-border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+.ui-tabs__tab.is-active .ui-tabs__badge {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.ui-tabs__panel {
+  min-width: 0;
+}

@@ -1,0 +1,187 @@
+/* Styles for src/ui/Field.jsx */
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ui-field--span-2 { grid-column: span 2; }
+.ui-field--span-3 { grid-column: span 3; }
+.ui-field--span-full { grid-column: 1 / -1; }
+
+.ui-field__label {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.ui-field__req {
+  color: var(--danger);
+}
+
+.ui-field__help {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.ui-field__error {
+  font-size: 11.5px;
+  color: var(--danger);
+}
+
+.ui-input {
+  width: 100%;
+  padding: 8px 11px;
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.ui-input::placeholder {
+  color: var(--text-faint);
+}
+
+.ui-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.ui-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ui-input--area {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+
+.ui-input--select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
+    linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
+  background-position: calc(100% - 15px) center, calc(100% - 10px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+}
+
+/* --------------------------------------------------------------- switch -- */
+
+.ui-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+
+.ui-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ui-switch__track {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--card-border);
+  position: relative;
+  transition: background 0.18s;
+  flex: none;
+}
+
+.ui-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  transition: transform 0.18s;
+  box-shadow: var(--shadow-sm);
+}
+
+.ui-switch input:checked + .ui-switch__track {
+  background: var(--primary);
+}
+
+.ui-switch input:checked + .ui-switch__track .ui-switch__thumb {
+  transform: translateX(16px);
+}
+
+.ui-switch input:focus-visible + .ui-switch__track {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ui-switch__label {
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------- multiselect -- */
+
+.ui-multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ui-multi__chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ui-multi__chip:hover:not(:disabled) {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+
+.ui-multi__chip.is-active {
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
+  color: var(--primary);
+}
+
+.ui-multi__chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------- image url -- */
+
+.ui-imageurl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-imageurl__preview {
+  max-height: 128px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  align-self: flex-start;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+}

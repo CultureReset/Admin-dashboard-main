@@ -1,0 +1,42 @@
+/* Styles for src/shell/AppShell.jsx */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.shell__content {
+  flex: 1;
+  padding: var(--space-6);
+  max-width: 1500px;
+  width: 100%;
+  min-width: 0;
+}
+
+.shell__scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 850;
+}
+
+@media (min-width: 961px) {
+  .shell__scrim {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell__content {
+    padding: var(--space-4);
+  }
+}

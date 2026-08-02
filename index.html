@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CyberCheck Admin</title>
+    <!--
+      Runtime configuration hook. Nothing in this app hardcodes an API host.
+      Precedence: window.__ADMIN_CONFIG__ > import.meta.env > same-origin.
+      A deployment can override the API without a rebuild by defining this
+      object (e.g. from a small config.js served next to index.html).
+    -->
+    <script>
+      window.__ADMIN_CONFIG__ = window.__ADMIN_CONFIG__ || {};
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
