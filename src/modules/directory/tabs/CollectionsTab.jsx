@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { CrudSection } from '../../../ui/CrudSection.jsx';
+import { TabBar } from '../../../ui/Tabs.jsx';
 import { columns, fields } from '../../../lib/fields.jsx';
 import {
   pricingItemsResource,
@@ -199,20 +200,11 @@ export default function CollectionsTab({ slug }) {
 
   return (
     <div className="stack">
-      <div className="ui-tabs__bar" role="tablist">
-        {COLLECTIONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={active === item.id}
-            className={`ui-tabs__tab ${active === item.id ? 'is-active' : ''}`}
-            onClick={() => setActive(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={COLLECTIONS.map((t) => ({ id: t.id, label: t.label }))}
+        activeId={active}
+        onChange={setActive}
+      />
 
       <CrudSection
         // Remount on switch so table state (search, page) does not leak across

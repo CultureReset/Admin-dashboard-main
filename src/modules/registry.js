@@ -27,6 +27,7 @@ export const NAV_GROUPS = [
   { key: 'home', label: '' },
   { key: 'menu', label: '🍽️ Menu & QR' },
   { key: 'directory', label: '🗺️ GCR Directory' },
+  { key: 'booking', label: '🛥️ Booking Platform' },
   { key: 'content', label: '📋 Content' },
   { key: 'ai', label: '🤖 AI Tools' },
   { key: 'engagement', label: '📊 Engagement' },
@@ -171,6 +172,65 @@ const definitions = [
     path: '/directory/claims',
     description: 'Approve or reject business claim requests.',
     load: () => import('./directory/Claims.jsx'),
+  },
+
+  // ----------------------------------------------------- booking platform --
+  // The universal booking engine: boat rentals, fishing charters, dolphin
+  // cruises, stays. One `bookings` table, one `booking_calendar`, with the
+  // unit as data. Backed by /api/admin/platform.
+  {
+    id: 'booking-overview',
+    label: 'Overview',
+    icon: '🛥️',
+    group: 'booking',
+    path: '/booking',
+    description: 'Booking totals across every business, and what each is connected to.',
+    load: () => import('./booking/Overview.jsx'),
+  },
+  {
+    id: 'booking-offerings',
+    label: 'Offerings',
+    icon: '🎣',
+    group: 'booking',
+    path: '/booking/offerings',
+    description: 'The catalog — charters, cruises, rentals, rooms, and add-ons, with tiered pricing.',
+    load: () => import('./booking/Offerings.jsx'),
+  },
+  {
+    id: 'booking-bookings',
+    label: 'Bookings',
+    icon: '📖',
+    group: 'booking',
+    path: '/booking/bookings',
+    description: 'Every booking across every business, with guest, party, money, and status.',
+    load: () => import('./booking/BookingsLedger.jsx'),
+  },
+  {
+    id: 'booking-calendar',
+    label: 'Calendar',
+    icon: '📅',
+    group: 'booking',
+    path: '/booking/calendar',
+    description: 'Every date claim from every source, and manual blocks.',
+    load: () => import('./booking/Calendar.jsx'),
+  },
+  {
+    id: 'booking-promos',
+    label: 'Promos',
+    icon: '🎟️',
+    group: 'booking',
+    path: '/booking/promos',
+    description: 'Discount codes redeemed at booking time.',
+    load: () => import('./booking/Promos.jsx'),
+  },
+  {
+    id: 'booking-connections',
+    label: 'Connections',
+    icon: '🔌',
+    group: 'booking',
+    path: '/booking/connections',
+    description: 'Third-party accounts a business connects through Composio, and the tool catalog.',
+    load: () => import('./booking/Connections.jsx'),
   },
 
   // ------------------------------------------------------------- content --

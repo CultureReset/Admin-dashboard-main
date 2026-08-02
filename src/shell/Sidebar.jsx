@@ -7,10 +7,22 @@
 
 import { useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { navigation } from '../modules/registry.js';
+import { navigation, modules } from '../modules/registry.js';
 import { config } from '../config/env.js';
 import { SearchInput } from '../ui/primitives.jsx';
 import './Sidebar.css';
+
+/**
+ * Paths that are a prefix of another section's path — "/booking" sits above
+ * "/booking/offerings", and "/tripswipe" above its children. Without `end`,
+ * NavLink marks the parent active whenever a child is open and two items light
+ * up at once. Derived rather than listed, so a new group gets it for free.
+ */
+const PREFIX_PATHS = new Set(
+  modules
+    .filter((m) => modules.some((other) => other !== m && other.path.startsWith(`${m.path}/`)))
+    .map((m) => m.path),
+);
 
 export function Sidebar({ open, onNavigate }) {
   const [filter, setFilter] = useState('');
@@ -50,7 +62,7 @@ export function Sidebar({ open, onNavigate }) {
               <NavLink
                 key={item.id}
                 to={item.path}
-                end={item.path === '/'}
+                end={item.path === '/' || PREFIX_PATHS.has(item.path)}
                 className={({ isActive }) => `shell-nav-item ${isActive ? 'is-active' : ''}`}
                 onClick={onNavigate}
                 title={item.description || item.label}

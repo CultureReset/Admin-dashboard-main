@@ -463,6 +463,55 @@ export const endpoints = {
     communityItem: (id) => `${ADMIN}/community-photos/${seg(id)}`,
   },
 
+  /**
+   * Admin view over the universal booking engine — /api/admin/platform.
+   *
+   * routes/platform.js owns the same tables but resolves the business from
+   * entity_owners using the signed-in user, so an admin token cannot reach it.
+   * These routes filter by slug instead of being scoped to one, which is what
+   * makes an operator view possible.
+   *
+   * The model, per routes/platform.js: `offerings` is the catalog (a charter,
+   * a cruise, a pontoon, a room, an add-on), `bookings` is ONE table for every
+   * booking-type app with the unit as data, and `booking_calendar` holds every
+   * date claim from every source.
+   */
+  bookingPlatform: {
+    summary: () => `${ADMIN}/platform/summary`,
+
+    bookings: () => `${ADMIN}/platform/bookings`,
+    booking: (id) => `${ADMIN}/platform/bookings/${seg(id)}`,
+
+    offerings: () => `${ADMIN}/platform/offerings`,
+    offering: (id) => `${ADMIN}/platform/offerings/${seg(id)}`,
+    offeringMeta: () => `${ADMIN}/platform/offering-meta`,
+    offeringPrices: (id) => `${ADMIN}/platform/offerings/${seg(id)}/prices`,
+    offeringPrice: (id) => `${ADMIN}/platform/offering-prices/${seg(id)}`,
+
+    calendar: () => `${ADMIN}/platform/calendar`,
+    calendarEntry: (id) => `${ADMIN}/platform/calendar/${seg(id)}`,
+
+    promos: () => `${ADMIN}/platform/promos`,
+    promo: (id) => `${ADMIN}/platform/promos/${seg(id)}`,
+
+    waivers: () => `${ADMIN}/platform/waivers`,
+    /** Third-party connections per business (FareHarbor and anything else). */
+    integrations: () => `${ADMIN}/platform/integrations`,
+  },
+
+  /** Composio connections — /api/admin/connections. */
+  connections: {
+    list: () => `${ADMIN}/connections`,
+    status: () => `${ADMIN}/connections/status`,
+    catalog: () => `${ADMIN}/connections/catalog`,
+    catalogItem: (toolId) => `${ADMIN}/connections/catalog/${seg(toolId)}`,
+    /** What Composio itself offers, for building the catalog from. */
+    available: () => `${ADMIN}/connections/available`,
+    connect: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}/connect`,
+    refresh: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}/refresh`,
+    disconnect: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}`,
+  },
+
   // ------------------------------------ paths with no route in the API ---
   // Wired as the legacy dashboard calls them. Modules using these render an
   // "endpoint unavailable" notice rather than pretending the save worked.

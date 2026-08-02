@@ -147,6 +147,68 @@
       "claims.list",
       "claims.update"
     ],
+    "booking-overview": [
+      "bookingPlatform.integrations",
+      "bookingPlatform.summary",
+      "entities.list"
+    ],
+    "booking-offerings": [
+      "bookingPlatform.booking",
+      "bookingPlatform.bookings",
+      "bookingPlatform.calendar",
+      "bookingPlatform.calendarEntry",
+      "bookingPlatform.offering",
+      "bookingPlatform.offeringPrice",
+      "bookingPlatform.offeringPrices",
+      "bookingPlatform.offerings",
+      "bookingPlatform.promo",
+      "bookingPlatform.promos",
+      "bookingPlatform.waivers",
+      "entities.list"
+    ],
+    "booking-bookings": [
+      "bookingPlatform.booking",
+      "bookingPlatform.bookings",
+      "bookingPlatform.calendar",
+      "bookingPlatform.calendarEntry",
+      "bookingPlatform.offering",
+      "bookingPlatform.offeringPrice",
+      "bookingPlatform.offeringPrices",
+      "bookingPlatform.offerings",
+      "bookingPlatform.promo",
+      "bookingPlatform.promos",
+      "bookingPlatform.waivers",
+      "entities.list"
+    ],
+    "booking-calendar": [
+      "bookingPlatform.calendar",
+      "bookingPlatform.calendarEntry",
+      "entities.list"
+    ],
+    "booking-promos": [
+      "bookingPlatform.booking",
+      "bookingPlatform.bookings",
+      "bookingPlatform.calendar",
+      "bookingPlatform.calendarEntry",
+      "bookingPlatform.offering",
+      "bookingPlatform.offeringPrice",
+      "bookingPlatform.offeringPrices",
+      "bookingPlatform.offerings",
+      "bookingPlatform.promo",
+      "bookingPlatform.promos",
+      "bookingPlatform.waivers",
+      "entities.list"
+    ],
+    "booking-connections": [
+      "connections.catalog",
+      "connections.catalogItem",
+      "connections.connect",
+      "connections.disconnect",
+      "connections.list",
+      "connections.refresh",
+      "connections.status",
+      "entities.list"
+    ],
     "gcr-events": [
       "entities.list",
       "events.backfillTypes",
@@ -373,6 +435,7 @@
       "arHunts.update"
     ],
     "integrations": [
+      "bookingPlatform.integrations",
       "unverified.setConnection"
     ],
     "people": [

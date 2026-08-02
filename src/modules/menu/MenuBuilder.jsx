@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { Button, PageHeader } from '../../ui/primitives.jsx';
+import { TabBar } from '../../ui/Tabs.jsx';
 import { SectionedItemsEditor } from '../../components/SectionedItemsEditor.jsx';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
 import { useEntityFull } from '../directory/useEntityFull.js';
@@ -53,21 +54,11 @@ export default function MenuBuilder() {
         <div className="entity-picker__prompt">Pick a business to build its menus.</div>
       ) : (
         <div className="stack">
-          <div className="ui-tabs__bar" role="tablist">
-            {LISTS.map((list) => (
-              <button
-                key={list.id}
-                type="button"
-                role="tab"
-                aria-selected={active === list.id}
-                className={`ui-tabs__tab ${active === list.id ? 'is-active' : ''}`}
-                onClick={() => setActive(list.id)}
-              >
-                {list.label}
-                <span className="ui-tabs__badge">{counts[list.id]}</span>
-              </button>
-            ))}
-          </div>
+          <TabBar
+            tabs={LISTS.map((list) => ({ ...list, badge: counts[list.id] }))}
+            activeId={active}
+            onChange={setActive}
+          />
 
           {active === 'menu' && (
             <SectionedItemsEditor

@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { Button, Card, EmptyState, LoadingBlock, ErrorState, Badge } from '../../../ui/primitives.jsx';
+import { TabBar } from '../../../ui/Tabs.jsx';
 import { SchemaForm } from '../../../ui/SchemaForm.jsx';
 import { Modal, useConfirm } from '../../../ui/Modal.jsx';
 import { useToast } from '../../../ui/Toast.jsx';
@@ -46,21 +47,11 @@ export default function ContentTab({ slug, entityName }) {
 
   return (
     <div className="stack">
-      <div className="ui-tabs__bar" role="tablist">
-        {SUB_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active === tab.id}
-            className={`ui-tabs__tab ${active === tab.id ? 'is-active' : ''}`}
-            onClick={() => setActive(tab.id)}
-          >
-            {tab.label}
-            <span className="ui-tabs__badge">{counts[tab.id] ?? 0}</span>
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={SUB_TABS.map((t) => ({ id: t.id, label: t.label, badge: counts[t.id] ?? 0 }))}
+        activeId={active}
+        onChange={setActive}
+      />
 
       {active === 'menu' && (
         <SectionedItemsEditor

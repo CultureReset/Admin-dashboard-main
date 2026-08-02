@@ -79,6 +79,40 @@ exist while a working route was available; this app uses the working one.
 - **`entity` exposes `parent_slug` on the API but stores `parent_entity_slug`.**
   The API translates between them; this app uses the API's field name.
 
+## New: admin routes added to gcr-api-clean
+
+Two routers were added on the `claude/cybercheck-modular-react-dashboard-7on41c`
+branch of `gcr-api-clean`, because the dashboard could not otherwise reach the
+data it needed.
+
+**`/api/admin/platform`** (24 routes) — an admin view over the universal booking
+engine. `routes/platform.js` owns the model but resolves the business from
+`entity_owners` using the signed-in user, so an admin token cannot read any of
+it. These routes use the same tables (`offerings`, `offering_prices`,
+`bookings`, `booking_calendar`, `promos`, `waivers`, `integrations`) and take
+the slug as a *filter* rather than a security boundary. Every route is
+`adminRequired` — they must never become reachable with an owner token.
+
+**`/api/admin/connections`** (10 routes) — Composio. Nothing existed. Adds the
+curated tool catalog, per-business connection records, the OAuth handshake,
+a status refresh, and disconnect. Requires `sql/composio_connections.sql`.
+
+### Three booking models
+
+Worth knowing, because it explains why this was needed:
+
+| Model | Tables | Routes |
+|---|---|---|
+| 1 | `entity_availability` | `/api/bookings/:slug/*` |
+| 2 | `bookable_resources`, `booking_events` | `/api/rentals`, `/api/services` |
+| 3 | `offerings`, `bookings`, `booking_calendar`, `promos` | `/api/platform`, and now `/api/admin/platform` |
+
+Model 3 is the one the codebase declares canonical — `routes/platform.js` says
+*"ONE universal booking: every booking-type app writes the same `bookings`
+table; the unit is DATA, never a separate table."* The Booking Platform section
+group is built on model 3. Platform → Bookings still shows models 1 and 2,
+because live data may exist in them.
+
 ## Open question: two app catalogues
 
 There are two separate app catalogues in the platform and they do not sync.

@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Button, EmptyState, ErrorState, LoadingBlock, PageHeader, Stat } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { Modal } from '../../ui/Modal.jsx';
+import { TabBar } from '../../ui/Tabs.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { qrCodesResource, qrLocationsResource } from '../../api/resources.js';
@@ -92,19 +93,8 @@ export default function QrTracker() {
         </div>
       )}
 
-      <div className="ui-tabs__bar" role="tablist" style={{ marginBottom: 'var(--space-4)' }}>
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={`ui-tabs__tab ${tab === item.id ? 'is-active' : ''}`}
-            onClick={() => setTab(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <TabBar tabs={TABS} activeId={tab} onChange={setTab} />
       </div>
 
       {tab === 'codes' && (
