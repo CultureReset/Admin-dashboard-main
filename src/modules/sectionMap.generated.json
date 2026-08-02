@@ -139,9 +139,11 @@
       "specials.update"
     ],
     "gcr-site-editor": [
-      "unverified.categoryCard",
-      "unverified.categoryCards",
-      "unverified.siteConfigHero"
+      "categoryCards.create",
+      "categoryCards.item",
+      "categoryCards.list",
+      "settings.get",
+      "settingsKeys.siteHero"
     ],
     "gcr-claims": [
       "claims.list",
@@ -369,7 +371,8 @@
       "tripswipe.promoCards"
     ],
     "tripswipe-points": [
-      "unverified.pointsConfig"
+      "settings.get",
+      "settingsKeys.pointsConfig"
     ],
     "tripswipe-sms-qr": [
       "sms.qrCode",
@@ -377,13 +380,15 @@
       "sms.qrCodes"
     ],
     "platform-auth": [
-      "unverified.authConfig"
+      "settings.get",
+      "settingsKeys.authConfig"
     ],
     "trip-swipe-button": [
       "tripswipe.buttonConfig"
     ],
     "sms-settings": [
-      "sms.config"
+      "settings.get",
+      "settingsKeys.smsConfig"
     ],
     "sms-blasts": [
       "sms.blast",
@@ -435,8 +440,7 @@
       "arHunts.update"
     ],
     "integrations": [
-      "bookingPlatform.integrations",
-      "unverified.setConnection"
+      "bookingPlatform.integrations"
     ],
     "people": [
       "auth.users",
@@ -450,7 +454,7 @@
       "auth.users"
     ],
     "api-keys": [
-      "unverified.saveApiKey"
+      "settings.providerStatus"
     ],
     "settings": [
       "auth.login",

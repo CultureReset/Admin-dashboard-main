@@ -60,8 +60,8 @@ export default function SmsSettings() {
       <ConfigCard
         title="SMS configuration"
         schema={schema}
-        getPath={() => endpoints.sms.config()}
-        responseKeys={['config', 'sms_config']}
+        getPath={() => endpoints.settings.get(endpoints.settingsKeys.smsConfig)}
+        responseKeys={['value']}
       />
     </>
   );

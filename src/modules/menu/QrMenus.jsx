@@ -133,7 +133,8 @@ function QrMenuPreview({ slug }) {
   if (loading) return <LoadingBlock />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
-  const sections = data?.menu_sections || data?.sections || [];
+  const raw = data?.menu_sections ?? data?.sections;
+  const sections = Array.isArray(raw) ? raw : [];
 
   return (
     <div className="stack">

@@ -1,6 +1,12 @@
 # Endpoint status
 
-This dashboard talks only to `gcr-api-clean`. Nothing was changed in that repo.
+This dashboard talks only to `gcr-api-clean`.
+
+The original rebuild changed nothing in that repo. Three route files have since
+been **added** to it, on the branch `claude/cybercheck-modular-react-dashboard-7on41c`,
+because several screens had no route to call at all — see *Current state* below
+and `docs/DEPLOY.md`. Those changes are additive: three new files and three
+`mount()` lines, with nothing existing modified.
 
 While rebuilding, every API path the legacy `cybercheck-login/admin.html` calls
 was checked against the routers actually mounted in `gcr-api-clean/server.js`.
@@ -22,12 +28,42 @@ fails to save.
   and from a genuine server failure, so the three never get conflated.
 - Platform → Settings lists every partial section in one place.
 
-## Paths with no matching route
+## Current state
+
+After the routes added on the `claude/cybercheck-modular-react-dashboard-7on41c`
+branch of `gcr-api-clean`, of 69 sections:
+
+| | Count |
+|---|---|
+| Wired to routes already live in `gcr-api-clean` | 61 |
+| Need that branch merged and deployed | 7 (Booking Platform + Integrations) |
+| Depend on a route that exists nowhere | **1** — SMS / Messaging |
+
+That last one is `routes/messaging.js`, which exists but is deliberately
+commented out in `server.js` because its tables are not in the live database.
+
+Most of the original gap needed no new tables: `platform_settings` was already
+a key/value store, so site config, SMS config, auth config and points config
+are four keys in it rather than four endpoints; and `business_leads` was
+already being written by `routes/public.js`, so only the admin read side was
+missing.
+
+Two things were deliberately **not** rebuilt:
+
+- **`/api/admin/save-api-key`.** Storing provider secrets in a table an admin
+  session can read back is worse than the environment variables the API already
+  uses. Replaced with `GET /api/admin/provider-status`, which returns booleans
+  and the last four characters — enough to tell two accounts apart, useless to
+  an attacker.
+- **`/api/admin/set-connection`.** Superseded by `/api/admin/connections`
+  (Composio). The duplicate panel was removed rather than duplicated.
+
+## Historical: paths with no matching route
 
 | Path the legacy dashboard calls | Used for | What this app does |
 |---|---|---|
-| `/api/admin/gcr/site-config`, `/api/admin/gcr/site-config/hero` | Homepage hero | Site Editor — wired, reports the gap |
-| `/api/admin/gcr/category-cards[/:id]` | Category tiles | Site Editor — wired, reports the gap |
+| `/api/admin/gcr/site-config`, `/api/admin/gcr/site-config/hero` | Homepage hero | **fixed** — now `platform_settings` key `site_hero` via `/api/admin/settings/:key` |
+| `/api/admin/gcr/category-cards[/:id]` | Category tiles | **fixed** — route + `category_cards` table added |
 | `/api/admin/gcr/category-page-config/:category` | Category page config | not surfaced; Page Rails covers the need |
 | `/api/admin/gcr/entity-pages/:slug`, `/api/admin/gcr/page-assignments/:slug` | Page placement | **replaced** — the Pages tab writes the real `entity_type` / `also_appears_on` columns |
 | `/api/admin/gcr/messaging/:slug` | Message threads | Messaging — wired, reports the gap |
@@ -38,17 +74,17 @@ fails to save.
 | `/api/admin/ai-chat-history[/save]` | Chat transcripts | AI Chat keeps history in the tab and says it is not saved |
 | `/api/admin/ai-chat-organizer`, `/api/admin/ai-save-business` | AI organizer | **replaced** — uses `ai-organize`, `parse-raw-data`, `save-parsed-items` |
 | `/api/admin/ai-provider` | Provider registry | **corrected** — mounted at `/api/ai-provider` |
-| `/api/admin/auth-config` | Tourist auth toggles | Auth Settings — wired, reports the gap |
-| `/api/admin/sms-config` | SMS provider config | SMS Settings — wired, reports the gap |
+| `/api/admin/auth-config` | Tourist auth toggles | **fixed** — `platform_settings` key `auth_config` |
+| `/api/admin/sms-config` | SMS provider config | **fixed** — `platform_settings` key `sms_config` |
 | `/api/admin/sms-campaign-preview` | Blast preview | **corrected** — `POST /api/admin/sms-blast/preview` exists |
-| `/api/admin/save-api-key` | Store provider keys | API Keys — wired, reports the gap |
-| `/api/admin/set-connection` | Integration config | Integrations — wired, reports the gap |
-| `/api/admin/business-leads[/:id]` | Trip Swipe lead board | Business Leads — wired, reports the gap |
-| `/api/admin/community-photos[/:id]` | Guest photo moderation | Guest Photos — wired, reports the gap |
+| `/api/admin/save-api-key` | Store provider keys | **deliberately not rebuilt** — replaced by read-only `/provider-status` |
+| `/api/admin/set-connection` | Integration config | **superseded** by `/api/admin/connections` (Composio) |
+| `/api/admin/business-leads[/:id]` | Trip Swipe lead board | **fixed** — admin route added over the existing `business_leads` table |
+| `/api/admin/community-photos[/:id]` | Guest photo moderation | **fixed** — route + `community_photos` table added |
 | `/api/admin/bookings` | Bookings | **corrected** — mounted at `/api/bookings` |
 | `/api/admin/businesses/link-gcr-all` | Bulk link | not surfaced; per-entity linking works |
 | `/api/admin/daily-rotation/options/:slug`, `/api/admin/daily-rotation/sections/:slug` | Daily rotation | not surfaced |
-| `/api/tourist/points-config` | Points & rewards | Points — wired, reports the gap |
+| `/api/tourist/points-config` | Points & rewards | **fixed** — `platform_settings` key `points_config` |
 | `/api/gcr/ask` | Public AI ask | **corrected** — `POST /api/admin/gcr/ask` exists |
 | `/api/gcr/claims/:id` | Claim decisions | **corrected** — `PATCH /api/admin/gcr/claims/:id` |
 | `/api/admin/gcr/sections/:id/...` | Section content | **corrected** — `/api/admin/entities/:slug/sections` (note: no `/gcr` segment) |

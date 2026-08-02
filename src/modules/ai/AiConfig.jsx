@@ -30,7 +30,8 @@ export default function AiConfig() {
     { initialData: null },
   );
 
-  const configs = data?.configs || [];
+  // Guard the shape — an unexpected payload shows an empty table, not a crash.
+  const configs = Array.isArray(data?.configs) ? data.configs : [];
   const providers = data?.providers || {};
 
   const providerOptions = useMemo(() => Object.keys(providers), [providers]);

@@ -12,12 +12,11 @@ import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, Notice, PageHeader, Spinner, Stat } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
-import { ConfigCard } from '../../components/ConfigCard.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { api, unwrapList } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
-import { columns, fields } from '../../lib/fields.jsx';
+import { columns } from '../../lib/fields.jsx';
 import './Integrations.css';
 
 /**
@@ -44,13 +43,6 @@ const INTEGRATIONS = [
  */
 const NOT_BUILT = [
   { name: 'Peek Pro', purpose: 'Activity booking sync', note: 'No integration exists in the API.' },
-];
-
-const connectionSchema = [
-  fields.text('provider', 'Provider', { required: true, span: 2 }),
-  fields.text('account_id', 'Account ID'),
-  fields.bool('enabled', 'Enabled'),
-  fields.textarea('notes', 'Notes', { rows: 3 }),
 ];
 
 export default function Integrations() {
@@ -242,17 +234,6 @@ export default function Integrations() {
         </div>
       </Card>
 
-      <div style={{ height: 'var(--space-5)' }} />
-
-      <ConfigCard
-        title="Connection settings"
-        subtitle="The legacy dashboard's per-provider connection record."
-        schema={connectionSchema}
-        getPath={() => endpoints.unverified.setConnection()}
-        method="POST"
-        responseKeys={['connection']}
-        unavailableHint="This route was called by the previous dashboard but is not part of the current API."
-      />
     </>
   );
 }

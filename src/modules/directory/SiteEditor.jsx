@@ -36,10 +36,11 @@ const heroSchema = {
 
 const categoryCardsResource = createResource({
   name: 'Category tile',
-  listPath: () => endpoints.unverified.categoryCards(),
-  createPath: () => endpoints.unverified.categoryCards(),
-  itemPath: (id) => endpoints.unverified.categoryCard(id),
-  listKeys: ['cards', 'category_cards'],
+  listPath: () => endpoints.categoryCards.list(),
+  createPath: () => endpoints.categoryCards.create(),
+  itemPath: (id) => endpoints.categoryCards.item(id),
+  listKeys: ['cards'],
+  itemKeys: ['card'],
 });
 
 const cardSchema = [
@@ -60,17 +61,11 @@ export default function SiteEditor() {
         description="Hero content and category tiles for the public GCR site."
       />
 
-      <Notice tone="warning" title="Two of these panels depend on routes that are not deployed">
-        <p>
-          <code className="mono">/api/admin/gcr/site-config</code> and{' '}
-          <code className="mono">/api/admin/gcr/category-cards</code> are called by the previous
-          dashboard but do not exist in <code>gcr-api-clean</code>. They are wired here so they
-          work the moment the API grows them; until then loading and saving will report a 404.
-        </p>
-        <p style={{ marginTop: 8 }}>
-          To curate what appears on a public page today, use{' '}
-          <Link to="/content/rails">Page Rails</Link>, which is fully supported by the API.
-        </p>
+      <Notice tone="info" title="Backed by the API">
+        The hero is a row in <code className="mono">platform_settings</code> under the{' '}
+        <code className="mono">site_hero</code> key; the tiles are the{' '}
+        <code className="mono">category_cards</code> table. For rails and ordering on a public
+        page, use <Link to="/content/rails">Page Rails</Link>.
       </Notice>
 
       <div style={{ height: 'var(--space-5)' }} />
@@ -80,9 +75,8 @@ export default function SiteEditor() {
           title="Homepage hero"
           subtitle="Headline, image, and call to action."
           schema={heroSchema}
-          getPath={() => endpoints.unverified.siteConfigHero()}
-          responseKeys={['hero', 'config']}
-          unavailableHint="The fields below match what the legacy dashboard sent to this route."
+          getPath={() => endpoints.settings.get(endpoints.settingsKeys.siteHero)}
+          responseKeys={['value']}
         />
 
         <CrudSection
@@ -101,7 +95,6 @@ export default function SiteEditor() {
             columns.bool('is_active', 'Active'),
           ]}
           formSchema={cardSchema}
-          unavailableNotice="The category-cards route is not part of the current API."
         />
 
         <Card

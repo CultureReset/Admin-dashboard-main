@@ -1,95 +1,134 @@
 /**
- * API keys.
+ * Provider keys.
  *
- * The legacy dashboard posted keys to /api/admin/save-api-key. That route does
- * not exist in gcr-api-clean.
+ * Read-only, deliberately.
  *
- * This screen is deliberately conservative about secrets: it never displays a
- * stored key, it does not fetch one, and the field is write-only. Even once the
- * route exists, an admin dashboard should not be a place where a provider key
- * can be read back off the screen.
+ * The legacy dashboard posted provider secrets to /api/admin/save-api-key,
+ * which stored them in a table an admin session could read back. That is
+ * strictly worse than the environment variables the API already uses: it turns
+ * every admin login into a path to your Stripe secret, and a screenshot or a
+ * shoulder-surf into a leak.
+ *
+ * So there is no write here. GET /api/admin/provider-status returns booleans
+ * saying which keys the server has, plus the last four characters so two
+ * accounts can be told apart — and nothing that could reconstruct a key.
+ * Rotating one means changing the environment variable and redeploying.
  */
 
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Notice, PageHeader } from '../../ui/primitives.jsx';
-import { SchemaForm } from '../../ui/SchemaForm.jsx';
-import { useToast } from '../../ui/Toast.jsx';
+import { Badge, Button, Card, ErrorState, LoadingBlock, Notice, PageHeader, Stat } from '../../ui/primitives.jsx';
+import { DataTable } from '../../ui/DataTable.jsx';
+import { useAsync } from '../../hooks/useAsync.js';
 import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
-import { fields } from '../../lib/fields.jsx';
-
-const PROVIDERS = ['anthropic', 'openai', 'groq', 'xai', 'stripe', 'square', 'brevo', 'resend', 'sendgrid'];
-
-const schema = [
-  fields.select('provider', 'Provider', PROVIDERS, { required: true, span: 2 }),
-  {
-    name: 'api_key',
-    label: 'API key',
-    type: 'password',
-    required: true,
-    span: 'full',
-    help: 'Sent once and never read back. Paste the full key.',
-    autoComplete: 'off',
-  },
-  fields.text('label', 'Label', { span: 2, placeholder: 'Which account this belongs to' }),
-];
 
 export default function ApiKeys() {
-  const toast = useToast();
-  const [lastSaved, setLastSaved] = useState(null);
+  const { data, loading, error, reload } = useAsync(
+    async () => api.get(endpoints.settings.providerStatus()),
+    [],
+    { initialData: null },
+  );
 
-  const save = async (values) => {
-    await api.post(endpoints.unverified.saveApiKey(), values);
-    toast.success(`${values.provider} key saved.`);
-    setLastSaved({ provider: values.provider, at: new Date().toLocaleTimeString() });
-  };
+  // Guard the shape rather than trusting it: an unexpected payload should show
+  // an empty table, not take the screen down.
+  const providers = Array.isArray(data?.providers) ? data.providers : [];
+  const configured = providers.filter((p) => p.configured);
+  const missing = providers.filter((p) => !p.configured);
 
   return (
     <>
       <PageHeader
-        title="API keys"
-        description="Provider credentials held by the platform."
+        title="Provider keys"
+        description="Which third-party credentials this API has."
+        actions={<Button onClick={reload} disabled={loading}>Refresh</Button>}
       />
 
-      <Notice tone="warning" title="This screen's API route is not deployed">
-        <code className="mono">/api/admin/save-api-key</code> is called by the previous dashboard
-        but does not exist in <code>gcr-api-clean</code>. Today the API reads its provider keys from
-        environment variables — set them in the deployment and redeploy.
+      <Notice tone="info" title="Keys are environment variables, and stay that way">
+        <p>
+          This screen cannot set or reveal a key. It reports whether each one is present, so you
+          can tell at a glance why a feature is not working. To add or rotate one, change the
+          environment variable on the API and redeploy.
+        </p>
+        <p style={{ marginTop: 8 }}>
+          The previous dashboard let you POST keys into the database. That is not reproduced here
+          on purpose — it made every admin session a way to read your production secrets.
+        </p>
       </Notice>
 
       <div style={{ height: 'var(--space-4)' }} />
 
-      <Card
-        title="Store a key"
-        subtitle="Write-only. Existing keys are never displayed or fetched by this dashboard."
-      >
-        <Notice tone="info">
-          Keys are sent to the API and not kept in the browser. Nothing on this page reads a stored
-          key back, so a shoulder-surfer or a screenshot cannot leak one.
-        </Notice>
-        <div style={{ height: 'var(--space-4)' }} />
-        <SchemaForm schema={schema} onSubmit={save} submitLabel="Save key" />
-        {lastSaved && (
-          <>
-            <div style={{ height: 'var(--space-4)' }} />
+      {loading && <LoadingBlock />}
+      {error && <ErrorState error={error} onRetry={reload} />}
+
+      {!loading && !error && (
+        <>
+          <div className="grid-auto" style={{ marginBottom: 'var(--space-5)' }}>
+            <Stat label="Configured" value={configured.length} tone="success" />
+            <Stat
+              label="Not set"
+              value={missing.length}
+              tone={missing.length ? 'warning' : 'neutral'}
+            />
+            <Stat label="Known providers" value={providers.length} />
+          </div>
+
+          <Card padded={false} title="Providers">
+            <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
+              <DataTable
+                columns={[
+                  {
+                    key: 'id',
+                    header: 'Provider',
+                    render: (row) => <span className="ui-cell-primary">{row.id}</span>,
+                  },
+                  {
+                    key: 'env_var',
+                    header: 'Environment variable',
+                    render: (row) => <span className="mono">{row.env_var}</span>,
+                  },
+                  {
+                    key: 'configured',
+                    header: 'Status',
+                    render: (row) =>
+                      row.configured ? (
+                        <Badge tone="success">Set</Badge>
+                      ) : (
+                        <Badge tone="warning">Not set</Badge>
+                      ),
+                  },
+                  {
+                    key: 'fingerprint',
+                    header: 'Ends with',
+                    render: (row) =>
+                      row.fingerprint ? (
+                        <span className="mono faint">{row.fingerprint}</span>
+                      ) : (
+                        <span className="faint">—</span>
+                      ),
+                  },
+                ]}
+                rows={providers}
+                rowKey="id"
+                searchPlaceholder="Search providers…"
+                emptyTitle="No providers reported"
+                initialSort={{ key: 'configured', direction: 'desc' }}
+              />
+            </div>
+          </Card>
+
+          <div style={{ height: 'var(--space-5)' }} />
+
+          <Card title="Related">
             <p className="muted">
-              Last submitted: <strong>{lastSaved.provider}</strong> at {lastSaved.at}.
+              Which model handles each AI task is set in{' '}
+              <Link to="/content/ai-config">AI Config</Link>. Which integration routers are
+              reachable is in <Link to="/platform/integrations">Integrations</Link>. Businesses
+              connect their own accounts under{' '}
+              <Link to="/booking/connections">Booking Platform → Connections</Link>.
             </p>
-          </>
-        )}
-      </Card>
-
-      <div style={{ height: 'var(--space-5)' }} />
-
-      <Card title="Which providers are configured?">
-        <p className="muted">
-          The API reports its available AI providers on{' '}
-          <code className="mono">/api/ai-provider</code>. See{' '}
-          <Link to="/ai/settings">AI Settings</Link> for the live list, and{' '}
-          <Link to="/platform/integrations">Integrations</Link> to check which routers respond.
-        </p>
-      </Card>
+          </Card>
+        </>
+      )}
     </>
   );
 }

@@ -53,9 +53,8 @@ export default function Points() {
         title="Points configuration"
         subtitle="Read from and written to /api/tourist/points-config."
         schema={schema}
-        getPath={() => endpoints.unverified.pointsConfig()}
-        responseKeys={['config', 'points_config']}
-        unavailableHint="These field names match what the previous dashboard sent to this route."
+        getPath={() => endpoints.settings.get(endpoints.settingsKeys.pointsConfig)}
+        responseKeys={['value']}
       />
     </>
   );

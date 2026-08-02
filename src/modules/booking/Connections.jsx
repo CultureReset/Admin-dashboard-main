@@ -68,8 +68,11 @@ export default function Connections() {
   );
 
   const status = statusQuery.data || {};
-  const tools = catalogQuery.data?.tools || [];
-  const categories = catalogQuery.data?.categories || [];
+  // Guard the shape — an unexpected payload shows an empty list, not a crash.
+  const tools = Array.isArray(catalogQuery.data?.tools) ? catalogQuery.data.tools : [];
+  const categories = Array.isArray(catalogQuery.data?.categories)
+    ? catalogQuery.data.categories
+    : [];
   const connections = connectionsQuery.data || [];
 
   const toolSchema = useMemo(

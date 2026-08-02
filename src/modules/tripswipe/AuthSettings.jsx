@@ -56,8 +56,8 @@ export default function AuthSettings() {
       <ConfigCard
         title="Sign-in configuration"
         schema={schema}
-        getPath={() => endpoints.unverified.authConfig()}
-        responseKeys={['config', 'auth_config']}
+        getPath={() => endpoints.settings.get(endpoints.settingsKeys.authConfig)}
+        responseKeys={['value']}
       />
     </>
   );

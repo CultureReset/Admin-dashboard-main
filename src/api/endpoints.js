@@ -320,8 +320,6 @@ export const endpoints = {
     qrCodes: () => '/api/sms/qr-codes',
     qrCode: (id) => `/api/sms/qr-codes/${seg(id)}`,
     qrCodeScans: (id) => `/api/sms/qr-codes/${seg(id)}/scans`,
-    /** UNVERIFIED — SMS provider config is not in the checkout. */
-    config: () => `${ADMIN}/sms-config`,
   },
 
   // ------------------------------------------------------------ qr/ar ---
@@ -392,7 +390,7 @@ export const endpoints = {
   leads: {
     salesLeads: () => `${ADMIN}/sales-leads`,
     salesLead: (id) => `${ADMIN}/sales-leads/${seg(id)}`,
-    /** UNVERIFIED — Trip Swipe business-lead board is not in the checkout. */
+    /** Admin side of the public sign-up form's business_leads table. */
     businessLeads: () => `${ADMIN}/business-leads`,
     businessLead: (id) => `${ADMIN}/business-leads/${seg(id)}`,
   },
@@ -458,7 +456,7 @@ export const endpoints = {
     repairStatus: () => `${ADMIN}/repair-photos/status`,
     repair: () => `${ADMIN}/repair-photos`,
     rehost: () => `${ADMIN}/gcr/rehost-photos`,
-    /** UNVERIFIED — guest photo moderation queue is not in the checkout. */
+    /** Guest photo moderation queue. */
     community: () => `${ADMIN}/community-photos`,
     communityItem: (id) => `${ADMIN}/community-photos/${seg(id)}`,
   },
@@ -512,14 +510,38 @@ export const endpoints = {
     disconnect: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}`,
   },
 
+  /**
+   * Generic key/value settings over the `platform_settings` table.
+   *
+   * The legacy dashboard had a bespoke endpoint per settings screen —
+   * site-config, sms-config, auth-config — and none of them existed. They are
+   * one route now, so another settings screen needs no new endpoint at all.
+   */
+  settings: {
+    all: () => `${ADMIN}/settings`,
+    get: (key) => `${ADMIN}/settings/${seg(key)}`,
+    /** Which provider keys the server has. Booleans only — never the keys. */
+    providerStatus: () => `${ADMIN}/provider-status`,
+  },
+
+  /** Settings keys the dashboard reads. Names, not paths, so they stay honest. */
+  settingsKeys: {
+    siteHero: 'site_hero',
+    smsConfig: 'sms_config',
+    authConfig: 'auth_config',
+    pointsConfig: 'points_config',
+  },
+
+  categoryCards: {
+    list: () => `${ADMIN}/gcr/category-cards`,
+    create: () => `${ADMIN}/gcr/category-cards`,
+    item: (id) => `${ADMIN}/gcr/category-cards/${seg(id)}`,
+  },
+
   // ------------------------------------ paths with no route in the API ---
   // Wired as the legacy dashboard calls them. Modules using these render an
   // "endpoint unavailable" notice rather than pretending the save worked.
   unverified: {
-    siteConfig: () => `${ADMIN}/gcr/site-config`,
-    siteConfigHero: () => `${ADMIN}/gcr/site-config/hero`,
-    categoryCards: () => `${ADMIN}/gcr/category-cards`,
-    categoryCard: (id) => `${ADMIN}/gcr/category-cards/${seg(id)}`,
     categoryPageConfig: (category) => `${ADMIN}/gcr/category-page-config/${seg(category)}`,
     entityPages: (slug) => `${ADMIN}/gcr/entity-pages/${seg(slug)}`,
     pageAssignments: (slug) => `${ADMIN}/gcr/page-assignments/${seg(slug)}`,
@@ -527,10 +549,6 @@ export const endpoints = {
     messaging: (slug) => `${ADMIN}/gcr/messaging/${seg(slug)}`,
     grokChat: () => `${ADMIN}/gcr/grok-chat`,
     autoActivateTop5: () => `${ADMIN}/gcr/auto-activate-top5`,
-    authConfig: () => `${ADMIN}/auth-config`,
-    saveApiKey: () => `${ADMIN}/save-api-key`,
-    setConnection: () => `${ADMIN}/set-connection`,
-    pointsConfig: () => '/api/tourist/points-config',
     dailyRotationOptions: (slug) => `${ADMIN}/daily-rotation/options/${seg(slug)}`,
     dailyRotationSections: (slug) => `${ADMIN}/daily-rotation/sections/${seg(slug)}`,
     linkGcrAll: () => `${ADMIN}/businesses/link-gcr-all`,
