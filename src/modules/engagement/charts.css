@@ -1,0 +1,108 @@
+/* Inline charts. Everything scales to its container so a phone gets the same
+   shape as a desktop, just narrower. */
+
+.spark__svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.spark__area { fill: var(--primary); opacity: 0.14; }
+
+.spark__line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.spark__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.spark__peak { font-weight: 600; }
+
+/* ── ranked bars ─────────────────────────────────────────────────────────── */
+
+.bars { list-style: none; margin: 0; padding: 0; }
+
+.bars__row {
+  display: grid;
+  grid-template-columns: minmax(70px, 34%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.bars__label {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bars__track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--card-border);
+  overflow: hidden;
+}
+
+.bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.bars__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bars__more {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── shared analytics layout ─────────────────────────────────────────────── */
+
+.an__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.an__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+
+.an__sources { list-style: none; margin: 0; padding: 0; }
+
+.an__sources li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px 0;
+}
+
+.an__sources li + li { border-top: 1px solid var(--card-border); }
+
+.an__note {
+  margin: var(--space-3) 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}

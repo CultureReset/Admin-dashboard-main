@@ -165,6 +165,16 @@ const definitions = [
     load: () => import('./directory/BusinessProfile.jsx'),
   },
   {
+    id: 'engagement-behaviour',
+    label: 'Visitor Behaviour',
+    icon: '📈',
+    group: 'engagement',
+    path: '/engagement/behaviour',
+    description:
+      'What visitors did across every business — views, clicks, swipes and saves, with an honest note on what is not tracked.',
+    load: () => import('./engagement/Behaviour.jsx'),
+  },
+  {
     id: 'gcr-business-profile-slug',
     label: 'Business Profiles',
     group: 'directory',

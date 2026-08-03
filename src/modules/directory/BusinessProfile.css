@@ -202,3 +202,10 @@
   .bp__picker button { flex-wrap: wrap; gap: 4px 10px; }
   .bp__picker-slug { margin-left: 0; width: 100%; }
 }
+
+.bp__bigrate {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

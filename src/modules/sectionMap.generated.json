@@ -161,10 +161,16 @@
       "specials.update"
     ],
     "gcr-business-profile": [
+      "analytics.entity",
       "businessProfile.get",
       "entities.list"
     ],
+    "engagement-behaviour": [
+      "analytics.behaviour",
+      "analytics.behaviourHealth"
+    ],
     "gcr-business-profile-slug": [
+      "analytics.entity",
       "businessProfile.get",
       "entities.list"
     ],

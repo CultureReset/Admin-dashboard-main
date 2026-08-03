@@ -279,6 +279,18 @@ export const endpoints = {
     platform: () => `${ADMIN}/platform-analytics`,
     tripswipe: () => `${ADMIN}/tripswipe-analytics`,
     stats: () => '/api/analytics/stats',
+
+    /**
+     * Behaviour actually recorded by gcr-unified and Trip Swipe. Read-only.
+     *
+     * `coverage` on every response says what the numbers are built from and,
+     * just as importantly, what is not tracked at all — so a small number
+     * reads as "barely recorded yet" rather than "nobody came".
+     * `behaviourHealth` reports which trackers are feeding data.
+     */
+    entity: (slug) => `${ADMIN}/analytics/entity/${seg(slug)}`,
+    behaviour: () => `${ADMIN}/analytics/platform`,
+    behaviourHealth: () => `${ADMIN}/analytics/health`,
   },
 
   customers: {

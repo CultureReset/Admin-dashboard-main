@@ -37,6 +37,8 @@ import {
   LoadingBlock, ErrorState, EmptyState, SearchInput,
 } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
+import { Sparkline, BreakdownBars } from '../engagement/charts.jsx';
+import '../engagement/charts.css';
 import './BusinessProfile.css';
 
 /* ── value rendering ─────────────────────────────────────────────────────── */
@@ -116,6 +118,89 @@ function SingleRow({ section }) {
   );
 }
 
+/** Sentinel for the analytics pane, which is not a table. */
+const ANALYTICS_KEY = '__analytics__';
+
+
+/**
+ * What visitors did to this one business.
+ *
+ * A rate is shown only when its denominator is real; the API returns null
+ * otherwise, and null renders as "not enough recorded" rather than 0%. That
+ * distinction matters — a business with two views and one click is not a 50%
+ * performer, it is barely measured.
+ */
+function AnalyticsPane({ query, name }) {
+  const d = query.data;
+  const t = d?.totals || {};
+  const r = d?.rates || {};
+
+  const pct = (v) => (v === null || v === undefined ? <span className="bp__null">not enough data</span> : `${v}%`);
+
+  return (
+    <Card
+      title="Analytics"
+      subtitle={d ? `last ${d.window_days} days · since ${d.since}` : 'visitor behaviour'}
+      actions={<Button variant="ghost" onClick={query.run}>Refresh</Button>}
+    >
+      {query.loading && <LoadingBlock label="Reading recorded behaviour…" />}
+      {query.error && <ErrorState error={query.error} onRetry={query.run} context="business analytics" />}
+
+      {!query.loading && !query.error && d && (
+        <>
+          <div className="an__stats">
+            <Stat label="Profile views" value={t.page_views ?? 0} />
+            <Stat label="Outbound clicks" value={t.clicks ?? 0} hint={`${t.clicks_converted ?? 0} converted`} />
+            <Stat label="Saves" value={t.saves ?? 0} hint={`${t.super_likes ?? 0} super likes`} />
+            <Stat label="Swipes" value={t.swipes ?? 0} hint={`${t.swipes_right ?? 0} right`} />
+            <Stat label="Times shown" value={t.times_shown ?? 0} hint="Trip Swipe" />
+          </div>
+
+          <div className="an__grid">
+            <Card title="Click rate" padded>
+              <p className="bp__bigrate">{pct(r.click_through)}</p>
+              <p className="an__note">Clicks per profile view.</p>
+            </Card>
+            <Card title="Swipe right rate" padded>
+              <p className="bp__bigrate">{pct(r.swipe_right)}</p>
+              <p className="an__note">Of everyone who swiped on {name}.</p>
+            </Card>
+            <Card title="Save after seen" padded>
+              <p className="bp__bigrate">{pct(r.save_after_seen)}</p>
+              <p className="an__note">Kept it after being shown it.</p>
+            </Card>
+          </div>
+
+          <div style={{ height: 'var(--space-4)' }} />
+
+          {d.views_by_day?.length ? (
+            <Card title="Views per day">
+              <Sparkline points={d.views_by_day.map((p) => ({ label: p.date, value: p.views }))} />
+            </Card>
+          ) : (
+            <EmptyState title="No views recorded in this window" />
+          )}
+
+          {d.clicks_by_type?.length > 0 && (
+            <>
+              <div style={{ height: 'var(--space-3)' }} />
+              <Card title="What they clicked">
+                <BreakdownBars items={d.clicks_by_type} />
+              </Card>
+            </>
+          )}
+
+          <div style={{ height: 'var(--space-3)' }} />
+          <Notice tone="warning" title="What these numbers are — and are not">
+            <p>{d.coverage?.page_views}</p>
+            <p style={{ marginTop: 8 }}>{d.coverage?.not_tracked}</p>
+          </Notice>
+        </>
+      )}
+    </Card>
+  );
+}
+
 /* ── the screen ──────────────────────────────────────────────────────────── */
 
 export default function BusinessProfile() {
@@ -143,6 +228,13 @@ export default function BusinessProfile() {
     { initialData: null },
   );
 
+  /* what visitors did to this business — a section like any other */
+  const stats = useAsync(
+    async () => (slugParam ? api.get(endpoints.analytics.entity(slugParam), { query: { days: 30 } }) : null),
+    [slugParam],
+    { initialData: null },
+  );
+
   const sections = useMemo(
     () => (Array.isArray(profile.data?.sections) ? profile.data.sections : []),
     [profile.data],
@@ -163,10 +255,11 @@ export default function BusinessProfile() {
   }, [sections]);
 
   useEffect(() => {
-    if (!active && sections.length) setActive(sections[0].table);
+    if (!active && sections.length) setActive(ANALYTICS_KEY);
   }, [sections, active]);
 
-  const current = sections.find((s) => s.table === active) || sections[0] || null;
+  const showingAnalytics = active === ANALYTICS_KEY;
+  const current = showingAnalytics ? null : (sections.find((s) => s.table === active) || sections[0] || null);
 
   const pick = useCallback((table) => {
     setActive(table);
@@ -275,11 +368,22 @@ export default function BusinessProfile() {
                 onClick={() => setNavOpen((v) => !v)}
                 aria-expanded={navOpen}
               >
-                ☰ {current ? current.label : 'Sections'}
+                ☰ {showingAnalytics ? 'Analytics' : current ? current.label : 'Sections'}
                 <span className="bp__navtoggle-count">{sections.length}</span>
               </button>
 
               <nav className={`bp__nav ${navOpen ? 'bp__nav--open' : ''}`}>
+                <div className="bp__navgroup">
+                  <p className="bp__navgroup-title">Performance</p>
+                  <button
+                    type="button"
+                    className={`bp__navitem ${showingAnalytics ? 'bp__navitem--on' : ''}`}
+                    onClick={() => pick(ANALYTICS_KEY)}
+                  >
+                    <span className="bp__navitem-label">Analytics</span>
+                    <span className="bp__navitem-count">{stats.data?.totals?.page_views ?? '—'}</span>
+                  </button>
+                </div>
                 {groups.map(([group, items]) => (
                   <div className="bp__navgroup" key={group}>
                     <p className="bp__navgroup-title">{group}</p>
@@ -300,7 +404,10 @@ export default function BusinessProfile() {
               </nav>
 
               <div className="bp__panel">
-                {current && (
+                {showingAnalytics && (
+                  <AnalyticsPane query={stats} name={profile.data?.entity?.name || slugParam} />
+                )}
+                {!showingAnalytics && current && (
                   <Card
                     title={current.label || current.table}
                     subtitle={<code className="bp__tablename">{current.table}</code>}
