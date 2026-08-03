@@ -31,12 +31,12 @@ fails to save.
 ## Current state
 
 After the routes added on the `claude/cybercheck-modular-react-dashboard-7on41c`
-branch of `gcr-api-clean`, of 69 sections:
+branch of `gcr-api-clean`, of 74 sections:
 
 | | Count |
 |---|---|
-| Wired to routes already live in `gcr-api-clean` | 61 |
-| Need that branch merged and deployed | 7 (Booking Platform + Integrations) |
+| Wired to routes already live in `gcr-api-clean` | 62 |
+| Need that branch merged and deployed | 11 (Booking Platform + Integrations) |
 | Depend on a route that exists nowhere | **1** — SMS / Messaging |
 
 That last one is `routes/messaging.js`, which exists but is deliberately
@@ -114,6 +114,14 @@ exist while a working route was available; this app uses the working one.
   `GET /api/gcr/events` and `GET /api/gcr/specials`.
 - **`entity` exposes `parent_slug` on the API but stores `parent_entity_slug`.**
   The API translates between them; this app uses the API's field name.
+- **`POST /api/admin/sms-blast` silently ignores unknown filter keys.** It
+  destructures `in_town_only`, `tags`, `min_score`, `match_type`, `swiped_right`,
+  `saved` and `category`, and drops everything else without a word — so a filter
+  named wrong does not narrow the audience, it texts everyone opted in. SMS
+  Blasts was sending `city`, `tag` and `min_saves`, none of which the route
+  reads; it now sends only keys the route destructures.
+- **`saved` and `swiped_right` intersect, they do not union.** Sending both
+  means "did both", not "did either". Openings sends one at a time.
 
 ## New: admin routes added to gcr-api-clean
 
@@ -121,13 +129,30 @@ Two routers were added on the `claude/cybercheck-modular-react-dashboard-7on41c`
 branch of `gcr-api-clean`, because the dashboard could not otherwise reach the
 data it needed.
 
-**`/api/admin/platform`** (24 routes) — an admin view over the universal booking
+**`/api/admin/platform`** (42 routes) — an admin view over the universal booking
 engine. `routes/platform.js` owns the model but resolves the business from
 `entity_owners` using the signed-in user, so an admin token cannot read any of
 it. These routes use the same tables (`offerings`, `offering_prices`,
 `bookings`, `booking_calendar`, `promos`, `waivers`, `integrations`) and take
 the slug as a *filter* rather than a security boundary. Every route is
 `adminRequired` — they must never become reachable with an owner token.
+
+The later additions cover the ingestion pipeline rather than the booking model:
+
+| Routes | Tables | Answers |
+|---|---|---|
+| `/parser/{sources,log,platforms}` | `email_parser_log` | which booking system each business is on |
+| `/capacity`, `/capacity/:slug` | `entity`, `offerings` | what each business has |
+| `/availability` | `business_availability` | what is left, per date |
+| `/openings` | `business_availability` + `entity` + `gcr_deals` | what is still sellable |
+| `/calendars/*` | `entity_external_calendars` | external iCal feeds, and a manual sync |
+| `/deals` | `gcr_deals` | what is being promoted |
+
+`POST /calendars/:id/sync` lazily requires `routes/email-parser.js` and calls
+`syncExternalCalendar` in-process. That module is 1,400 lines and holds all 24
+extractors, so requiring it at boot would let a fault in it take the whole admin
+router down; requiring it inside the handler keeps the blast radius to one
+route. The only change made to `email-parser.js` was exporting that function.
 
 **`/api/admin/connections`** (10 routes) — Composio. Nothing existed. Adds the
 curated tool catalog, per-business connection records, the OAuth handshake,
@@ -148,6 +173,33 @@ Model 3 is the one the codebase declares canonical — `routes/platform.js` says
 table; the unit is DATA, never a separate table."* The Booking Platform section
 group is built on model 3. Platform → Bookings still shows models 1 and 2,
 because live data may exist in them.
+
+## How availability is actually computed
+
+Worth stating plainly, because several screens only make sense against it and
+it is deliberately not an API integration:
+
+1. A business forwards or BCCs its booking confirmations to
+   `gcr-<slug>@parse.gulfcoastradar.com`. `routes/email-parser.js` recognises 24
+   platforms — FareHarbor, Peek Pro, Rezdy, Bókun, Airbnb, VRBO, OpenTable,
+   Toast and the rest — and extracts date, time, party size and guest.
+2. That parsed booking is subtracted from `entity.daily_capacity` into a
+   `business_availability` row, and mirrored into `booking_calendar`.
+3. Separately, an external iCal feed (`entity_external_calendars`) is polled
+   hourly and every date it claims is blocked in both tables.
+4. A date in the next few days with spots left is an **opening**, which can be
+   published as a `gcr_deals` row or texted to guests who already saved that
+   business.
+
+The consequence worth knowing: **a business with no `daily_capacity` can never
+report an opening**, however many confirmations it forwards — the parser has
+nothing to subtract from, so `remaining_spots` stays null. Booking Platform →
+Inventory & Capacity exists to make that blank visible.
+
+There is deliberately no live API integration with Peek Pro, FareHarbor or
+Thoroughbred, and none is needed for this. Booking Platform → Booking Sources
+answers "what is this business on?" from the emails that actually arrived,
+which is a stronger signal than a field someone remembered to set.
 
 ## Open question: two app catalogues
 

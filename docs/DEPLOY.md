@@ -8,12 +8,13 @@ Both repos use the same branch name: `claude/cybercheck-modular-react-dashboard-
 
 ## 1 · Database
 
-Two SQL files, both re-runnable. Run them against the **GCR Supabase** project
+Three SQL files, all re-runnable. Run them against the **GCR Supabase** project
 (the one behind `GCR_SUPABASE_URL`).
 
 ```bash
 psql "$GCR_DATABASE_URL" -f sql/admin_dashboard_gaps.sql
 psql "$GCR_DATABASE_URL" -f sql/composio_connections.sql
+psql "$GCR_DATABASE_URL" -f sql/booking_ingestion.sql
 ```
 
 Or paste each into the Supabase SQL editor.
@@ -22,6 +23,14 @@ Or paste each into the Supabase SQL editor.
 |---|---|
 | `admin_dashboard_gaps.sql` | `community_photos`, `category_cards`, and makes sure `platform_settings` and `business_leads` exist |
 | `composio_connections.sql` | `platform_connections`, `platform_connection_categories`, `entity_connections` |
+| `booking_ingestion.sql` | `entity.daily_capacity` / `entity.capacity_per_slot`, then reports any ingestion table that is absent |
+
+`booking_ingestion.sql` deliberately creates no tables. The ingestion views read
+`email_parser_log`, `business_availability`, `booking_calendar`,
+`entity_external_calendars` and `gcr_deals` — all of which the live pipeline
+already writes daily, and none of which has a definition in this repo. It adds
+the two capacity columns and then *prints* anything missing rather than guessing
+a shape for a table that is already in production.
 
 Both use `create table if not exists` and `add column if not exists`, so running
 them twice is harmless, and running them after the owner-dashboard package's
@@ -47,12 +56,17 @@ in `server.js`; nothing existing is modified.
 
 | Router | Mounted at | Gives you |
 |---|---|---|
-| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations |
+| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations, plus the ingestion views: parser sources, capacity, availability, openings, iCal feeds, deals |
 | `routes/composio.js` | `/api/admin/connections` | Composio catalog and connections |
 | `routes/admin-settings.js` | `/api/admin` | settings, provider status, business leads, guest photos, category cards |
 
 `mount()` already skips a route file that fails to load rather than taking the
 API down, so a bad deploy degrades instead of going dark.
+
+One existing file changed, by one line: `routes/email-parser.js` now also
+exports `syncExternalCalendar`, so `POST /api/admin/platform/calendars/:id/sync`
+can run a feed in-process instead of making an HTTP call back to the same
+server. Nothing in that module's behaviour changed.
 
 ### Environment
 
@@ -129,9 +143,18 @@ commented out in `server.js`, with a note that its tables are not in the live
 database. Making it work means creating those tables and mounting it — a
 feature build, not a gap-fill, so it was left alone. The screen says so.
 
-**Peek Pro.** No integration exists anywhere in the API. `routes/fareharbor.js`
-is the template if you want one; it would write to the same `integrations`
-table the dashboard already reads.
+**A business with no capacity on file.** It will forward confirmations, they
+will parse, and it will still never appear under Openings — the parser has
+nothing to subtract from, so `remaining_spots` stays null. Booking Platform →
+Inventory & Capacity lists exactly those businesses; that list should be empty
+before anyone judges Openings as broken.
+
+**Live API integrations with Peek Pro, FareHarbor and the rest.** There aren't
+any, and for availability there don't need to be — those platforms are read
+through the email parser, which recognises 24 of them. Booking Platform →
+Booking Sources shows which one each business is actually on, derived from the
+emails that arrived. `routes/fareharbor.js` is the template if a real API
+connection is ever wanted for something the parser can't give you.
 
 **The booking tables.** `offerings`, `bookings`, `booking_calendar`, `promos`
 and `waivers` are written by `routes/platform.js` but are not in `schema.sql`,
@@ -143,7 +166,8 @@ shows "table not present" — so the first load tells you the truth.
 
 ## Rollback
 
-The API changes are three new files and three `mount()` lines. Reverting the
-merge removes them; nothing existing was modified, and no migration drops or
-alters an existing column. The SQL only adds tables, so it can be left in place
-safely even if the API is rolled back.
+The API changes are three new files, three `mount()` lines, and one added
+`module.exports` line in `routes/email-parser.js`. Reverting the merge removes
+them; no existing behaviour was modified and no migration drops or alters an
+existing column. The SQL only adds tables and columns, so it can be left in
+place safely even if the API is rolled back.

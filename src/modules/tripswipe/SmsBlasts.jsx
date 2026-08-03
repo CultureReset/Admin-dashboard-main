@@ -8,9 +8,15 @@
  * Previewing before sending is enforced in the UI: the send button stays
  * disabled until the audience has been counted, because this action texts real
  * people and cannot be undone.
+ *
+ * The filters below are exactly the keys routes/admin.js destructures. That
+ * matters more than it looks: the route ignores unknown keys without a word,
+ * so a filter named something the API doesn't read doesn't narrow the
+ * audience — it quietly texts everyone who opted in.
  */
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge, Button, Card, ErrorState, LoadingBlock, Notice, PageHeader } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
 import { useConfirm } from '../../ui/Modal.jsx';
@@ -25,7 +31,15 @@ const MAX_SMS_LENGTH = 160;
 export default function SmsBlasts() {
   const toast = useToast();
   const [message, setMessage] = useState('');
-  const [filters, setFilters] = useState({ city: '', tag: '', min_saves: '' });
+  const [filters, setFilters] = useState({
+    in_town_only: true,
+    tags: '',
+    min_score: '',
+    match_type: 'any',
+    category: '',
+    interested_in: '',
+    interest_signal: 'saved',
+  });
   const [audience, setAudience] = useState(null);
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
@@ -37,10 +51,31 @@ export default function SmsBlasts() {
     { initialData: [] },
   );
 
-  const body = () => ({
-    message,
-    ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '')),
-  });
+  /**
+   * Exactly the shape /api/admin/sms-blast destructures. It ignores anything
+   * else silently, so a filter named wrong doesn't narrow the audience — it
+   * texts everybody. Every key here is one the API actually reads.
+   */
+  const body = () => {
+    const out = { message, in_town_only: filters.in_town_only };
+
+    const tags = filters.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length) {
+      out.tags = tags;
+      out.match_type = filters.match_type;
+      if (filters.min_score !== '') out.min_score = Number(filters.min_score);
+    }
+    if (filters.category) out.category = filters.category;
+    if (filters.interested_in) {
+      // The API intersects `saved` and `swiped_right`, so sending both would
+      // mean "did both" rather than "did either" — one signal at a time.
+      out[filters.interest_signal === 'saved' ? 'saved' : 'swiped_right'] = [filters.interested_in];
+    }
+    return out;
+  };
 
   const preview = async () => {
     setPreviewing(true);
@@ -126,36 +161,90 @@ export default function SmsBlasts() {
 
             <div className="ui-form__grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
               <div className="ui-field">
-                <label className="ui-field__label" htmlFor="blast-city">City</label>
-                <input
-                  id="blast-city"
-                  className="ui-input"
-                  value={filters.city}
-                  placeholder="Any city"
-                  onChange={(e) => setFilter('city', e.target.value)}
-                />
+                <label className="ui-field__label" htmlFor="blast-intown">Who</label>
+                <select
+                  id="blast-intown"
+                  className="ui-input ui-input--select"
+                  value={filters.in_town_only ? 'in_town' : 'everyone'}
+                  onChange={(e) => setFilter('in_town_only', e.target.value === 'in_town')}
+                >
+                  <option value="in_town">In town today</option>
+                  <option value="everyone">Everyone opted in</option>
+                </select>
+                <p className="ui-field__help">Always limited to guests who opted in and have a phone.</p>
               </div>
               <div className="ui-field">
-                <label className="ui-field__label" htmlFor="blast-tag">Interest tag</label>
+                <label className="ui-field__label" htmlFor="blast-tags">Interest tags</label>
                 <input
-                  id="blast-tag"
+                  id="blast-tags"
                   className="ui-input"
-                  value={filters.tag}
-                  placeholder="Any interest"
-                  onChange={(e) => setFilter('tag', e.target.value)}
+                  value={filters.tags}
+                  placeholder="seafood, fishing"
+                  onChange={(e) => setFilter('tags', e.target.value)}
                 />
+                <p className="ui-field__help">Comma separated. Blank means any interest.</p>
               </div>
               <div className="ui-field">
-                <label className="ui-field__label" htmlFor="blast-saves">Minimum saves</label>
+                <label className="ui-field__label" htmlFor="blast-match">Tag match</label>
+                <select
+                  id="blast-match"
+                  className="ui-input ui-input--select"
+                  value={filters.match_type}
+                  disabled={!filters.tags.trim()}
+                  onChange={(e) => setFilter('match_type', e.target.value)}
+                >
+                  <option value="any">Any of them</option>
+                  <option value="all">All of them</option>
+                </select>
+              </div>
+              <div className="ui-field">
+                <label className="ui-field__label" htmlFor="blast-score">Minimum interest score</label>
                 <input
-                  id="blast-saves"
+                  id="blast-score"
                   className="ui-input"
                   type="number"
                   min="0"
-                  value={filters.min_saves}
+                  value={filters.min_score}
                   placeholder="0"
-                  onChange={(e) => setFilter('min_saves', e.target.value)}
+                  disabled={!filters.tags.trim()}
+                  onChange={(e) => setFilter('min_score', e.target.value)}
                 />
+              </div>
+              <div className="ui-field">
+                <label className="ui-field__label" htmlFor="blast-category">Category engaged with</label>
+                <input
+                  id="blast-category"
+                  className="ui-input"
+                  value={filters.category}
+                  placeholder="restaurant, activity…"
+                  onChange={(e) => setFilter('category', e.target.value)}
+                />
+              </div>
+              <div className="ui-field">
+                <label className="ui-field__label" htmlFor="blast-interest">Interested in one business</label>
+                <div className="row" style={{ gap: 6 }}>
+                  <select
+                    className="ui-input ui-input--select"
+                    style={{ width: 'auto' }}
+                    value={filters.interest_signal}
+                    aria-label="Interest signal"
+                    onChange={(e) => setFilter('interest_signal', e.target.value)}
+                  >
+                    <option value="saved">Saved</option>
+                    <option value="swiped_right">Swiped right</option>
+                  </select>
+                  <input
+                    id="blast-interest"
+                    className="ui-input mono"
+                    value={filters.interested_in}
+                    placeholder="entity slug"
+                    onChange={(e) => setFilter('interested_in', e.target.value)}
+                  />
+                </div>
+                <p className="ui-field__help">
+                  To text about one business&apos;s last-minute opening, use{' '}
+                  <Link to="/booking/openings">Openings</Link> — it fills this in for you.
+                </p>
               </div>
             </div>
 

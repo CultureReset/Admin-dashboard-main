@@ -234,6 +234,46 @@ const definitions = [
     load: () => import('./booking/Sources.jsx'),
   },
   {
+    id: 'booking-feeds',
+    label: 'Calendar Feeds',
+    icon: '🔄',
+    group: 'booking',
+    path: '/booking/feeds',
+    description:
+      'External iCal links from Airbnb, VRBO and the rest — the second way dates get claimed, polled hourly.',
+    load: () => import('./booking/CalendarFeeds.jsx'),
+  },
+  {
+    id: 'booking-inventory',
+    label: 'Inventory & Capacity',
+    icon: '🚤',
+    group: 'booking',
+    path: '/booking/inventory',
+    description:
+      'What each business actually has — the daily capacity the parser counts down from, and the offerings catalog beside it.',
+    load: () => import('./booking/Inventory.jsx'),
+  },
+  {
+    id: 'booking-availability',
+    label: 'Availability',
+    icon: '📊',
+    group: 'booking',
+    path: '/booking/availability',
+    description:
+      'Capacity minus what has been booked, per business per date, from the parser, the iCal import and hand edits.',
+    load: () => import('./booking/Availability.jsx'),
+  },
+  {
+    id: 'booking-openings',
+    label: 'Openings',
+    icon: '⚡',
+    group: 'booking',
+    path: '/booking/openings',
+    description:
+      'Near-term dates that still have spots — post a last-minute deal, or text the guests who already saved that business.',
+    load: () => import('./booking/Openings.jsx'),
+  },
+  {
     id: 'booking-connections',
     label: 'Connections',
     icon: '🔌',

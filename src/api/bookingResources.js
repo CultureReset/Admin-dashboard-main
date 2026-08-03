@@ -65,6 +65,68 @@ export const waiversResource = createResource({
   listKeys: ['waivers'],
 });
 
+/**
+ * External iCal feeds — the second way dates get claimed, alongside the email
+ * parser. A business pastes their Airbnb/VRBO/Google .ics export URL and a
+ * cron polls it. Note this is the FEED list, not the date claims those feeds
+ * write; those are `bookingCalendarResource` above.
+ */
+export const icalFeedsResource = createResource({
+  name: 'Calendar feed',
+  listPath: () => ep.bookingPlatform.icalFeeds(),
+  createPath: () => ep.bookingPlatform.icalFeeds(),
+  itemPath: (id) => ep.bookingPlatform.icalFeed(id),
+  listKeys: ['calendars'],
+  itemKeys: ['calendar'],
+  updateMethod: 'PATCH',
+});
+
+/** gcr_deals — what gets published when a date has spots left. */
+export const dealsResource = createResource({
+  name: 'Deal',
+  listPath: () => ep.bookingPlatform.deals(),
+  createPath: () => ep.bookingPlatform.deals(),
+  itemPath: (id) => ep.bookingPlatform.deal(id),
+  listKeys: ['deals'],
+  itemKeys: ['deal'],
+  updateMethod: 'PATCH',
+});
+
+/** Where a feed's dates come from. Free text on the row; these are the ones seen. */
+export const ICAL_PROVIDERS = [
+  { value: 'airbnb', label: 'Airbnb' },
+  { value: 'vrbo', label: 'VRBO' },
+  { value: 'booking_com', label: 'Booking.com' },
+  { value: 'google', label: 'Google Calendar' },
+  { value: 'other', label: 'Other' },
+];
+
+/** Deal types the public /deals feed renders. */
+export const DEAL_TYPES = [
+  { value: 'last_minute', label: 'Last minute' },
+  { value: 'charter_opening', label: 'Charter opening' },
+  { value: 'rental_gap', label: 'Rental gap' },
+  { value: 'happy_hour', label: 'Happy hour' },
+  { value: 'special', label: 'Special' },
+];
+
+/** business_availability.status, as written by the parser and the iCal import. */
+export const AVAILABILITY_STATUSES = [
+  { value: 'available', label: 'Available' },
+  { value: 'limited', label: 'Limited' },
+  { value: 'full', label: 'Full' },
+  { value: 'blocked', label: 'Blocked' },
+  { value: 'unknown', label: 'Unknown' },
+];
+
+export const AVAILABILITY_STATUS_TONES = {
+  available: 'success',
+  limited: 'warning',
+  full: 'danger',
+  blocked: 'neutral',
+  unknown: 'neutral',
+};
+
 /* ── shared vocabulary ───────────────────────────────────────────────── */
 //
 // Mirrors OFFERING_KINDS and the unit list in routes/admin-platform.js. The

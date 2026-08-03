@@ -511,6 +511,37 @@ export const endpoints = {
     parserPlatforms: () => `${ADMIN}/platform/parser/platforms`,
     /** Third-party connections per business (FareHarbor and anything else). */
     integrations: () => `${ADMIN}/platform/integrations`,
+
+    /**
+     * Inventory and capacity — what a business actually has.
+     *
+     * The parser can log a confirmation without knowing how many spots are
+     * left; it can only subtract once entity.daily_capacity is set. `capacity`
+     * lists every business against that number plus its offerings catalog, so
+     * the businesses that can never report availability are visible.
+     */
+    capacity: () => `${ADMIN}/platform/capacity`,
+    businessCapacity: (slug) => `${ADMIN}/platform/capacity/${seg(slug)}`,
+
+    /** business_availability across every business, not one at a time. */
+    availability: () => `${ADMIN}/platform/availability`,
+    availabilityRow: (id) => `${ADMIN}/platform/availability/${seg(id)}`,
+
+    /** Near-term dates with spots left — the outreach worklist. */
+    openings: () => `${ADMIN}/platform/openings`,
+
+    /**
+     * External iCal feeds — the second ingestion path beside the parser.
+     * Note this is `calendars` (the feeds), not `calendar` (the date claims
+     * they write into). Both exist and they are different things.
+     */
+    icalFeeds: () => `${ADMIN}/platform/calendars`,
+    icalFeed: (id) => `${ADMIN}/platform/calendars/${seg(id)}`,
+    icalFeedSync: (id) => `${ADMIN}/platform/calendars/${seg(id)}/sync`,
+
+    /** gcr_deals — the outbound side of an opening. */
+    deals: () => `${ADMIN}/platform/deals`,
+    deal: (id) => `${ADMIN}/platform/deals/${seg(id)}`,
   },
 
   /** Composio connections — /api/admin/connections. */
