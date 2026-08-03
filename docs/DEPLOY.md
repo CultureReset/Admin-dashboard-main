@@ -17,6 +17,7 @@ psql "$GCR_DATABASE_URL" -f sql/composio_connections.sql
 psql "$GCR_DATABASE_URL" -f sql/booking_ingestion.sql
 psql "$GCR_DATABASE_URL" -f sql/capability_tables.sql
 psql "$GCR_DATABASE_URL" -f sql/capability_seed.sql
+psql "$GCR_DATABASE_URL" -f sql/menu_normalization.sql
 ```
 
 Or paste each into the Supabase SQL editor.
@@ -28,6 +29,12 @@ Or paste each into the Supabase SQL editor.
 | `booking_ingestion.sql` | `entity.daily_capacity` / `entity.capacity_per_slot`, then reports any ingestion table that is absent |
 | `capability_tables.sql` | 18 tables of structured listing data — `units`, `boats`, `trips`, `gear`, `packages`, `spaces`, `entity_operations` and their joins. Named after the thing, not the industry; any slug can use any of them |
 | `capability_seed.sql` | the catalogs they join to — 128 amenities, 20 fish species, 20 activities |
+| `menu_normalization.sql` | `service_periods`, `menu_item_prices`, `dietary_tags` + `menu_item_dietary`, and a nullable `menu_sections.service_period_id`. **Additive only** — it touches live menu tables and drops nothing |
+
+Every SQL file is checked by `npm run check:sql` in gcr-api-clean, which fails
+on a `drop table`, `drop column`, `truncate` or `delete from` anywhere in
+`sql/`. These tables hold live menus and bookings; the rule is add, never
+replace.
 
 `booking_ingestion.sql` deliberately creates no tables. The ingestion views read
 `email_parser_log`, `business_availability`, `booking_calendar`,

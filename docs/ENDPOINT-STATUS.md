@@ -246,7 +246,7 @@ units are free.
 
 `entity` holds what every business has — name, phone, hours, hero image. It does
 not hold bedrooms, boat length or whether there is a head on board.
-`sql/capability_tables.sql` does, in **18 real tables with real typed columns**.
+`sql/capability_tables.sql` does, in **23 real tables with real typed columns**.
 
 **A table is named after the thing, not the industry.** A boat is a boat whether
 a fishing charter, a dolphin cruise or a pontoon rental owns it:
@@ -255,7 +255,8 @@ a fishing charter, a dolphin cruise or a pontoon rental owns it:
 |---|---|
 | `entity_operations` | one optional row per business — crew, licences, what's included, rules, deposits, the building |
 | `units` + `unit_beds` + `unit_amenities` | anything with bedrooms |
-| `boats` + `boat_amenities` | anything that floats and carries people |
+| `vessels` + `vessel_amenities` | anything that floats and carries people — a 65ft Viking, a 22ft tritoon, a 56ft catamaran |
+| `service_periods` + `service_period_days` | when breakfast, lunch and dinner are served |
 | `trips` | anything with a departure time and a duration |
 | `gear` | anything you rent that is not a boat or a unit |
 | `packages` | a priced thing with a duration but no departure |
@@ -278,6 +279,24 @@ could not express a marina that also rents pontoons.
 lists. Lists are join tables. (Pre-existing jsonb that is NOT part of this:
 `offerings.details` and `booking_calendar.details`, written by
 `routes/platform.js`, and `platform_settings.value`.)
+
+**Repeating groups get their own table.** A menu item's prices are
+"Small $9 / Large $14"; its dietary tags are gluten-free AND vegetarian. One
+column cannot hold either, and a comma-separated string cannot be searched or
+summed — so `menu_item_prices` and `dietary_tags` + `menu_item_dietary` exist,
+added alongside the live `menu_items.price` and `.tags`, which are untouched.
+
+**Service periods are recorded once, not per item.** The times breakfast is
+served are a fact about the restaurant. `service_periods` holds them per
+business, `menu_sections.service_period_id` points at one, and every item in
+that section inherits it. Nobody types 7–11 onto forty items, and changing the
+time is one edit instead of forty. `service_period_days` handles "brunch is
+Saturday and Sunday only".
+
+**Nothing is ever dropped.** `sql/menu_normalization.sql` is `create table if
+not exists` and `add column if not exists` throughout, against tables that hold
+live menus. `npm run check:sql` fails the build on a `drop table`, `drop
+column`, `truncate` or `delete from` in any SQL file — confirmed by adding one.
 
 **Filters are named `capability.column`** — `units.bedrooms`, `boats.length_ft`,
 `trips.duration_hours` — so the same column name on two capabilities is two
