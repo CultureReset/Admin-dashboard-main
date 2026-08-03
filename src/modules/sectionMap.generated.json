@@ -162,7 +162,9 @@
     ],
     "gcr-business-profile": [
       "analytics.entity",
+      "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.row",
       "entities.list"
     ],
     "engagement-behaviour": [
@@ -171,7 +173,9 @@
     ],
     "gcr-business-profile-slug": [
       "analytics.entity",
+      "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.row",
       "entities.list"
     ],
     "gcr-site-editor": [

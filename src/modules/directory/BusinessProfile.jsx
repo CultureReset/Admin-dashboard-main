@@ -37,7 +37,11 @@ import {
   LoadingBlock, ErrorState, EmptyState, SearchInput,
 } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
+import { SchemaForm } from '../../ui/SchemaForm.jsx';
+import { Modal } from '../../ui/Modal.jsx';
+import { useToast } from '../../ui/Toast.jsx';
 import { Sparkline, BreakdownBars } from '../engagement/charts.jsx';
+import { fields } from '../../lib/fields.jsx';
 import '../engagement/charts.css';
 import './BusinessProfile.css';
 
@@ -116,6 +120,85 @@ function SingleRow({ section }) {
       ))}
     </dl>
   );
+}
+
+
+/* ── editing ─────────────────────────────────────────────────────────────── */
+
+/**
+ * Build a form from the table's own columns.
+ *
+ * The field TYPE comes from the schema the API reported, so a numeric column
+ * gets a number input and a boolean gets a switch without anyone writing a
+ * form for that table. Identity and bookkeeping columns are omitted — the API
+ * refuses to write them anyway, so offering them would be a lie.
+ */
+const NOT_EDITABLE = new Set(['id', 'entity_slug', 'entity_id', 'site_id', 'created_at', 'updated_at']);
+
+function fieldFor(col) {
+  const label = col.name.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  const t = String(col.type || 'text').toLowerCase();
+
+  if (t === 'boolean') return fields.bool(col.name, label);
+  if (t === 'integer' || t === 'bigint' || t === 'smallint') return fields.number(col.name, label, { step: 1 });
+  if (t === 'number' || t === 'numeric' || t === 'double precision' || t === 'real') {
+    return fields.money(col.name, label);
+  }
+  if (t === 'date') return fields.date(col.name, label);
+  if (t === 'time' || t === 'time without time zone') return fields.time(col.name, label);
+  if (t.startsWith('timestamp') || t === 'date-time') return fields.datetime(col.name, label);
+  if (t === 'json' || t === 'jsonb' || t === 'object') return fields.json(col.name, label);
+  if (t === 'array') return fields.tags(col.name, label);
+  if (/url$/i.test(col.name) || /_url_/i.test(col.name)) return fields.url(col.name, label);
+  if (/email/i.test(col.name)) return fields.email(col.name, label);
+  if (/phone|tel/i.test(col.name)) return fields.tel(col.name, label);
+  if (/description|notes|text|body|summary/i.test(col.name)) return fields.textarea(col.name, label);
+  return fields.text(col.name, label);
+}
+
+/**
+ * Field order, since the schema returns columns in whatever order the table
+ * declares them — which put "Zip" above "Name" on a resource. What a person
+ * uses to recognise the row goes first, long prose last, everything else in
+ * between.
+ */
+const FIRST = ['name', 'title', 'label', 'slug', 'headline', 'subtitle'];
+
+function fieldRank(col) {
+  const i = FIRST.indexOf(col.name);
+  if (i !== -1) return i;
+  const t = String(col.type || '').toLowerCase();
+  if (t === 'json' || t === 'jsonb' || t === 'object' || t === 'array') return 900;
+  if (/description|notes|body|summary|text$/i.test(col.name)) return 800;
+  return 100;
+}
+
+function schemaFor(section) {
+  const cols = (section.columns || [])
+    .filter((c) => !NOT_EDITABLE.has(c.name))
+    .slice()
+    .sort((a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name));
+  // Fall back to the keys actually present if the schema said nothing, and
+  // infer each type from its value — otherwise a boolean renders as the text
+  // "true" in a text box, which is both ugly and a way to write the string
+  // "true" into a boolean column.
+  if (!cols.length && section.rows?.length) {
+    const sample = section.rows[0];
+    const inferred = Object.keys(sample)
+      .filter((k) => !NOT_EDITABLE.has(k))
+      .map((name) => {
+        const v = sample[name];
+        const type = typeof v === 'boolean' ? 'boolean'
+          : typeof v === 'number' ? (Number.isInteger(v) ? 'integer' : 'number')
+          : Array.isArray(v) ? 'array'
+          : v && typeof v === 'object' ? 'object'
+          : 'text';
+        return { name, type };
+      });
+    inferred.sort((a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name));
+    return inferred.map(fieldFor);
+  }
+  return cols.map(fieldFor);
 }
 
 /** Sentinel for the analytics pane, which is not a table. */
@@ -211,6 +294,8 @@ export default function BusinessProfile() {
   const [active, setActive] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
   const [showEmpty, setShowEmpty] = useState(false);
+  const [editing, setEditing] = useState(null);   // { section, row } | { section, row: null } for new
+  const toast = useToast();
 
   /* business picker — only when no slug is chosen */
   const list = useAsync(
@@ -265,6 +350,30 @@ export default function BusinessProfile() {
     setActive(table);
     setNavOpen(false);
   }, []);
+
+  const saveRow = useCallback(async (values) => {
+    const { section, row } = editing;
+    const isNew = !row?.id;
+    const res = isNew
+      ? await api.post(endpoints.businessProfile.createRow(slugParam, section.table), values)
+      : await api.patch(endpoints.businessProfile.row(slugParam, section.table, row.id), values);
+
+    // The API reports fields it refused rather than silently dropping them.
+    if (res?.ignored?.length) {
+      toast.info(`Saved. Ignored: ${res.ignored.join(', ')}`);
+    } else {
+      toast.success(isNew ? 'Row added' : 'Saved');
+    }
+    setEditing(null);
+    profile.run();
+  }, [editing, slugParam, profile, toast]);
+
+  const deleteRow = useCallback(async (section, row) => {
+    if (!row?.id) return;
+    await api.del(endpoints.businessProfile.row(slugParam, section.table, row.id));
+    toast.success('Deleted');
+    profile.run();
+  }, [slugParam, profile, toast]);
 
   /* ── no business chosen yet ─────────────────────────────────────────── */
 
@@ -411,7 +520,12 @@ export default function BusinessProfile() {
                   <Card
                     title={current.label || current.table}
                     subtitle={<code className="bp__tablename">{current.table}</code>}
-                    actions={<Badge tone={current.count ? 'success' : 'neutral'}>{current.count} rows</Badge>}
+                    actions={
+                      <>
+                        <Badge tone={current.count ? 'success' : 'neutral'}>{current.count} rows</Badge>
+                        <Button onClick={() => setEditing({ section: current, row: null })}>Add</Button>
+                      </>
+                    }
                   >
                     {current.error && (
                       <Notice tone="warning" title="This table could not be read">
@@ -425,11 +539,33 @@ export default function BusinessProfile() {
                       />
                     )}
                     {!current.error && current.count > 0 && current.rows.length === 1 && (
-                      <SingleRow section={current} />
+                      <>
+                        <SingleRow section={current} />
+                        <div className="bp__rowactions">
+                          <Button variant="ghost" onClick={() => setEditing({ section: current, row: current.rows[0] })}>
+                            Edit
+                          </Button>
+                        </div>
+                      </>
                     )}
                     {!current.error && current.count > 0 && current.rows.length > 1 && (
                       <DataTable
-                        columns={columnsFor(current)}
+                        columns={[
+                          ...columnsFor(current),
+                          {
+                            key: '__edit',
+                            header: '',
+                            width: '108px',
+                            align: 'right',
+                            render: (row) => (
+                              <span className="bp__rowactions">
+                                <Button variant="ghost" onClick={() => setEditing({ section: current, row })}>
+                                  Edit
+                                </Button>
+                              </span>
+                            ),
+                          },
+                        ]}
                         rows={current.rows}
                         pageSize={25}
                         searchable
@@ -445,6 +581,37 @@ export default function BusinessProfile() {
                 )}
               </div>
             </div>
+          )}
+
+          {editing && (
+            <Modal
+              open
+              title={`${editing.row ? 'Edit' : 'New'} ${editing.section.label || editing.section.table}`}
+              subtitle={editing.section.table}
+              onClose={() => setEditing(null)}
+              size="lg"
+            >
+              <SchemaForm
+                schema={schemaFor(editing.section)}
+                initialValues={editing.row || {}}
+                onSubmit={saveRow}
+                onCancel={() => setEditing(null)}
+                submitLabel={editing.row ? 'Save changes' : 'Add row'}
+                extraActions={
+                  editing.row?.id ? (
+                    <Button
+                      variant="danger"
+                      onClick={async () => {
+                        await deleteRow(editing.section, editing.row);
+                        setEditing(null);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  ) : null
+                }
+              />
+            </Modal>
           )}
         </>
       )}

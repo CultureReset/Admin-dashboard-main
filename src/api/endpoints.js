@@ -154,6 +154,13 @@ export const endpoints = {
   businessProfile: {
     get: (slug) => `${ADMIN}/gcr/profile/${seg(slug)}`,
     schema: () => `${ADMIN}/gcr/profile-schema`,
+    /**
+     * Writes are pinned to the slug in the path, never to anything in the
+     * body, and the API checks the table against the live schema before
+     * touching it — so a row belonging to another business cannot be reached.
+     */
+    createRow: (slug, table) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}`,
+    row: (slug, table, id) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}/${seg(id)}`,
   },
 
   /** Collections that each have their own dedicated route pair. */
