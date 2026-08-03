@@ -155,6 +155,24 @@ const definitions = [
     load: () => import('./directory/EntityEditor.jsx'),
   },
   {
+    id: 'gcr-business-profile',
+    label: 'Business Profiles',
+    icon: '🗂️',
+    group: 'directory',
+    path: '/directory/profile',
+    description:
+      "Open any business and see its own dashboard — every table holding its data, discovered from the schema rather than listed in code.",
+    load: () => import('./directory/BusinessProfile.jsx'),
+  },
+  {
+    id: 'gcr-business-profile-slug',
+    label: 'Business Profiles',
+    group: 'directory',
+    path: '/directory/profile/:slug',
+    hidden: true,
+    load: () => import('./directory/BusinessProfile.jsx'),
+  },
+  {
     id: 'gcr-site-editor',
     label: 'Site Editor',
     icon: '🎨',

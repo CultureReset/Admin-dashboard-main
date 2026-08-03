@@ -142,6 +142,20 @@ export const endpoints = {
     singleton: (slug, kind) => `${ADMIN}/gcr/entities/${seg(slug)}/profile-singleton/${seg(kind)}`,
   },
 
+  /**
+   * One business as its own dashboard would show it.
+   *
+   * `businessProfile` returns every slug-keyed table that has rows for this
+   * business, discovered from the live schema on each request — so a table
+   * added to the database appears here with no deploy. `profileSchema` reports
+   * what the discovery step currently sees, which is how you answer "why isn't
+   * my new table showing up".
+   */
+  businessProfile: {
+    get: (slug) => `${ADMIN}/gcr/profile/${seg(slug)}`,
+    schema: () => `${ADMIN}/gcr/profile-schema`,
+  },
+
   /** Collections that each have their own dedicated route pair. */
   collections: {
     pricingItems: {

@@ -160,6 +160,14 @@
       "specials.create",
       "specials.update"
     ],
+    "gcr-business-profile": [
+      "businessProfile.get",
+      "entities.list"
+    ],
+    "gcr-business-profile-slug": [
+      "businessProfile.get",
+      "entities.list"
+    ],
     "gcr-site-editor": [
       "categoryCards.create",
       "categoryCards.item",

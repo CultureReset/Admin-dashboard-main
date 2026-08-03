@@ -1,0 +1,204 @@
+/* Business Profile — a dashboard nested inside the dashboard.
+   Desktop puts the business's own nav in a column beside its content; below
+   900px that column becomes a drawer behind a second hamburger, because a
+   phone has no room for the admin nav and the business nav at once. */
+
+.bp__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* ── layout ─────────────────────────────────────────────────────────────── */
+
+.bp__layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.bp__panel { min-width: 0; }          /* lets wide tables scroll, not push */
+
+.bp__navtoggle { display: none; }
+
+/* ── the business's own nav ─────────────────────────────────────────────── */
+
+.bp__nav {
+  position: sticky;
+  top: var(--space-3);
+  max-height: calc(100vh - 2 * var(--space-3));
+  overflow-y: auto;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  padding: var(--space-2);
+}
+
+.bp__navgroup + .bp__navgroup { margin-top: var(--space-3); }
+
+.bp__navgroup-title {
+  margin: 0 0 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.bp__navitem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bp__navitem:hover { background: var(--hover-bg, rgba(255, 255, 255, 0.05)); }
+
+.bp__navitem--on {
+  background: var(--primary-soft, rgba(99, 102, 241, 0.16));
+  color: var(--primary-text, var(--text));
+  font-weight: 600;
+}
+
+.bp__navitem--empty { opacity: 0.5; }
+
+.bp__navitem-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bp__navitem-count {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── content ────────────────────────────────────────────────────────────── */
+
+.bp__tablename { font-size: 12px; color: var(--text-muted); }
+
+.bp__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.bp__fact dt {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.bp__fact dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.bp__null { color: var(--text-muted); }
+.bp__link { color: var(--primary); overflow-wrap: anywhere; }
+.bp__json { font-size: 11px; color: var(--text-muted); overflow-wrap: anywhere; }
+
+.bp__thumb {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.bp__truncated {
+  margin: var(--space-3) 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── the picker ─────────────────────────────────────────────────────────── */
+
+.bp__picker { list-style: none; margin: 0; padding: 0; }
+
+.bp__picker li + li { border-top: 1px solid var(--card-border); }
+
+.bp__picker button {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bp__picker button:hover { background: var(--hover-bg, rgba(255, 255, 255, 0.04)); }
+
+.bp__picker-name { font-weight: 600; }
+.bp__picker-meta { color: var(--text-muted); font-size: 13px; }
+
+.bp__picker-slug {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── phones: the second hamburger ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .bp__layout { grid-template-columns: minmax(0, 1fr); }
+
+  .bp__navtoggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .bp__navtoggle-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bp__nav {
+    display: none;
+    position: static;
+    max-height: 60vh;
+    margin-bottom: var(--space-3);
+  }
+
+  .bp__nav--open { display: block; }
+
+  .bp__picker button { flex-wrap: wrap; gap: 4px 10px; }
+  .bp__picker-slug { margin-left: 0; width: 100%; }
+}
