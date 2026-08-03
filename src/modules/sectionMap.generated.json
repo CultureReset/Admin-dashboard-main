@@ -61,8 +61,13 @@
       "entities.remove"
     ],
     "gcr-entity-editor": [
-      "bookingPlatform.attributes",
+      "bookingPlatform.amenityCatalog",
+      "bookingPlatform.blueprint",
       "bookingPlatform.businessCalendar",
+      "bookingPlatform.collectionRow",
+      "bookingPlatform.listing",
+      "bookingPlatform.listingAmenities",
+      "bookingPlatform.listingCollection",
       "collections.blog",
       "collections.faqs",
       "collections.policies",
@@ -102,8 +107,13 @@
       "specials.update"
     ],
     "gcr-entity-editor-slug": [
-      "bookingPlatform.attributes",
+      "bookingPlatform.amenityCatalog",
+      "bookingPlatform.blueprint",
       "bookingPlatform.businessCalendar",
+      "bookingPlatform.collectionRow",
+      "bookingPlatform.listing",
+      "bookingPlatform.listingAmenities",
+      "bookingPlatform.listingCollection",
       "collections.blog",
       "collections.faqs",
       "collections.policies",
@@ -279,6 +289,7 @@
       "bookingPlatform.industryCalendar"
     ],
     "booking-match": [
+      "bookingPlatform.amenityCatalog",
       "bookingPlatform.blueprint",
       "bookingPlatform.match",
       "bookingPlatform.verticals"

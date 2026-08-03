@@ -563,15 +563,25 @@ export const endpoints = {
     industryCalendar: () => `${ADMIN}/platform/industry-calendar`,
 
     /**
-     * Structured listing data — what each industry would store if you rebuilt
-     * its platform from scratch. A condo unit holds bedrooms/baths/sleeps/view;
-     * a charter boat holds length/anglers/AC/head. Field definitions live in
-     * `routes/industry-blueprints.js` and are served, not duplicated here,
-     * because a form built from a stale copy asks for fields nothing stores.
+     * Structured listing data, in real tables with real columns —
+     * `stay_units.bedrooms`, `charter_boats.length_ft`,
+     * `venue_spaces.seated_capacity`. The tables are in
+     * `sql/industry_tables.sql`; `routes/industry-blueprints.js` describes
+     * them so a form and a search can be generated, and a build-time check
+     * fails if the description ever names a column the SQL does not create.
      */
     blueprints: () => `${ADMIN}/platform/blueprints`,
     blueprint: (vertical) => `${ADMIN}/platform/blueprint/${seg(vertical)}`,
-    attributes: (slug) => `${ADMIN}/platform/attributes/${seg(slug)}`,
+
+    /** One listing's real row, its amenities, its lists, its units. */
+    listing: (slug) => `${ADMIN}/platform/listing/${seg(slug)}`,
+    listingAmenities: (slug) => `${ADMIN}/platform/listing/${seg(slug)}/amenities`,
+    listingTags: (slug, catalog) => `${ADMIN}/platform/listing/${seg(slug)}/tags/${seg(catalog)}`,
+    listingCollection: (slug, table) => `${ADMIN}/platform/listing/${seg(slug)}/collection/${seg(table)}`,
+    collectionRow: (table, id) => `${ADMIN}/platform/collection/${seg(table)}/${seg(id)}`,
+
+    /** The shared amenity catalog, grouped into the sections guests know. */
+    amenityCatalog: () => `${ADMIN}/platform/amenities`,
 
     /**
      * Description + dates in one question: "a two bed two bath at Phoenix

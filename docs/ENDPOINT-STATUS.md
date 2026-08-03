@@ -129,7 +129,7 @@ Two routers were added on the `claude/cybercheck-modular-react-dashboard-7on41c`
 branch of `gcr-api-clean`, because the dashboard could not otherwise reach the
 data it needed.
 
-**`/api/admin/platform`** (51 routes) — an admin view over the universal booking
+**`/api/admin/platform`** (57 routes) — an admin view over the universal booking
 engine. `routes/platform.js` owns the model but resolves the business from
 `entity_owners` using the signed-in user, so an admin token cannot read any of
 it. These routes use the same tables (`offerings`, `offering_prices`,
@@ -150,9 +150,11 @@ The later additions cover the ingestion pipeline rather than the booking model:
 | `/search`, `/verticals` | all three availability sources + `entity` | what is open on a given date, across every industry |
 | `/business-calendar/:slug` | the three sources + `entity` + `entity_external_calendars` | one business's month, with its units and the feeds that claimed dates |
 | `/industry-calendar` | the three sources + `entity` | one industry's month — how many of its businesses are open each day |
-| `/blueprints`, `/blueprint/:vertical` | code, not a table | what each industry stores — the field list a form is built from |
-| `/attributes/:slug` | `entity_attributes` | the structured listing data for one business and its units |
-| `/match` | `entity_attributes` + the three availability sources | description AND dates in one question |
+| `/blueprints`, `/blueprint/:vertical` | code, describing the SQL | which tables and columns an industry has |
+| `/listing/:slug` (+ `/amenities`, `/tags/:catalog`, `/collection/:table`) | the industry tables | one listing's real row, its amenities, its lists, its units |
+| `/collection/:table/:id` | the collection tables | edit or remove a bed, a trip, a package |
+| `/amenities` | `amenity_sections` + `amenities` | the shared catalog, grouped |
+| `/match` | the industry tables + the three availability sources | description AND dates in one question |
 
 `POST /calendars/:id/sync` lazily requires `routes/email-parser.js` and calls
 `syncExternalCalendar` in-process. That module is 1,400 lines and holds all 24
@@ -249,30 +251,47 @@ perfectly ordinary questions had no answer:
     "a two bedroom two bath at Phoenix West on these nights"
     "a charter for eight, at least eight hours, a 45ft boat with AC and a head"
 
-`routes/industry-blueprints.js` defines what each industry would store if you
-rebuilt its platform from scratch — 31 fields for a stay, 35 for a charter, 20
-for a rental — following what Airbnb, VRBO and FareHarbor actually collect, so a
-business can transcribe an existing listing rather than invent answers.
+`sql/industry_tables.sql` answers them with **27 real tables and real typed
+columns** — what each industry would store if you rebuilt its platform from
+scratch, following what Airbnb, VRBO and FareHarbor actually collect so a
+business can transcribe an existing listing rather than invent answers:
 
-**Why one table and not eight.** A `condo_units` table, a `charter_boats` table
-and six more would each need a migration per new field and a bespoke search per
-vertical. What varies between industries is the FIELD LIST, not the shape of
-storage — every one is (this listing, this attribute, this value). So the field
-list is code, the values are `entity_attributes`, and one route searches them
-all. A new field is one line of JavaScript; a new industry is one entry.
+| Industry | Tables |
+|---|---|
+| Stays | `stay_properties`, `stay_units`, `stay_unit_beds`, + amenity joins |
+| Charters | `charter_operators`, `charter_boats`, `charter_trips`, `fish_species`, `charter_species` |
+| Cruises | `cruise_operators`, `cruise_vessels`, `cruise_trips` |
+| Rentals | `rental_operators`, `rental_items` |
+| Watersports | `watersport_operators`, `watersport_activities` + join |
+| Sessions | `session_providers`, `session_packages`, `session_locations` |
+| Venues | `venue_spaces`, `venue_space_event_types`, + amenity join |
+| Shared | `amenity_sections`, `amenities` (172 seeded rows across 15 sections) |
 
-The cost is that the value cannot be a single typed column, so there are four
-and exactly one is filled per row, chosen by the field's declared type. That is
-what keeps `bedrooms >= 2` an indexed integer comparison instead of a string
-cast, and it is why writes are coerced server-side rather than trusted: a
-`bedrooms` landing in the text column would make every numeric filter silently
-match nothing.
+`bedrooms` is an `integer`, `bathrooms` a `numeric(3,1)` because 2.5 is a real
+answer, `length_ft` a `numeric(5,1)`. Amenities and species are catalogs joined
+through real join tables, never free text, so "who targets red snapper" is an
+index lookup rather than a LIKE over a comma-separated string.
 
-**`applies: 'unit'` matters.** Bedrooms belong to condo 1204, not to the Phoenix
-West building; boat length belongs to the boat, not to the marina. Those are
-child entities and get their own attribute rows, which is also why `/match`
-classifies a matched child by its PARENT's industry — otherwise "2 bed 2 bath"
-finds unit 1204 and then discards it because a `condo_unit` is not a `condo`.
+`routes/industry-blueprints.js` does not store anything — it *describes* those
+tables so a form and a search can be generated from them without a second,
+hand-kept field list. `scripts/check-blueprint-columns.mjs` parses the SQL and
+fails the build if the description ever names a column the schema does not
+create, which is the failure that would otherwise show up as a Postgres error
+in production, per business, at write time.
+
+**The building and the unit are separate on purpose.** A condo complex is one
+`entity`; each unit is its own `entity` with `parent_entity_slug` set. The
+building has the pool and the lazy river (`stay_properties`); the unit has two
+bedrooms (`stay_units`). That is why `/match` classifies a matched child by its
+PARENT's industry — otherwise "2 bed 2 bath" finds unit 1204 and then discards
+it because a `condo_unit` is not a `condo`.
+
+**A name can live on two tables.** `max_anglers` is on both `charter_boats` (what
+the boat holds) and `charter_trips` (what this trip takes). Left alone, which one
+a filter hits would depend on loop order, so duplicates collapse to the first
+occurrence — listing, then its collections, then unit — and the rest are reported
+on `also_on`. For `max_anglers` that resolves to the trip, which is right: "a
+charter for eight" is a question about the trip you can book.
 
 ## Industries
 

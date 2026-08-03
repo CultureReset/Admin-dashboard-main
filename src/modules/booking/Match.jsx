@@ -60,6 +60,20 @@ export default function Match() {
     { initialData: null },
   );
 
+  // Amenity and species filters are joins to a catalog, so their options come
+  // from the database rather than from the blueprint.
+  const catalogQuery = useAsync(
+    async () => api.get(endpoints.bookingPlatform.amenityCatalog()),
+    [],
+    { initialData: null },
+  );
+
+  const catalogs = useMemo(() => {
+    const amenities = (catalogQuery.data?.sections || []).flatMap((s) =>
+      s.amenities.map((a) => ({ value: a.id, label: a.label, group: s.label })));
+    return { listing_amenities: amenities, unit_amenities: amenities };
+  }, [catalogQuery.data]);
+
   const verticals = Array.isArray(verticalsQuery.data?.verticals) ? verticalsQuery.data.verticals : [];
   const searchable = useMemo(
     () => (Array.isArray(blueprintQuery.data?.searchable) ? blueprintQuery.data.searchable : []),
@@ -108,18 +122,24 @@ export default function Match() {
     // Show what was asked for first, then anything else the results carry, so
     // the answer shows its work rather than just asserting a match.
     const seen = new Set(keys);
-    for (const r of results) for (const k of Object.keys(r.attributes || {})) seen.add(k);
-    const ordered = [...keys, ...[...seen].filter((k) => !keys.includes(k))].slice(0, 6);
+    for (const r of results) for (const k of Object.keys(r.record || {})) seen.add(k);
+    // Ids, foreign keys and timestamps are real columns but say nothing to a
+    // person reading a result; the asked-for columns lead, then the rest.
+    const NOISE = /^(id|.*_id|created_at|updated_at|entity_slug|is_active|sort_order)$/;
+    const ordered = [
+      ...keys,
+      ...[...seen].filter((k) => !keys.includes(k) && !NOISE.test(k)),
+    ].slice(0, 6);
     return ordered.map((key) => {
-      const field = searchable.find((s) => s.key === key);
+      const field = searchable.find((s) => s.name === key);
       return {
         key: `attr_${key}`,
         header: field ? field.label : prettify(key),
         hideOn: keys.includes(key) ? undefined : 'narrow',
         sortable: false,
-        value: (row) => String(row.attributes?.[key] ?? ''),
+        value: (row) => String(row.record?.[key] ?? ''),
         render: (row) => {
-          const v = row.attributes?.[key];
+          const v = row.record?.[key];
           if (v === undefined || v === null) return <span className="faint">—</span>;
           if (typeof v === 'boolean') return v ? <Badge tone="success">yes</Badge> : <Badge tone="neutral">no</Badge>;
           if (Array.isArray(v)) return <span style={{ fontSize: 12 }}>{v.map(prettify).join(', ')}</span>;
@@ -142,12 +162,14 @@ export default function Match() {
         <p>
           A two-bed two-bath that is booked all week is not what someone asked for, and a free week
           in a studio is not either. This intersects the{' '}
-          <Link to="/booking/inventory">listing data</Link> with the{' '}
+          <Link to="/directory/entity">listing data</Link> with the{' '}
           <Link to="/booking/availability">calendar</Link> and returns only what satisfies both.
         </p>
         <p style={{ marginTop: 8 }}>
-          The filters below come from the industry&apos;s blueprint. A business with nothing filled
-          in cannot be matched — its Attributes tab is where that gets fixed.
+          Every filter is a real comparison on a real column —
+          <code className="mono"> bedrooms &gt;= 2</code>,
+          <code className="mono"> length_ft &gt;= 45</code>. A business with nothing filled in cannot
+          be matched; its Listing Data tab is where that gets fixed.
         </p>
       </Notice>
 
@@ -218,10 +240,11 @@ export default function Match() {
           >
             {searchable.map((field) => (
               <FilterControl
-                key={field.key}
+                key={field.name}
                 field={field}
-                value={filters[field.key]}
-                onChange={(v) => setFilter(field.key, v)}
+                value={filters[field.name]}
+                onChange={(v) => setFilter(field.name, v)}
+                catalog={catalogs[field.name]}
               />
             ))}
           </div>
@@ -256,7 +279,7 @@ export default function Match() {
               <Card title="Asked for">
                 <div className="row-wrap" style={{ gap: 6 }}>
                   {ran.filters.map((x) => (
-                    <Badge key={x.key} tone="info">
+                    <Badge key={x.name} tone="info" title={x.table ? `on ${x.table}` : undefined}>
                       {x.label}{' '}
                       {x.rule === 'min' ? '≥' : x.rule === 'max' ? '≤' : x.rule === 'has' ? '' : '='}{' '}
                       {Array.isArray(x.value) ? x.value.map(prettify).join(', ') : x.rule === 'has' ? 'yes' : String(x.value)}
@@ -276,7 +299,7 @@ export default function Match() {
                   title="Nothing matches"
                   description={
                     ran.reason === 'no listing matches the description'
-                      ? 'No listing has those attributes on file. Either nothing fits, or the businesses that do have not filled theirs in.'
+                      ? 'No row matches those columns. Either nothing fits, or the businesses that do have not filled their listing data in.'
                       : 'Listings fit the description, but none is free on those dates.'
                   }
                 />
@@ -371,7 +394,7 @@ export default function Match() {
 }
 
 /** One filter, rendered from its blueprint descriptor. */
-function FilterControl({ field, value, onChange }) {
+function FilterControl({ field, value, onChange, catalog }) {
   const hint =
     field.search === 'min' ? 'at least'
       : field.search === 'max' ? 'at most'
@@ -388,26 +411,34 @@ function FilterControl({ field, value, onChange }) {
     );
   }
 
-  if (field.type === 'multi' || (field.type === 'select' && field.options)) {
+  // A catalog-backed filter (amenities, species) renders the same chip row as
+  // an enum, but its options are rows rather than strings.
+  const options = catalog
+    ? catalog
+    : (field.options || []).map((o) => ({ value: o, label: prettify(o) }));
+
+  if (catalog || field.type === 'enum' || field.type === 'tags' || field.type === 'amenities') {
     const selected = Array.isArray(value) ? value : value ? [value] : [];
     return (
       <div className="ui-field">
         <span className="ui-field__label">
           {field.label} {hint && <span className="faint">({hint})</span>}
         </span>
-        <div className="row-wrap" style={{ gap: 4 }}>
-          {(field.options || []).map((option) => {
-            const on = selected.includes(option);
+        <div className="row-wrap" style={{ gap: 4, maxHeight: 190, overflowY: 'auto' }}>
+          {options.length === 0 && <span className="faint">No options</span>}
+          {options.map((option) => {
+            const on = selected.includes(option.value);
             return (
               <button
-                key={option}
+                key={option.value}
                 type="button"
+                title={option.group}
                 className={`ui-multi__chip ${on ? 'is-active' : ''}`}
                 onClick={() =>
-                  onChange(on ? selected.filter((s) => s !== option) : [...selected, option])
+                  onChange(on ? selected.filter((s) => s !== option.value) : [...selected, option.value])
                 }
               >
-                {prettify(option)}
+                {option.label}
               </button>
             );
           })}
@@ -418,15 +449,16 @@ function FilterControl({ field, value, onChange }) {
 
   return (
     <div className="ui-field">
-      <label className="ui-field__label" htmlFor={`match-${field.key}`}>
+      <label className="ui-field__label" htmlFor={`match-${field.name}`}>
         {field.label} {hint && <span className="faint">({hint})</span>}
         {field.unit && field.unit !== '$' ? <span className="faint"> — {field.unit}</span> : null}
       </label>
       <input
-        id={`match-${field.key}`}
+        id={`match-${field.name}`}
         className="ui-input"
-        type={field.type === 'number' ? 'number' : 'text'}
-        min={field.type === 'number' ? 0 : undefined}
+        type={field.type === 'int' || field.type === 'decimal' ? 'number' : 'text'}
+        min={field.type === 'int' || field.type === 'decimal' ? 0 : undefined}
+        step={field.type === 'decimal' ? 'any' : undefined}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
       />
