@@ -15,8 +15,8 @@ Three SQL files, all re-runnable. Run them against the **GCR Supabase** project
 psql "$GCR_DATABASE_URL" -f sql/admin_dashboard_gaps.sql
 psql "$GCR_DATABASE_URL" -f sql/composio_connections.sql
 psql "$GCR_DATABASE_URL" -f sql/booking_ingestion.sql
-psql "$GCR_DATABASE_URL" -f sql/industry_tables.sql
-psql "$GCR_DATABASE_URL" -f sql/industry_seed.sql
+psql "$GCR_DATABASE_URL" -f sql/capability_tables.sql
+psql "$GCR_DATABASE_URL" -f sql/capability_seed.sql
 ```
 
 Or paste each into the Supabase SQL editor.
@@ -26,8 +26,8 @@ Or paste each into the Supabase SQL editor.
 | `admin_dashboard_gaps.sql` | `community_photos`, `category_cards`, and makes sure `platform_settings` and `business_leads` exist |
 | `composio_connections.sql` | `platform_connections`, `platform_connection_categories`, `entity_connections` |
 | `booking_ingestion.sql` | `entity.daily_capacity` / `entity.capacity_per_slot`, then reports any ingestion table that is absent |
-| `industry_tables.sql` | 27 tables of structured listing data — `stay_units`, `charter_boats`, `venue_spaces` and the rest, with real typed columns and their indexes |
-| `industry_seed.sql` | the catalogs those tables join to — 172 amenities in 15 sections, 20 fish species, 14 watersport activities |
+| `capability_tables.sql` | 18 tables of structured listing data — `units`, `boats`, `trips`, `gear`, `packages`, `spaces`, `entity_operations` and their joins. Named after the thing, not the industry; any slug can use any of them |
+| `capability_seed.sql` | the catalogs they join to — 128 amenities, 20 fish species, 20 activities |
 
 `booking_ingestion.sql` deliberately creates no tables. The ingestion views read
 `email_parser_log`, `business_availability`, `booking_calendar`,

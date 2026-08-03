@@ -38,7 +38,7 @@ function isoDay(offset = 0) {
 const prettify = (v) => String(v).replace(/_/g, ' ');
 
 export default function Match() {
-  const [vertical, setVertical] = useState('condo');
+  const [capability, setCapability] = useState('units');
   const [from, setFrom] = useState(() => isoDay(1));
   const [to, setTo] = useState(() => isoDay(3));
   const [useDates, setUseDates] = useState(true);
@@ -48,36 +48,38 @@ export default function Match() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
 
-  const verticalsQuery = useAsync(
-    async () => api.get(endpoints.bookingPlatform.verticals()),
+  const metaQuery = useAsync(
+    async () => api.get(endpoints.bookingPlatform.capabilities()),
     [],
     { initialData: null },
   );
 
-  const blueprintQuery = useAsync(
-    async () => api.get(endpoints.bookingPlatform.blueprint(vertical)),
-    [vertical],
-    { initialData: null },
+  // Catalog-backed filters (amenities, species, activities) get their options
+  // from the database, not from the column map.
+  const amenityQuery = useAsync(async () => api.get(endpoints.bookingPlatform.catalog('amenities')), [], { initialData: null });
+  const speciesQuery = useAsync(async () => api.get(endpoints.bookingPlatform.catalog('species')), [], { initialData: null });
+  const activityQuery = useAsync(async () => api.get(endpoints.bookingPlatform.catalog('activities')), [], { initialData: null });
+
+  const catalogs = useMemo(() => ({
+    amenities: (amenityQuery.data?.groups || []).flatMap((g) => g.items.map((i) => ({ value: i.id, label: i.label, group: g.category }))),
+    species: (speciesQuery.data?.rows || []).map((i) => ({ value: i.id, label: i.label, group: i.category })),
+    activities: (activityQuery.data?.rows || []).map((i) => ({ value: i.id, label: i.label, group: i.category })),
+  }), [amenityQuery.data, speciesQuery.data, activityQuery.data]);
+
+  const allCapabilities = useMemo(
+    () => (Array.isArray(metaQuery.data?.capabilities) ? metaQuery.data.capabilities : []),
+    [metaQuery.data],
   );
-
-  // Amenity and species filters are joins to a catalog, so their options come
-  // from the database rather than from the blueprint.
-  const catalogQuery = useAsync(
-    async () => api.get(endpoints.bookingPlatform.amenityCatalog()),
-    [],
-    { initialData: null },
+  const allSearchable = useMemo(
+    () => (Array.isArray(metaQuery.data?.searchable) ? metaQuery.data.searchable : []),
+    [metaQuery.data],
   );
-
-  const catalogs = useMemo(() => {
-    const amenities = (catalogQuery.data?.sections || []).flatMap((s) =>
-      s.amenities.map((a) => ({ value: a.id, label: a.label, group: s.label })));
-    return { listing_amenities: amenities, unit_amenities: amenities };
-  }, [catalogQuery.data]);
-
-  const verticals = Array.isArray(verticalsQuery.data?.verticals) ? verticalsQuery.data.verticals : [];
+  // Filters from every capability stay active at once — a business is not
+  // limited to one, so a search should not be either. The picker below only
+  // decides which set is on screen.
   const searchable = useMemo(
-    () => (Array.isArray(blueprintQuery.data?.searchable) ? blueprintQuery.data.searchable : []),
-    [blueprintQuery.data],
+    () => allSearchable.filter((s) => s.capability === capability),
+    [allSearchable, capability],
   );
 
   const setFilter = useCallback((key, value) => {
@@ -97,7 +99,6 @@ export default function Match() {
     setError(null);
     try {
       const result = await api.post(endpoints.bookingPlatform.match(), {
-        vertical,
         from: useDates ? from : undefined,
         to: useDates ? to : undefined,
         filters,
@@ -122,24 +123,38 @@ export default function Match() {
     // Show what was asked for first, then anything else the results carry, so
     // the answer shows its work rather than just asserting a match.
     const seen = new Set(keys);
-    for (const r of results) for (const k of Object.keys(r.record || {})) seen.add(k);
+    for (const r of results) {
+      for (const rows of Object.values(r.matched || {})) {
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        for (const k of Object.keys(row || {})) seen.add(k);
+      }
+    }
     // Ids, foreign keys and timestamps are real columns but say nothing to a
     // person reading a result; the asked-for columns lead, then the rest.
     const NOISE = /^(id|.*_id|created_at|updated_at|entity_slug|is_active|sort_order)$/;
+    // Filter ids are `capability.column`; the result rows are keyed by column.
+    const asked = keys.map((k) => k.split('.').pop());
     const ordered = [
-      ...keys,
-      ...[...seen].filter((k) => !keys.includes(k) && !NOISE.test(k)),
+      ...asked,
+      ...[...seen].filter((k) => !asked.includes(k) && !NOISE.test(k)),
     ].slice(0, 6);
+    const valueOf = (row, key) => {
+      for (const rows of Object.values(row.matched || {})) {
+        const first = Array.isArray(rows) ? rows[0] : rows;
+        if (first && first[key] !== undefined) return first[key];
+      }
+      return undefined;
+    };
     return ordered.map((key) => {
-      const field = searchable.find((s) => s.name === key);
+      const field = allSearchable.find((s) => s.name === key);
       return {
         key: `attr_${key}`,
         header: field ? field.label : prettify(key),
-        hideOn: keys.includes(key) ? undefined : 'narrow',
+        hideOn: asked.includes(key) ? undefined : 'narrow',
         sortable: false,
-        value: (row) => String(row.record?.[key] ?? ''),
+        value: (row) => String(valueOf(row, key) ?? ''),
         render: (row) => {
-          const v = row.record?.[key];
+          const v = valueOf(row, key);
           if (v === undefined || v === null) return <span className="faint">—</span>;
           if (typeof v === 'boolean') return v ? <Badge tone="success">yes</Badge> : <Badge tone="neutral">no</Badge>;
           if (Array.isArray(v)) return <span style={{ fontSize: 12 }}>{v.map(prettify).join(', ')}</span>;
@@ -148,7 +163,7 @@ export default function Match() {
         },
       };
     });
-  }, [filters, results, searchable]);
+  }, [filters, results, allSearchable]);
 
   return (
     <>
@@ -167,9 +182,10 @@ export default function Match() {
         </p>
         <p style={{ marginTop: 8 }}>
           Every filter is a real comparison on a real column —
-          <code className="mono"> bedrooms &gt;= 2</code>,
-          <code className="mono"> length_ft &gt;= 45</code>. A business with nothing filled in cannot
-          be matched; its Listing Data tab is where that gets fixed.
+          <code className="mono"> units.bedrooms &gt;= 2</code>,
+          <code className="mono"> boats.length_ft &gt;= 45</code>. No industry is named anywhere: a
+          filter on boats finds any business with a boat that long, whatever the directory calls
+          it. A business with nothing filled in cannot be matched; its Listing Data tab fixes that.
         </p>
       </Notice>
 
@@ -180,12 +196,12 @@ export default function Match() {
           <select
             className="ui-input ui-input--select"
             style={{ width: 'auto' }}
-            value={vertical}
-            aria-label="Industry"
-            onChange={(e) => { setVertical(e.target.value); setFilters({}); setRan(null); }}
+            value={capability}
+            aria-label="What they are looking for"
+            onChange={(e) => setCapability(e.target.value)}
           >
-            {verticals.filter((v) => v.id !== 'other').map((v) => (
-              <option key={v.id} value={v.id}>{v.label}</option>
+            {allCapabilities.map((c) => (
+              <option key={c.key} value={c.key}>{c.label}</option>
             ))}
           </select>
           <input
@@ -218,13 +234,13 @@ export default function Match() {
 
       <div style={{ height: 'var(--space-4)' }} />
 
-      {blueprintQuery.loading && <LoadingBlock />}
-      {blueprintQuery.error && <ErrorState error={blueprintQuery.error} onRetry={blueprintQuery.reload} />}
+      {metaQuery.loading && <LoadingBlock />}
+      {metaQuery.error && <ErrorState error={metaQuery.error} onRetry={metaQuery.reload} />}
 
       {searchable.length > 0 && (
         <Card
-          title={`${blueprintQuery.data?.label || vertical} — what can they ask for?`}
-          subtitle="Leave anything blank to not filter on it."
+          title={`${allCapabilities.find((c) => c.key === capability)?.label || capability} — what can they ask for?`}
+          subtitle="Leave anything blank. Filters from other groups stay active — switch groups and add more."
           actions={
             activeFilters > 0 && (
               <Button size="sm" onClick={() => setFilters({})}>Clear {activeFilters}</Button>
@@ -240,11 +256,11 @@ export default function Match() {
           >
             {searchable.map((field) => (
               <FilterControl
-                key={field.name}
+                key={field.id}
                 field={field}
-                value={filters[field.name]}
-                onChange={(v) => setFilter(field.name, v)}
-                catalog={catalogs[field.name]}
+                value={filters[field.id]}
+                onChange={(v) => setFilter(field.id, v)}
+                catalog={field.type === 'catalog' ? catalogs[field.catalog] : undefined}
               />
             ))}
           </div>
@@ -279,7 +295,7 @@ export default function Match() {
               <Card title="Asked for">
                 <div className="row-wrap" style={{ gap: 6 }}>
                   {ran.filters.map((x) => (
-                    <Badge key={x.name} tone="info" title={x.table ? `on ${x.table}` : undefined}>
+                    <Badge key={x.id} tone="info" title={x.table ? `on ${x.table}` : undefined}>
                       {x.label}{' '}
                       {x.rule === 'min' ? '≥' : x.rule === 'max' ? '≤' : x.rule === 'has' ? '' : '='}{' '}
                       {Array.isArray(x.value) ? x.value.map(prettify).join(', ') : x.rule === 'has' ? 'yes' : String(x.value)}
@@ -415,9 +431,9 @@ function FilterControl({ field, value, onChange, catalog }) {
   // an enum, but its options are rows rather than strings.
   const options = catalog
     ? catalog
-    : (field.options || []).map((o) => ({ value: o, label: prettify(o) }));
+    : (field.suggestions || []).map((o) => ({ value: o, label: prettify(o) }));
 
-  if (catalog || field.type === 'enum' || field.type === 'tags' || field.type === 'amenities') {
+  if (catalog || field.suggestions) {
     const selected = Array.isArray(value) ? value : value ? [value] : [];
     return (
       <div className="ui-field">
@@ -449,12 +465,12 @@ function FilterControl({ field, value, onChange, catalog }) {
 
   return (
     <div className="ui-field">
-      <label className="ui-field__label" htmlFor={`match-${field.name}`}>
+      <label className="ui-field__label" htmlFor={`match-${field.id}`}>
         {field.label} {hint && <span className="faint">({hint})</span>}
         {field.unit && field.unit !== '$' ? <span className="faint"> — {field.unit}</span> : null}
       </label>
       <input
-        id={`match-${field.name}`}
+        id={`match-${field.id}`}
         className="ui-input"
         type={field.type === 'int' || field.type === 'decimal' ? 'number' : 'text'}
         min={field.type === 'int' || field.type === 'decimal' ? 0 : undefined}

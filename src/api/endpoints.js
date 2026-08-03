@@ -563,25 +563,33 @@ export const endpoints = {
     industryCalendar: () => `${ADMIN}/platform/industry-calendar`,
 
     /**
-     * Structured listing data, in real tables with real columns —
-     * `stay_units.bedrooms`, `charter_boats.length_ft`,
-     * `venue_spaces.seated_capacity`. The tables are in
-     * `sql/industry_tables.sql`; `routes/industry-blueprints.js` describes
-     * them so a form and a search can be generated, and a build-time check
-     * fails if the description ever names a column the SQL does not create.
+     * Structured listing data, in real tables named after the thing rather
+     * than the industry — `units.bedrooms`, `boats.length_ft`,
+     * `spaces.seated_capacity`. ANY slug can use ANY of them: a marina that
+     * runs charters, rents pontoons and has a private deck uses boats, trips,
+     * gear and spaces, all the same tables a hotel would use.
+     *
+     * Tables in `sql/capability_tables.sql`; `routes/capabilities.js` maps the
+     * columns so a form and a search generate themselves, and a build-time
+     * check fails if the map ever names a column the SQL does not create.
      */
-    blueprints: () => `${ADMIN}/platform/blueprints`,
-    blueprint: (vertical) => `${ADMIN}/platform/blueprint/${seg(vertical)}`,
+    /** Which capabilities exist, and which to open first for a business. */
+    capabilities: (slug) =>
+      `${ADMIN}/platform/capabilities${slug ? `?slug=${encodeURIComponent(slug)}` : ''}`,
 
-    /** One listing's real row, its amenities, its lists, its units. */
+    /** A shared catalog — amenities, species, activities. */
+    catalog: (name) => `${ADMIN}/platform/catalog/${seg(name)}`,
+
+    /** Everything one business has, capability by capability. */
     listing: (slug) => `${ADMIN}/platform/listing/${seg(slug)}`,
-    listingAmenities: (slug) => `${ADMIN}/platform/listing/${seg(slug)}/amenities`,
-    listingTags: (slug, catalog) => `${ADMIN}/platform/listing/${seg(slug)}/tags/${seg(catalog)}`,
-    listingCollection: (slug, table) => `${ADMIN}/platform/listing/${seg(slug)}/collection/${seg(table)}`,
-    collectionRow: (table, id) => `${ADMIN}/platform/collection/${seg(table)}/${seg(id)}`,
-
-    /** The shared amenity catalog, grouped into the sections guests know. */
-    amenityCatalog: () => `${ADMIN}/platform/amenities`,
+    listingOperations: (slug) => `${ADMIN}/platform/listing/${seg(slug)}/operations`,
+    listingRows: (slug, capability) => `${ADMIN}/platform/listing/${seg(slug)}/${seg(capability)}`,
+    listingList: (slug, name) => `${ADMIN}/platform/listing/${seg(slug)}/list/${seg(name)}`,
+    capabilityRow: (capability, id) => `${ADMIN}/platform/row/${seg(capability)}/${seg(id)}`,
+    rowAmenities: (capability, id) => `${ADMIN}/platform/row/${seg(capability)}/${seg(id)}/amenities`,
+    rowChildren: (capability, id, table) =>
+      `${ADMIN}/platform/row/${seg(capability)}/${seg(id)}/${seg(table)}`,
+    childRow: (table, id) => `${ADMIN}/platform/child/${seg(table)}/${seg(id)}`,
 
     /**
      * Description + dates in one question: "a two bed two bath at Phoenix

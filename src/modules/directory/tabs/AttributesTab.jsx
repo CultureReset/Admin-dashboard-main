@@ -12,8 +12,8 @@ export default function AttributesTab({ slug }) {
   return (
     <>
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
-        The structured fields a guest searches on — what this would hold if it were listed on
-        Airbnb, VRBO or FareHarbor. <Link to="/booking/match">Try a search against them</Link>.
+        The things this business has — units, boats, trips, gear, packages, spaces. Any business
+        can use any of them. <Link to="/booking/match">Try a search against them</Link>.
       </p>
       <AttributesPanel slug={slug} />
     </>

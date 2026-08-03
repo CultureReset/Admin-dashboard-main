@@ -245,69 +245,60 @@ units are free.
 ## Structured listing data
 
 `entity` holds what every business has — name, phone, hours, hero image. It does
-not hold "3 bedrooms, 3 baths, gulf front" or "48ft with a head and AC", so two
-perfectly ordinary questions had no answer:
+not hold bedrooms, boat length or whether there is a head on board.
+`sql/capability_tables.sql` does, in **18 real tables with real typed columns**.
 
-    "a two bedroom two bath at Phoenix West on these nights"
-    "a charter for eight, at least eight hours, a 45ft boat with AC and a head"
+**A table is named after the thing, not the industry.** A boat is a boat whether
+a fishing charter, a dolphin cruise or a pontoon rental owns it:
 
-`sql/industry_tables.sql` answers them with **27 real tables and real typed
-columns** — what each industry would store if you rebuilt its platform from
-scratch, following what Airbnb, VRBO and FareHarbor actually collect so a
-business can transcribe an existing listing rather than invent answers:
-
-| Industry | Tables |
+| Table | What it holds |
 |---|---|
-| Stays | `stay_properties`, `stay_units`, `stay_unit_beds`, + amenity joins |
-| Charters | `charter_operators`, `charter_boats`, `charter_trips`, `fish_species`, `charter_species` |
-| Cruises | `cruise_operators`, `cruise_vessels`, `cruise_trips` |
-| Rentals | `rental_operators`, `rental_items` |
-| Watersports | `watersport_operators`, `watersport_activities` + join |
-| Sessions | `session_providers`, `session_packages`, `session_locations` |
-| Venues | `venue_spaces`, `venue_space_event_types`, + amenity join |
-| Shared | `amenity_sections`, `amenities` (172 seeded rows across 15 sections) |
+| `entity_operations` | one optional row per business — crew, licences, what's included, rules, deposits, the building |
+| `units` + `unit_beds` + `unit_amenities` | anything with bedrooms |
+| `boats` + `boat_amenities` | anything that floats and carries people |
+| `trips` | anything with a departure time and a duration |
+| `gear` | anything you rent that is not a boat or a unit |
+| `packages` | a priced thing with a duration but no departure |
+| `spaces` + `space_event_types` + `space_amenities` | anything with a capacity booked by the hour or day |
+| `amenities`, `species`, `activities` + their `entity_*` joins | catalogs, joined, never free text |
 
-`bedrooms` is an `integer`, `bathrooms` a `numeric(3,1)` because 2.5 is a real
-answer, `length_ft` a `numeric(5,1)`. Amenities and species are catalogs joined
-through real join tables, never free text, so "who targets red snapper" is an
-index lookup rather than a LIKE over a comma-separated string.
+**ANY slug can use ANY of them.** The industry gates nothing. A marina that runs
+charters, rents pontoons, lends bikes and has a dockside deck fills in `boats`,
+`trips`, `gear` and `spaces` — the same four tables a hotel would use for its own
+boat, its own sunset cruise, its own bikes and its own ballroom. The subtype only
+decides which group is open when the editor loads; every group is offered to
+every business.
 
-`routes/industry-blueprints.js` does not store anything — it *describes* those
-tables so a form and a search can be generated from them without a second,
-hand-kept field list. `scripts/check-blueprint-columns.mjs` parses the SQL and
-fails the build if the description ever names a column the schema does not
-create, which is the failure that would otherwise show up as a Postgres error
-in production, per business, at write time.
+This replaced an earlier design with `charter_operators`, `cruise_operators`,
+`rental_operators`, `session_providers` and `stay_properties` — five names for
+one idea, each of which locked a business into a single industry. That design
+could not express a marina that also rents pontoons.
 
-**The building and the unit are separate on purpose.** A condo complex is one
-`entity`; each unit is its own `entity` with `parent_entity_slug` set. The
-building has the pool and the lazy river (`stay_properties`); the unit has two
-bedrooms (`stay_units`). That is why `/match` classifies a matched child by its
-PARENT's industry — otherwise "2 bed 2 bath" finds unit 1204 and then discards
-it because a `condo_unit` is not a `condo`.
+**No JSON anywhere in it.** No jsonb, no key/value rows, no comma-separated
+lists. Lists are join tables. (Pre-existing jsonb that is NOT part of this:
+`offerings.details` and `booking_calendar.details`, written by
+`routes/platform.js`, and `platform_settings.value`.)
 
-**The building is yours, the unit is theirs.** `stay_properties` is marked
-`managedBy: 'operator'` — the operator fills a complex in once (pool, lazy
-river, floors, parking, images) and every unit inherits it. Nothing on the
-property is `required`, a unit owner is only ever asked about their own unit,
-and `GET /listing/:slug` for a unit returns the building's row and amenities as
-a read-only `inherited` block so a blank field on a unit is never ambiguous
-between "no" and "ask upstairs".
+**Filters are named `capability.column`** — `units.bedrooms`, `boats.length_ft`,
+`trips.duration_hours` — so the same column name on two capabilities is two
+different filters rather than one ambiguous one. No industry is named anywhere
+in a search.
 
-That inheritance has to reach the search or it is decorative. A guest asking
-for "two bed two bath **with a lazy river**" is naming one thing on `stay_units`
-and one on `stay_property_amenities`; intersecting a set of unit slugs with a
-set of building slugs is empty every time. So a listing-level filter expands to
-the building's children before intersecting — the building stays in the set
-too, since a whole-house rental has no children and is itself the bookable
-thing.
+**Inheritance reaches the search.** A guest asking for "two bed two bath **with a
+lazy river**" names one column on `units` and one row on `entity_amenities`;
+intersecting unit slugs with building slugs is empty every time. So a filter
+result expands to the parent's children before intersecting, with the parent
+kept in the set because a whole-house rental has no children and is itself the
+bookable thing.
 
-**A name can live on two tables.** `max_anglers` is on both `charter_boats` (what
-the boat holds) and `charter_trips` (what this trip takes). Left alone, which one
-a filter hits would depend on loop order, so duplicates collapse to the first
-occurrence — listing, then its collections, then unit — and the rest are reported
-on `also_on`. For `max_anglers` that resolves to the trip, which is right: "a
-charter for eight" is a question about the trip you can book.
+**On reads at 100k businesses.** Every table is indexed on `entity_slug` and only
+holds rows for businesses that have that thing. Reading one business is a handful
+of index lookups against small tables; the directory list reads `entity` alone
+and touches none of them.
+
+`routes/capabilities.js` describes the columns so forms and searches generate
+themselves; `scripts/check-capability-columns.mjs` fails the build if it ever
+names a column the SQL does not create — confirmed by misspelling one.
 
 ## Industries
 
