@@ -585,6 +585,16 @@ export default function BusinessProfile() {
     [profile.data],
   );
 
+  /**
+   * What the business declares it has, in its own order — straight from
+   * `entity_modules`, the same table routes/gcr.js reads to decide what the
+   * public site renders. Not a second opinion, the same source of truth.
+   */
+  const modules = useMemo(
+    () => (Array.isArray(profile.data?.modules) ? profile.data.modules : []),
+    [profile.data],
+  );
+
   /* group sections by their derived group, preserving order within each */
   const groups = useMemo(() => {
     const out = new Map();
@@ -759,6 +769,22 @@ export default function BusinessProfile() {
                     <span className="bp__navitem-count">{stats.data?.totals?.page_views ?? '—'}</span>
                   </button>
                 </div>
+                {modules.length > 0 && (
+                  <div className="bp__navgroup">
+                    <p className="bp__navgroup-title">Its own sections</p>
+                    <div className="bp__modules">
+                      {modules.map((m) => (
+                        <span
+                          key={m.key}
+                          className={`bp__module ${m.enabled ? '' : 'bp__module--off'}`}
+                          title={m.enabled ? 'Enabled' : 'Turned off'}
+                        >
+                          {m.key}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {unusedSections.length > 0 && (
                   <div className="bp__navgroup">
                     <p className="bp__navgroup-title">Not used yet</p>

@@ -292,3 +292,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* entity_modules — the business's own declared sections, in its own order.
+   Shown as labels rather than nav items because a module is not a table: it
+   is what the business says it offers, and several map to no single table. */
+.bp__modules { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 4px; }
+
+.bp__module {
+  padding: 2px 7px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bp__module--off { opacity: 0.45; text-decoration: line-through; }
