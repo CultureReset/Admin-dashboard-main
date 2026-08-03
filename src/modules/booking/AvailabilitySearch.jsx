@@ -120,6 +120,10 @@ export default function AvailabilitySearch() {
           <Link to="/booking/inventory">capacity</Link>, unknown if we don&apos;t. Unknown never
           counts as available.
         </p>
+        <p style={{ marginTop: 8 }}>
+          For one industry at a time see <Link to="/booking/industries">Industry Calendars</Link>;
+          for one business, its own <Link to="/booking/calendar">calendar page</Link>.
+        </p>
       </Notice>
 
       <div style={{ height: 'var(--space-4)' }} />
@@ -284,7 +288,7 @@ export default function AvailabilitySearch() {
                       render: (row) => (
                         <div>
                           <div className="ui-cell-primary">
-                            <Link to={`/directory/entity/${encodeURIComponent(row.entity_slug)}`}>
+                            <Link to={`/booking/calendar/${encodeURIComponent(row.entity_slug)}`}>
                               {row.entity_name || row.entity_slug}
                             </Link>
                           </div>
@@ -364,7 +368,15 @@ export default function AvailabilitySearch() {
                       searchable: false,
                       stopPropagation: true,
                       render: (row) => (
-                        <Button size="sm" onClick={() => setDetailFor(row)}>Day by day</Button>
+                        <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                          <Button size="sm" onClick={() => setDetailFor(row)}>Day by day</Button>
+                          <Link
+                            className="ui-btn ui-btn--default ui-btn--sm"
+                            to={`/booking/calendar/${encodeURIComponent(row.entity_slug)}`}
+                          >
+                            Calendar
+                          </Link>
+                        </span>
                       ),
                     },
                   ]}
@@ -429,7 +441,7 @@ function DayByDay({ row }) {
                 key: 'entity_name',
                 header: 'Unit',
                 render: (u) => (
-                  <Link to={`/directory/entity/${encodeURIComponent(u.entity_slug)}`}>
+                  <Link to={`/booking/calendar/${encodeURIComponent(u.entity_slug)}`}>
                     {u.entity_name || u.entity_slug}
                   </Link>
                 ),

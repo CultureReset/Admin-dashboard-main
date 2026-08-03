@@ -112,6 +112,7 @@ const EXPECTED_KEYS = {
   'bookingPlatform.icalFeeds': 'calendars',
   'bookingPlatform.deals': 'deals',
   'bookingPlatform.search': 'results',
+  'bookingPlatform.industryCalendar': 'days',
   'connections.list': 'connections',
   'connections.catalog': 'tools',
   'categoryCards.list': 'cards',
@@ -149,6 +150,7 @@ const READ_ONLY = new Set([
  * worse than not covering it, because a harness that cries wolf gets ignored.
  */
 const QUERY = {
+  'bookingPlatform.industryCalendar': () => '?vertical=charter',
   'bookingPlatform.search': () => {
     const today = new Date().toISOString().slice(0, 10);
     return `?from=${today}&to=${today}&limit=50`;

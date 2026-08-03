@@ -1,0 +1,176 @@
+/* Month availability grid. Colours come from the theme, never hardcoded. */
+
+.monthcal__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.monthcal__navlabel {
+  font-weight: 600;
+  min-width: 9.5em;
+  text-align: center;
+}
+
+/* Capped so the square cells don't balloon to 200px each on a wide screen.
+   The compact variant, which lives inside a table cell, is unconstrained. */
+.monthcal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 640px;
+}
+
+.monthcal--compact .monthcal__grid { max-width: none; }
+
+.monthcal__dow {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding-bottom: 2px;
+}
+
+.monthcal__cell {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font: inherit;
+  color: var(--text);
+  background: var(--input-bg);
+  padding: 2px;
+  overflow: hidden;
+}
+
+.monthcal__cell--pad {
+  background: none;
+  border-color: transparent;
+}
+
+.monthcal__cell--clickable {
+  cursor: pointer;
+}
+
+.monthcal__cell--clickable:hover {
+  outline: 2px solid var(--primary-border);
+  outline-offset: -1px;
+}
+
+.monthcal__num {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.monthcal__count {
+  font-size: 10px;
+  line-height: 1.1;
+  opacity: 0.85;
+}
+
+/* Status fills. `assumed` hollows the same colour out, so "open because a
+   booking told us" and "open because capacity says so" read differently
+   without introducing a second palette. */
+.monthcal__cell--available {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+
+.monthcal__cell--limited {
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+  color: var(--warning);
+}
+
+.monthcal__cell--full {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.monthcal__cell--blocked {
+  background: var(--input-bg);
+  border-color: var(--card-border);
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.monthcal__cell--unknown {
+  background: transparent;
+  border-color: var(--card-border);
+  border-style: dashed;
+  color: var(--text-faint);
+}
+
+.monthcal__cell--assumed {
+  background: transparent;
+}
+
+.monthcal__cell--past {
+  opacity: 0.4;
+}
+
+.monthcal__cell--today {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.monthcal__cell--selected {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+.monthcal--compact .monthcal__grid { gap: 2px; }
+
+.monthcal--compact .monthcal__cell {
+  min-height: 22px;
+  padding: 0;
+  gap: 0;
+}
+
+.monthcal--compact .monthcal__num { font-size: 10px; }
+.monthcal--compact .monthcal__count { font-size: 9px; }
+.monthcal--compact .monthcal__dow { font-size: 9px; padding-bottom: 0; }
+
+.monthcal__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.monthcal__k {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.monthcal__k--note {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.monthcal__sw {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+
+.monthcal__sw--available { background: var(--success-soft); border-color: var(--success-border); }
+.monthcal__sw--limited   { background: var(--warning-soft); border-color: var(--warning-border); }
+.monthcal__sw--full      { background: var(--danger-soft); border-color: var(--danger-border); }
+.monthcal__sw--blocked   { background: var(--input-bg); border-color: var(--card-border); }
+.monthcal__sw--unknown   { background: transparent; border-color: var(--card-border); border-style: dashed; }

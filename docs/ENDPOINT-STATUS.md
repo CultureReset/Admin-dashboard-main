@@ -31,12 +31,12 @@ fails to save.
 ## Current state
 
 After the routes added on the `claude/cybercheck-modular-react-dashboard-7on41c`
-branch of `gcr-api-clean`, of 76 sections:
+branch of `gcr-api-clean`, of 80 sections:
 
 | | Count |
 |---|---|
 | Wired to routes already live in `gcr-api-clean` | 62 |
-| Need that branch merged and deployed | 13 (Booking Platform + Integrations) |
+| Need that branch merged and deployed | 17 (Booking Platform + Integrations) |
 | Depend on a route that exists nowhere | **1** — SMS / Messaging |
 
 That last one is `routes/messaging.js`, which exists but is deliberately
@@ -129,7 +129,7 @@ Two routers were added on the `claude/cybercheck-modular-react-dashboard-7on41c`
 branch of `gcr-api-clean`, because the dashboard could not otherwise reach the
 data it needed.
 
-**`/api/admin/platform`** (44 routes) — an admin view over the universal booking
+**`/api/admin/platform`** (46 routes) — an admin view over the universal booking
 engine. `routes/platform.js` owns the model but resolves the business from
 `entity_owners` using the signed-in user, so an admin token cannot read any of
 it. These routes use the same tables (`offerings`, `offering_prices`,
@@ -148,6 +148,8 @@ The later additions cover the ingestion pipeline rather than the booking model:
 | `/calendars/*` | `entity_external_calendars` | external iCal feeds, and a manual sync |
 | `/deals` | `gcr_deals` | what is being promoted |
 | `/search`, `/verticals` | all three availability sources + `entity` | what is open on a given date, across every industry |
+| `/business-calendar/:slug` | the three sources + `entity` + `entity_external_calendars` | one business's month, with its units and the feeds that claimed dates |
+| `/industry-calendar` | the three sources + `entity` | one industry's month — how many of its businesses are open each day |
 
 `POST /calendars/:id/sync` lazily requires `routes/email-parser.js` and calls
 `syncExternalCalendar` in-process. That module is 1,400 lines and holds all 24
@@ -234,6 +236,24 @@ testing rather than a hypothetical:
 A fourth, smaller one: the limited/available threshold has to be proportional.
 A flat "3 or fewer is limited" paints a two-unit building amber when both
 units are free.
+
+## Industries
+
+An industry is derived from `entity_type` / `entity_subtype` by the patterns in
+`routes/availability-engine.js`, not stored on a row, so a new subtype lands in
+the right bucket without a migration. `GET /api/admin/platform/verticals` is the
+single source of truth — the dashboard's Industry Calendars index reads it
+rather than hardcoding a list, because a page that classifies nothing is the
+predictable result of the two drifting apart.
+
+Condos and hotels are separate industries rather than one "stays" bucket: they
+are run by different people and searched separately, and each gets its own
+page. They share the coverage rule (`all` — a stay has to cover every night),
+which is what actually distinguishes them from a charter.
+
+Order matters in the pattern list: `rental` would swallow "vacation rental" and
+"condo rental" if it ran before the stay types, so entity_type is matched
+first and the patterns second.
 
 ## Open question: two app catalogues
 

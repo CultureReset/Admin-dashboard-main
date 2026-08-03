@@ -264,6 +264,44 @@ const definitions = [
     load: () => import('./booking/Availability.jsx'),
   },
   {
+    id: 'booking-business-calendar',
+    label: 'Business Calendar',
+    icon: '🗓️',
+    group: 'booking',
+    path: '/booking/calendar',
+    description:
+      'One business, one month — what is open, what claimed each date, and its units. Also a tab on every business profile.',
+    load: () => import('./booking/BusinessCalendar.jsx'),
+  },
+  {
+    // Same component, addressed by slug so a calendar can be linked to.
+    id: 'booking-business-calendar-slug',
+    label: 'Business Calendar',
+    group: 'booking',
+    path: '/booking/calendar/:slug',
+    hidden: true,
+    load: () => import('./booking/BusinessCalendar.jsx'),
+  },
+  {
+    id: 'booking-industries',
+    label: 'Industry Calendars',
+    icon: '🏷️',
+    group: 'booking',
+    path: '/booking/industries',
+    description:
+      'A calendar page per industry — fishing charters, dolphin cruises, condos, hotels, parasailing, photographers.',
+    load: () => import('./booking/Industries.jsx'),
+  },
+  {
+    // One route serves every industry; the sidebar links straight into it.
+    id: 'booking-industry',
+    label: 'Industry Calendar',
+    group: 'booking',
+    path: '/booking/industries/:vertical',
+    hidden: true,
+    load: () => import('./booking/IndustryCalendar.jsx'),
+  },
+  {
     id: 'booking-search',
     label: 'Availability Search',
     icon: '🔎',

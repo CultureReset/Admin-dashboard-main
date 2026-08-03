@@ -61,6 +61,7 @@
       "entities.remove"
     ],
     "gcr-entity-editor": [
+      "bookingPlatform.businessCalendar",
       "collections.blog",
       "collections.faqs",
       "collections.policies",
@@ -100,6 +101,7 @@
       "specials.update"
     ],
     "gcr-entity-editor-slug": [
+      "bookingPlatform.businessCalendar",
       "collections.blog",
       "collections.faqs",
       "collections.policies",
@@ -259,6 +261,20 @@
       "bookingPlatform.promos",
       "bookingPlatform.waivers",
       "entities.list"
+    ],
+    "booking-business-calendar": [
+      "bookingPlatform.businessCalendar",
+      "entities.list"
+    ],
+    "booking-business-calendar-slug": [
+      "bookingPlatform.businessCalendar",
+      "entities.list"
+    ],
+    "booking-industries": [
+      "bookingPlatform.verticals"
+    ],
+    "booking-industry": [
+      "bookingPlatform.industryCalendar"
     ],
     "booking-search": [
       "bookingPlatform.search",

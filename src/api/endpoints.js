@@ -551,6 +551,16 @@ export const endpoints = {
      */
     search: () => `${ADMIN}/platform/search`,
     verticals: () => `${ADMIN}/platform/verticals`,
+
+    /**
+     * One business's own month — the operator's view, so it carries what the
+     * public embed strips: which source claimed each date, which dates are
+     * only assumed from capacity, and which feed blocked one.
+     */
+    businessCalendar: (slug) => `${ADMIN}/platform/business-calendar/${seg(slug)}`,
+
+    /** One industry's month: how many of its businesses are open each day. */
+    industryCalendar: () => `${ADMIN}/platform/industry-calendar`,
   },
 
   /**

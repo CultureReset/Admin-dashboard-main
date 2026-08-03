@@ -56,7 +56,7 @@ in `server.js`; nothing existing is modified.
 
 | Router | Mounted at | Gives you |
 |---|---|---|
-| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations, plus the ingestion views: parser sources, capacity, availability, openings, iCal feeds, deals, and the cross-industry date search |
+| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations, plus the ingestion views: parser sources, capacity, availability, openings, iCal feeds, deals, the cross-industry date search, and the per-business and per-industry month calendars |
 | `routes/embed.js` | `/api/embed` | the availability calendar businesses embed on their own sites, and its JSON — **public, no auth** |
 | `routes/composio.js` | `/api/admin/connections` | Composio catalog and connections |
 | `routes/admin-settings.js` | `/api/admin` | settings, provider status, business leads, guest photos, category cards |

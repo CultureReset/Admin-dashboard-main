@@ -14,6 +14,7 @@ import ContentTab from './ContentTab.jsx';
 import SectionsTab from './SectionsTab.jsx';
 import CollectionsTab from './CollectionsTab.jsx';
 import PagesTab from './PagesTab.jsx';
+import CalendarTab from './CalendarTab.jsx';
 
 export const entityTabs = [
   { id: 'info', label: 'Info', icon: 'ℹ️', component: InfoTab },
@@ -25,6 +26,8 @@ export const entityTabs = [
   { id: 'sections', label: 'Sections', icon: '🧱', component: SectionsTab },
   { id: 'details', label: 'Details', icon: '📑', component: CollectionsTab },
   { id: 'pages', label: 'Pages', icon: '🗂️', component: PagesTab },
+  // Last, because it is the only tab that reads rather than edits.
+  { id: 'calendar', label: 'Calendar', icon: '🗓️', component: CalendarTab },
 ];
 
 export default entityTabs;
