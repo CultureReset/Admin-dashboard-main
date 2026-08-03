@@ -36,8 +36,36 @@ branch of `gcr-api-clean`, of 81 sections:
 | | Count |
 |---|---|
 | Wired to routes already live in `gcr-api-clean` | 62 |
-| Need that branch merged and deployed | 18 (Booking Platform + Integrations) |
+| Need that branch merged and deployed | 18 sections — **58 endpoints** |
 | Depend on a route that exists nowhere | **1** — SMS / Messaging |
+
+### How many endpoints actually break before that deploy
+
+Measured, not estimated — `scripts/audit-endpoints.mjs` run against a worktree
+of `origin/main` and again against the branch:
+
+| | `origin/main` (deployed today) | branch (after deploy) |
+|---|---|---|
+| Routes mounted in the API | 1,040 | 1,124 |
+| Dashboard endpoints resolving cleanly | 233 | 295 |
+| **Unexpected missing** | **58** | **0** |
+| Shadowed | 0 | 0 |
+
+An earlier version of this table said 18, which conflated *sections* with
+*endpoints*. 18 sections are affected; they call 58 distinct endpoints between
+them. Until the branch is deployed, every one of those returns 404: the whole
+capability layer (`/api/admin/platform/*`), Composio connections
+(`/api/admin/connections/*`), settings and provider status
+(`/api/admin/settings`, `/api/admin/provider-status`), category cards, and the
+embed widget (`/api/embed/*`).
+
+Reproduce with:
+
+```bash
+git -C ../gcr-api-clean worktree add /tmp/api-main origin/main
+node scripts/audit-endpoints.mjs /tmp/api-main     # 58 unexpected missing
+node scripts/audit-endpoints.mjs ../gcr-api-clean  # 0
+```
 
 That last one is `routes/messaging.js`, which exists but is deliberately
 commented out in `server.js` because its tables are not in the live database.

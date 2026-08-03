@@ -12,7 +12,7 @@ export default function AttributesTab({ slug }) {
   return (
     <>
       <p className="muted" style={{ marginBottom: 'var(--space-4)' }}>
-        The things this business has — units, boats, trips, gear, packages, spaces. Any business
+        The things this business has — units, vessels, trips, gear, packages, spaces. Any business
         can use any of them. <Link to="/booking/match">Try a search against them</Link>.
       </p>
       <AttributesPanel slug={slug} />

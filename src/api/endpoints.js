@@ -564,10 +564,10 @@ export const endpoints = {
 
     /**
      * Structured listing data, in real tables named after the thing rather
-     * than the industry — `units.bedrooms`, `boats.length_ft`,
+     * than the industry — `units.bedrooms`, `vessels.length_ft`,
      * `spaces.seated_capacity`. ANY slug can use ANY of them: a marina that
-     * runs charters, rents pontoons and has a private deck uses boats, trips,
-     * gear and spaces, all the same tables a hotel would use.
+     * runs charters, rents pontoons and has a private deck uses vessels,
+     * trips, gear and spaces, all the same tables a hotel would use.
      *
      * Tables in `sql/capability_tables.sql`; `routes/capabilities.js` maps the
      * columns so a form and a search generate themselves, and a build-time

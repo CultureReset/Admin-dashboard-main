@@ -1,15 +1,15 @@
 /**
  * Structured listing data for one business — the capability tables.
  *
- * A capability is a THING a business can have: units, boats, trips, gear,
+ * A capability is a THING a business can have: units, vessels, trips, gear,
  * packages, spaces, plus one row of operating details. Not an industry.
  *
  *   ANY business can use ANY capability.
  *
  * That is the whole point and it is why this screen offers all of them to
  * everyone. A marina that runs charters, rents pontoons, lends bikes and has a
- * dockside deck fills in boats, trips, gear and spaces — the same four tables
- * a hotel would use for its own boat, its own sunset cruise, its own bikes and
+ * dockside deck fills in vessels, trips, gear and spaces — the same four tables
+ * a hotel would use for its own vessel, its own sunset cruise, its own bikes and
  * its own ballroom. Nothing is hidden because of what the directory calls the
  * business; the suggested set only decides what is open on arrival.
  *
@@ -153,7 +153,7 @@ export default function AttributesPanel({ slug }) {
     <>
       <Notice tone="info" title="Any business can use any of these">
         <p>
-          These are things a business <em>has</em> — units, boats, trips, gear, packages, spaces —
+          These are things a business <em>has</em> — units, vessels, trips, gear, packages, spaces —
           not industries. A marina that runs charters, rents pontoons, lends bikes and has a
           dockside deck fills in four of them. Nothing is hidden because of what the directory
           calls it.

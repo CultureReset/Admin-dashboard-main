@@ -128,6 +128,17 @@ cp .env.example .env      # set VITE_API_BASE_URL
 npm run build             # → dist/
 ```
 
+> **Do not skip the `.env` step.** `VITE_API_BASE_URL` has no default — it
+> falls back to the empty string, which means *same origin*. There is no
+> `.env` checked into this repo and no hostname baked into `dist/`, so a build
+> made without it will send every request to whatever domain the dashboard
+> itself is served from and get 404 on all of them. On Vercel, set
+> `VITE_API_BASE_URL` in the project's build environment variables — a `.env`
+> on your laptop does not travel with a git push.
+>
+> Same origin is only correct when the dashboard sits behind the same domain
+> as the API. Anything else needs the variable set.
+
 Deploy `dist/` as a static site. Set `VITE_PUBLIC_SITE_URL` too if you want the
 claim, preview and QR-menu links on Sales Pages / QR Menus / Menu Editors Hub.
 

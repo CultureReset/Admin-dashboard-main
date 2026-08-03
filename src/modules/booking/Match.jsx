@@ -183,9 +183,10 @@ export default function Match() {
         <p style={{ marginTop: 8 }}>
           Every filter is a real comparison on a real column —
           <code className="mono"> units.bedrooms &gt;= 2</code>,
-          <code className="mono"> boats.length_ft &gt;= 45</code>. No industry is named anywhere: a
-          filter on boats finds any business with a boat that long, whatever the directory calls
-          it. A business with nothing filled in cannot be matched; its Listing Data tab fixes that.
+          <code className="mono"> vessels.length_ft &gt;= 45</code>. No industry is named anywhere: a
+          filter on vessels finds any business with a vessel that long, whatever the directory
+          calls it. A business with nothing filled in cannot be matched; its Listing Data tab
+          fixes that.
         </p>
       </Notice>
 

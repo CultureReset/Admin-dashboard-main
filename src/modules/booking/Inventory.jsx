@@ -48,7 +48,7 @@ const capacitySchema = {
           min: 0,
           step: 1,
           required: true,
-          help: 'Seats, rooms, boats — whatever one day of this business holds. Clear it to go back to "unknown".',
+          help: 'Seats, rooms, vessels — whatever one day of this business holds. Clear it to go back to "unknown".',
         }),
         fields.number('capacity_per_slot', 'Per departure / time slot', {
           min: 0,
