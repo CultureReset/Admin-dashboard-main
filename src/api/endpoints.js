@@ -169,6 +169,22 @@ export const endpoints = {
     ingest: (slug, table) => `${ADMIN}/gcr/ingest/${seg(slug)}/${seg(table)}`,
   },
 
+  /**
+   * Intake — businesses handing over their links, and the webhooks that
+   * announce them. Webhook destinations are rows in the database, not
+   * config in code, so a target can be added or paused without a deploy.
+   */
+  intake: {
+    list: () => `${ADMIN}/intake`,
+    item: (id) => `${ADMIN}/intake/${seg(id)}`,
+    /** Public submission — the only unauthenticated write in this registry. */
+    submit: () => '/api/intake',
+    endpoints: () => `${ADMIN}/intake/webhooks/endpoints`,
+    endpoint: (id) => `${ADMIN}/intake/webhooks/endpoints/${seg(id)}`,
+    testEndpoint: (id) => `${ADMIN}/intake/webhooks/endpoints/${seg(id)}/test`,
+    deliveries: () => `${ADMIN}/intake/webhooks/deliveries`,
+  },
+
   /** Collections that each have their own dedicated route pair. */
   collections: {
     pricingItems: {

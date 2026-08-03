@@ -43,6 +43,7 @@ import { useToast } from '../../ui/Toast.jsx';
 import { Sparkline, BreakdownBars } from '../engagement/charts.jsx';
 import { fields } from '../../lib/fields.jsx';
 import '../engagement/charts.css';
+import '../../ui/chips.css';
 import './BusinessProfile.css';
 
 /* ── value rendering ─────────────────────────────────────────────────────── */

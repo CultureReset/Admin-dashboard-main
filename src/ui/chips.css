@@ -1,0 +1,33 @@
+/* Chips — small pill-shaped labels and buttons.
+   Shared because more than one screen needs them: the business profile uses
+   them for "add a field" and section pickers, Intake uses them for a request's
+   links. Keeping one copy means they cannot drift apart, and a screen that
+   forgets to import this gets unstyled chips rather than subtly wrong ones. */
+
+.bp__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-3) 0;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.bp__chips--tall { max-height: 320px; }
+
+.bp__chip {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bp__chip:hover { border-color: var(--primary); color: var(--primary); }

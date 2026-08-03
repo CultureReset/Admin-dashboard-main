@@ -168,6 +168,14 @@
       "businessProfile.row",
       "entities.list"
     ],
+    "platform-intake": [
+      "intake.deliveries",
+      "intake.endpoint",
+      "intake.endpoints",
+      "intake.item",
+      "intake.list",
+      "intake.testEndpoint"
+    ],
     "engagement-behaviour": [
       "analytics.behaviour",
       "analytics.behaviourHealth"

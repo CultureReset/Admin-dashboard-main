@@ -165,6 +165,16 @@ const definitions = [
     load: () => import('./directory/BusinessProfile.jsx'),
   },
   {
+    id: 'platform-intake',
+    label: 'Intake',
+    icon: '📥',
+    group: 'platform',
+    path: '/platform/intake',
+    description:
+      'Businesses handing over their links, and the webhooks that tell you one arrived.',
+    load: () => import('./platform/Intake.jsx'),
+  },
+  {
     id: 'engagement-behaviour',
     label: 'Visitor Behaviour',
     icon: '📈',
