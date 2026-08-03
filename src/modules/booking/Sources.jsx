@@ -131,7 +131,7 @@ export default function Sources() {
           which is a stronger signal than anything typed into a field.
         </p>
         <p style={{ marginTop: 8 }}>
-          Parsed bookings become date claims in <Link to="/booking/calendar">the calendar</Link>,
+          Parsed bookings become date claims in <Link to="/booking/date-claims">the calendar</Link>,
           which is what availability is computed from.
         </p>
       </Notice>

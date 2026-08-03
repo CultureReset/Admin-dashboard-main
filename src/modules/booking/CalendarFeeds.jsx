@@ -166,7 +166,7 @@ export default function CalendarFeeds() {
         <p>
           <Link to="/booking/sources">Forwarded confirmation emails</Link> tell you who booked
           and what. iCal feeds tell you which dates are gone. Both write into the same{' '}
-          <Link to="/booking/calendar">booking calendar</Link>, so a date taken anywhere is taken
+          <Link to="/booking/date-claims">booking calendar</Link>, so a date taken anywhere is taken
           everywhere.
         </p>
         <p style={{ marginTop: 8 }}>

@@ -205,6 +205,10 @@ export default function BusinessCalendarPanel({ slug, showHeader = true }) {
                     header: 'Month',
                     sortable: false,
                     searchable: false,
+                    // A 7-column grid squeezed into a phone-width table cell is
+                    // unreadable; the open/claimed counts beside it carry the
+                    // same information in words.
+                    hideOn: 'narrow',
                     render: (u) => (
                       <div style={{ maxWidth: 250 }}>
                         <MonthCalendar month={month} days={u.days || []} unitWord={data.unit_word} compact />

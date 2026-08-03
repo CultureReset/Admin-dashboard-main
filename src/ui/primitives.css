@@ -415,3 +415,27 @@
   outline: none;
   border-color: var(--primary);
 }
+
+/* On a phone a card's title and its actions cannot share a row: the actions
+   are `flex: none`, so a month navigator or a pair of buttons pushes past the
+   right edge and the last control is unreachable. Below 640px they stack. */
+@media (max-width: 640px) {
+  .ui-card__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .ui-card__actions {
+    flex: 1 1 auto;
+  }
+
+  /* Same problem on the page header: the title and its buttons cannot share
+     a 390px row. Note the class is `ui-page-head__main`, not the
+     `ui-page-header` a guess would produce. */
+  .ui-page-head__main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+}

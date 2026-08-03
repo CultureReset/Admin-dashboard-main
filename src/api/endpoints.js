@@ -561,6 +561,24 @@ export const endpoints = {
 
     /** One industry's month: how many of its businesses are open each day. */
     industryCalendar: () => `${ADMIN}/platform/industry-calendar`,
+
+    /**
+     * Structured listing data — what each industry would store if you rebuilt
+     * its platform from scratch. A condo unit holds bedrooms/baths/sleeps/view;
+     * a charter boat holds length/anglers/AC/head. Field definitions live in
+     * `routes/industry-blueprints.js` and are served, not duplicated here,
+     * because a form built from a stale copy asks for fields nothing stores.
+     */
+    blueprints: () => `${ADMIN}/platform/blueprints`,
+    blueprint: (vertical) => `${ADMIN}/platform/blueprint/${seg(vertical)}`,
+    attributes: (slug) => `${ADMIN}/platform/attributes/${seg(slug)}`,
+
+    /**
+     * Description + dates in one question: "a two bed two bath at Phoenix
+     * West on these nights", "a charter for eight, eight hours, 45ft with AC".
+     * POST, because the filter set is a nested object.
+     */
+    match: () => `${ADMIN}/platform/match`,
   },
 
   /**

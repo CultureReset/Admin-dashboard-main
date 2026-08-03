@@ -206,12 +206,13 @@ const definitions = [
     load: () => import('./booking/BookingsLedger.jsx'),
   },
   {
-    id: 'booking-calendar',
-    label: 'Calendar',
+    id: 'booking-date-claims',
+    label: 'Date Claims',
     icon: '📅',
     group: 'booking',
-    path: '/booking/calendar',
-    description: 'Every date claim from every source, and manual blocks.',
+    path: '/booking/date-claims',
+    description:
+      'The raw booking_calendar ledger — every date claim from every source, and manual blocks.',
     load: () => import('./booking/Calendar.jsx'),
   },
   {
@@ -300,6 +301,16 @@ const definitions = [
     path: '/booking/industries/:vertical',
     hidden: true,
     load: () => import('./booking/IndustryCalendar.jsx'),
+  },
+  {
+    id: 'booking-match',
+    label: 'Find a Match',
+    icon: '🔍',
+    group: 'booking',
+    path: '/booking/match',
+    description:
+      'A description and some dates in one question — "two bed two bath at Phoenix West on these nights", "a charter for eight, eight hours, 45ft with AC".',
+    load: () => import('./booking/Match.jsx'),
   },
   {
     id: 'booking-search',
@@ -803,6 +814,27 @@ const definitions = [
     load: () => import('./platform/Settings.jsx'),
   },
 ];
+
+/**
+ * Two sections on the same path is not a warning, it is a section that can
+ * never be reached: the router matches the first and the second is dead. It
+ * also survives every check we have — the endpoint audit looks at API paths,
+ * and the route walk navigates each path and finds *something* rendering. So
+ * it is asserted here, at module load, where it fails immediately and names
+ * both offenders.
+ */
+{
+  const byPath = new Map();
+  for (const definition of definitions) {
+    if (byPath.has(definition.path)) {
+      throw new Error(
+        `Duplicate route "${definition.path}": "${byPath.get(definition.path)}" and "${definition.id}". ` +
+        'The second is unreachable — give one of them a different path.',
+      );
+    }
+    byPath.set(definition.path, definition.id);
+  }
+}
 
 /** Attach the lazy component to each descriptor. */
 export const modules = definitions.map((definition) => ({

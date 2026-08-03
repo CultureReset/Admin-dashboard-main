@@ -114,8 +114,25 @@ const registrySource = readFileSync(join(src, 'modules', 'registry.js'), 'utf8')
 
 const sections = [];
 // Each descriptor is a `{ ... }` block containing an `id:` and a `load:`.
+const seenPaths = new Map();
 for (const block of registrySource.split(/\n\s*\{\n/).slice(1)) {
   const id = block.match(/^\s*id:\s*'([^']+)'/m)?.[1];
+  // Two sections on one path is a section that can never be reached: the
+  // router matches the first and the second is dead. The endpoint audit
+  // cannot see it (it checks API paths) and the route walk cannot either
+  // (it navigates each path and finds *something* rendering), so it is
+  // checked here, where `npm run verify` will catch it.
+  const routePath = block.match(/^\s*path:\s*'([^']+)'/m)?.[1];
+  if (id && routePath) {
+    if (seenPaths.has(routePath)) {
+      console.error(
+        `Duplicate route "${routePath}": "${seenPaths.get(routePath)}" and "${id}". ` +
+        'The second is unreachable — give one of them a different path.',
+      );
+      process.exit(1);
+    }
+    seenPaths.set(routePath, id);
+  }
   const load = block.match(/load:\s*\(\)\s*=>\s*import\('([^']+)'\)/)?.[1];
   if (!id || !load) continue;
   sections.push({ id, file: resolveImport(join(src, 'modules', 'registry.js'), load) });

@@ -265,6 +265,7 @@ export default function IndustryCalendar() {
                         key: 'claimed_days',
                         header: 'Claimed',
                         align: 'right',
+                        hideOn: 'narrow',
                         render: (b) =>
                           b.claimed_days ? (
                             b.claimed_days

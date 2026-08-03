@@ -99,7 +99,7 @@ export default function BookingOverview() {
             <Link to="/booking/bookings" className="ui-multi__chip" style={{ textDecoration: 'none' }}>
               📖 Bookings
             </Link>
-            <Link to="/booking/calendar" className="ui-multi__chip" style={{ textDecoration: 'none' }}>
+            <Link to="/booking/date-claims" className="ui-multi__chip" style={{ textDecoration: 'none' }}>
               📅 Calendar
             </Link>
             <Link to="/booking/promos" className="ui-multi__chip" style={{ textDecoration: 'none' }}>

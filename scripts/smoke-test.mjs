@@ -113,6 +113,7 @@ const EXPECTED_KEYS = {
   'bookingPlatform.deals': 'deals',
   'bookingPlatform.search': 'results',
   'bookingPlatform.industryCalendar': 'days',
+  'bookingPlatform.blueprints': 'blueprints',
   'connections.list': 'connections',
   'connections.catalog': 'tools',
   'categoryCards.list': 'cards',

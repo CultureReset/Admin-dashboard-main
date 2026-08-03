@@ -301,6 +301,7 @@ export default function AvailabilitySearch() {
                     {
                       key: 'vertical',
                       header: 'Industry',
+                      hideOn: 'narrow',
                       render: (row) => <Badge tone="info">{row.vertical}</Badge>,
                     },
                     {
@@ -334,6 +335,7 @@ export default function AvailabilitySearch() {
                       key: 'min_remaining',
                       header: 'Fewest left',
                       align: 'right',
+                      hideOn: 'narrow',
                       render: (row) =>
                         row.min_remaining != null ? row.min_remaining : <span className="faint">—</span>,
                     },

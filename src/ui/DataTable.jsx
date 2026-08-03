@@ -145,7 +145,14 @@ export function DataTable({
                     <th
                       key={key}
                       style={{ width: column.width, textAlign: column.align || 'left' }}
-                      className={column.sortable === false ? '' : 'is-sortable'}
+                      className={[
+                        column.sortable === false ? '' : 'is-sortable',
+                        // `hideOn: 'narrow'` drops a column on a phone rather
+                        // than pushing the whole table into a sideways scroll
+                        // nobody discovers. For columns that carry detail, not
+                        // identity — a mini chart, a secondary timestamp.
+                        column.hideOn === 'narrow' ? 'ui-table__hide-narrow' : '',
+                      ].filter(Boolean).join(' ')}
                       onClick={() => toggleSort(column)}
                     >
                       <span className="ui-table__th">
@@ -174,6 +181,7 @@ export function DataTable({
                       <td
                         key={column.key || column.header}
                         style={{ textAlign: column.align || 'left' }}
+                        className={column.hideOn === 'narrow' ? 'ui-table__hide-narrow' : undefined}
                         onClick={
                           column.stopPropagation ? (e) => e.stopPropagation() : undefined
                         }
