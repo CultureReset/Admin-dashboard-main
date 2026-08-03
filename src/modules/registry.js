@@ -264,6 +264,26 @@ const definitions = [
     load: () => import('./booking/Availability.jsx'),
   },
   {
+    id: 'booking-search',
+    label: 'Availability Search',
+    icon: '🔎',
+    group: 'booking',
+    path: '/booking/search',
+    description:
+      'Pick any date and see what is open across every industry at once — condos and their units, charters, cruises, parasailing, photographers.',
+    load: () => import('./booking/AvailabilitySearch.jsx'),
+  },
+  {
+    id: 'booking-website-calendar',
+    label: 'Website Calendar',
+    icon: '🗓️',
+    group: 'booking',
+    path: '/booking/website-calendar',
+    description:
+      'The embeddable availability calendar a business drops into its own site — one view across every platform it books through.',
+    load: () => import('./booking/WebsiteCalendar.jsx'),
+  },
+  {
     id: 'booking-openings',
     label: 'Openings',
     icon: '⚡',

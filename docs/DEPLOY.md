@@ -56,12 +56,16 @@ in `server.js`; nothing existing is modified.
 
 | Router | Mounted at | Gives you |
 |---|---|---|
-| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations, plus the ingestion views: parser sources, capacity, availability, openings, iCal feeds, deals |
+| `routes/admin-platform.js` | `/api/admin/platform` | bookings, offerings, calendar, promos, waivers, integrations, plus the ingestion views: parser sources, capacity, availability, openings, iCal feeds, deals, and the cross-industry date search |
+| `routes/embed.js` | `/api/embed` | the availability calendar businesses embed on their own sites, and its JSON — **public, no auth** |
 | `routes/composio.js` | `/api/admin/connections` | Composio catalog and connections |
 | `routes/admin-settings.js` | `/api/admin` | settings, provider status, business leads, guest photos, category cards |
 
 `mount()` already skips a route file that fails to load rather than taking the
 API down, so a bad deploy degrades instead of going dark.
+
+`routes/availability-engine.js` is a shared module, not a router — the
+three-source merge, so the admin search and the embed widget cannot disagree.
 
 One existing file changed, by one line: `routes/email-parser.js` now also
 exports `syncExternalCalendar`, so `POST /api/admin/platform/calendars/:id/sync`
@@ -83,9 +87,25 @@ Only one variable is genuinely new:
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' https://YOUR-API/api/admin/platform/summary
 # expect 401 — the route exists and is correctly refusing an unauthenticated call
+
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' https://YOUR-API/api/embed/availability.js
+# expect 200 application/javascript — the embed widget is public on purpose
 ```
 
-A `404` there means the deploy did not pick up the new routers.
+A `404` on either means the deploy did not pick up the new routers.
+
+### The embed widget is public
+
+`/api/embed/*` has no auth and must not get any — it runs in anonymous
+visitors' browsers on customers' own websites. What protects it is what it
+returns: counts and statuses only, with `visible_on_profile = false` rows
+excluded. No guest name, email, phone, confirmation number or booking row is
+reachable through it. Keep it that way if you extend it.
+
+The widget bakes in the origin it was fetched from, so moving the API to
+another host needs no change on any customer site — but a snippet already
+pasted on a customer site points at the old host, so keep the old origin
+answering or reissue the snippets from Booking Platform → Website Calendar.
 
 ---
 

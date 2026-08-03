@@ -31,12 +31,12 @@ fails to save.
 ## Current state
 
 After the routes added on the `claude/cybercheck-modular-react-dashboard-7on41c`
-branch of `gcr-api-clean`, of 74 sections:
+branch of `gcr-api-clean`, of 76 sections:
 
 | | Count |
 |---|---|
 | Wired to routes already live in `gcr-api-clean` | 62 |
-| Need that branch merged and deployed | 11 (Booking Platform + Integrations) |
+| Need that branch merged and deployed | 13 (Booking Platform + Integrations) |
 | Depend on a route that exists nowhere | **1** — SMS / Messaging |
 
 That last one is `routes/messaging.js`, which exists but is deliberately
@@ -129,7 +129,7 @@ Two routers were added on the `claude/cybercheck-modular-react-dashboard-7on41c`
 branch of `gcr-api-clean`, because the dashboard could not otherwise reach the
 data it needed.
 
-**`/api/admin/platform`** (42 routes) — an admin view over the universal booking
+**`/api/admin/platform`** (44 routes) — an admin view over the universal booking
 engine. `routes/platform.js` owns the model but resolves the business from
 `entity_owners` using the signed-in user, so an admin token cannot read any of
 it. These routes use the same tables (`offerings`, `offering_prices`,
@@ -147,12 +147,25 @@ The later additions cover the ingestion pipeline rather than the booking model:
 | `/openings` | `business_availability` + `entity` + `gcr_deals` | what is still sellable |
 | `/calendars/*` | `entity_external_calendars` | external iCal feeds, and a manual sync |
 | `/deals` | `gcr_deals` | what is being promoted |
+| `/search`, `/verticals` | all three availability sources + `entity` | what is open on a given date, across every industry |
 
 `POST /calendars/:id/sync` lazily requires `routes/email-parser.js` and calls
 `syncExternalCalendar` in-process. That module is 1,400 lines and holds all 24
 extractors, so requiring it at boot would let a fault in it take the whole admin
 router down; requiring it inside the handler keeps the blast radius to one
 route. The only change made to `email-parser.js` was exporting that function.
+
+**`/api/embed`** (2 routes, public) — the availability calendar a business
+embeds on its own website, and the JSON it reads. Unauthenticated by design:
+it loads in anonymous visitors' browsers on other people's domains. Only
+counts and statuses are returned — never a guest, an email or a booking row —
+and `visible_on_profile = false` rows are excluded so a business can keep a
+date off its public calendar without deleting it.
+
+**`routes/availability-engine.js`** — not a router. The three-source merge,
+extracted so the admin search and the embed widget cannot drift apart.
+`routes/gcr.js` still does its own inline merge for the public search and was
+deliberately left alone.
 
 **`/api/admin/connections`** (10 routes) — Composio. Nothing existed. Adds the
 curated tool catalog, per-business connection records, the OAuth handshake,
@@ -200,6 +213,27 @@ There is deliberately no live API integration with Peek Pro, FareHarbor or
 Thoroughbred, and none is needed for this. Booking Platform → Booking Sources
 answers "what is this business on?" from the emails that actually arrived,
 which is a stronger signal than a field someone remembered to set.
+
+## The three rules the availability model turns on
+
+Each of these is easy to get backwards, and each was a real bug caught in
+testing rather than a hypothetical:
+
+1. **A missing row means unclaimed, not unavailable.** Rows are only written
+   when something CLAIMS a date. So no row means nothing has taken it: open
+   with the full capacity free if a capacity is on file, genuinely unknown if
+   not. Reading absence as "full" showed every boat as sold out on every day
+   nobody had booked yet.
+2. **Unknown is not available.** With no capacity and nothing claiming a date
+   there is no basis for saying it is free. Counting unknown as open put the
+   businesses we know least about at the top of a search for what is open.
+3. **An entity-wide block beats everything.** A condo with a capacity row
+   saying "1 unit free" and an Airbnb iCal block on the same night is not
+   free. The block is applied last so nothing can overwrite it.
+
+A fourth, smaller one: the limited/available threshold has to be proportional.
+A flat "3 or fewer is limited" paints a two-unit building amber when both
+units are free.
 
 ## Open question: two app catalogues
 

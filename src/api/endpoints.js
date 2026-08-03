@@ -542,6 +542,27 @@ export const endpoints = {
     /** gcr_deals — the outbound side of an opening. */
     deals: () => `${ADMIN}/platform/deals`,
     deal: (id) => `${ADMIN}/platform/deals/${seg(id)}`,
+
+    /**
+     * Cross-board availability search — pick a date, see what is open in every
+     * industry at once. Rolls condo units up to their complex, and returns
+     * businesses with no data too, labelled, because those are the ones to
+     * chase rather than the ones to hide.
+     */
+    search: () => `${ADMIN}/platform/search`,
+    verticals: () => `${ADMIN}/platform/verticals`,
+  },
+
+  /**
+   * The embeddable availability calendar a business puts on its own website.
+   *
+   * Public and unauthenticated on purpose — it loads in anonymous visitors'
+   * browsers on other people's domains — and returns only counts and statuses,
+   * never a guest, an email or a booking row.
+   */
+  embed: {
+    script: () => '/api/embed/availability.js',
+    availability: (slug) => `/api/embed/availability/${seg(slug)}`,
   },
 
   /** Composio connections — /api/admin/connections. */

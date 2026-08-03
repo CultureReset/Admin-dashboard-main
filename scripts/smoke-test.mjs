@@ -111,6 +111,7 @@ const EXPECTED_KEYS = {
   'bookingPlatform.openings': 'openings',
   'bookingPlatform.icalFeeds': 'calendars',
   'bookingPlatform.deals': 'deals',
+  'bookingPlatform.search': 'results',
   'connections.list': 'connections',
   'connections.catalog': 'tools',
   'categoryCards.list': 'cards',
@@ -131,6 +132,7 @@ const READ_ONLY = new Set([
   'bookingPlatform.summary',
   'bookingPlatform.offeringMeta',
   'bookingPlatform.parserPlatforms',
+  'bookingPlatform.verticals',
   'connections.status',
   'photos.repairStatus',
   'qr.statsSummary',
@@ -139,6 +141,19 @@ const READ_ONLY = new Set([
   'settings.all',
   'updateLinks.today',
 ]);
+
+/**
+ * Endpoints that answer 400 without a query parameter, and the one to send.
+ *
+ * Without this the search route reports as a failure on every run — which is
+ * worse than not covering it, because a harness that cries wolf gets ignored.
+ */
+const QUERY = {
+  'bookingPlatform.search': () => {
+    const today = new Date().toISOString().slice(0, 10);
+    return `?from=${today}&to=${today}&limit=50`;
+  },
+};
 
 /* ── load the registry and the section map ───────────────────────────── */
 
@@ -222,7 +237,8 @@ for (const key of Object.keys(usedBy).sort()) {
   const path = pathFor(key);
   // A read endpoint that still needs an id can't be probed blind.
   if (!path) { skipped.push(key); continue; }
-  targets.push({ key, path, sections: usedBy[key] });
+  const query = QUERY[key] ? QUERY[key]() : '';
+  targets.push({ key, path: path + query, sections: usedBy[key] });
 }
 
 async function probe({ key, path, sections }) {

@@ -260,6 +260,15 @@
       "bookingPlatform.waivers",
       "entities.list"
     ],
+    "booking-search": [
+      "bookingPlatform.search",
+      "bookingPlatform.verticals"
+    ],
+    "booking-website-calendar": [
+      "embed.availability",
+      "embed.script",
+      "entities.list"
+    ],
     "booking-openings": [
       "bookingPlatform.booking",
       "bookingPlatform.bookings",
