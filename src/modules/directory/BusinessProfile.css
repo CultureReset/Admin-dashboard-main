@@ -218,3 +218,37 @@
   gap: var(--space-2);
   margin-top: var(--space-3);
 }
+
+/* "Add a field" — everything the table supports that this business has not
+   filled in yet. Never gated by industry, only by use. */
+.bp__addfield {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--card-border);
+}
+
+.bp__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-3) 0;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.bp__chip {
+  padding: 5px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bp__chip:hover { border-color: var(--primary); color: var(--primary); }
+
+.bp__chips--tall { max-height: 320px; }
+
+.bp__navitem--add { color: var(--primary); font-weight: 600; }

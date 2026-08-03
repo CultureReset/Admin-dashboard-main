@@ -173,32 +173,156 @@ function fieldRank(col) {
   return 100;
 }
 
-function schemaFor(section) {
-  const cols = (section.columns || [])
-    .filter((c) => !NOT_EDITABLE.has(c.name))
-    .slice()
-    .sort((a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name));
-  // Fall back to the keys actually present if the schema said nothing, and
-  // infer each type from its value — otherwise a boolean renders as the text
-  // "true" in a text box, which is both ugly and a way to write the string
-  // "true" into a boolean column.
-  if (!cols.length && section.rows?.length) {
-    const sample = section.rows[0];
-    const inferred = Object.keys(sample)
-      .filter((k) => !NOT_EDITABLE.has(k))
-      .map((name) => {
-        const v = sample[name];
-        const type = typeof v === 'boolean' ? 'boolean'
-          : typeof v === 'number' ? (Number.isInteger(v) ? 'integer' : 'number')
-          : Array.isArray(v) ? 'array'
-          : v && typeof v === 'object' ? 'object'
-          : 'text';
-        return { name, type };
-      });
-    inferred.sort((a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name));
-    return inferred.map(fieldFor);
+/** Columns of this table, from the schema or inferred from a row. */
+function columnsOf(section) {
+  const declared = (section.columns || []).filter((c) => !NOT_EDITABLE.has(c.name));
+  if (declared.length) return declared;
+
+  // The API reported no types. Infer from a row, otherwise a boolean renders
+  // as the string "true" in a text box — and saving would write "true" into a
+  // boolean column.
+  const sample = section.rows?.[0];
+  if (!sample) return [];
+  return Object.keys(sample)
+    .filter((k) => !NOT_EDITABLE.has(k))
+    .map((name) => {
+      const v = sample[name];
+      const type = typeof v === 'boolean' ? 'boolean'
+        : typeof v === 'number' ? (Number.isInteger(v) ? 'integer' : 'number')
+        : Array.isArray(v) ? 'array'
+        : v && typeof v === 'object' ? 'object'
+        : 'text';
+      return { name, type };
+    });
+}
+
+const isBlank = (v) =>
+  v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+
+/**
+ * Split a table's columns into the ones this business actually uses and the
+ * ones it has never filled in.
+ *
+ * ── Why presence and not industry ───────────────────────────────────────
+ *
+ * `bookable_resources` carries bedrooms, bathrooms, sqft, wifi_ssid and
+ * nightly_rate because a condo needs them. A fishing charter's boat does not,
+ * and asking a charter operator for a bedroom count is noise.
+ *
+ * The tempting fix is to decide by entity_type — show bedrooms for condos,
+ * hide them for charters. That is wrong, and it is the same mistake as naming
+ * a table after an industry: a 65ft sportfish genuinely has a head and two
+ * berths, and a rule keyed on "charter" would refuse to let anyone record
+ * them.
+ *
+ * So nothing here looks at the industry. A field is shown because THIS row
+ * uses it, or because another row in the same table for the same business
+ * uses it — a marina with six boats where one has a head shows the head field
+ * on all six, which is right, because the question is now live for that
+ * business. Everything else moves behind "Add a field", one click away and
+ * never lost.
+ */
+function splitFields(section, row) {
+  const cols = columnsOf(section);
+  const rows = section.rows || [];
+
+  const usedByBusiness = new Set();
+  for (const r of rows) {
+    for (const [k, v] of Object.entries(r || {})) {
+      if (!isBlank(v)) usedByBusiness.add(k);
+    }
   }
-  return cols.map(fieldFor);
+  // A new row has nothing of its own yet, so it inherits what the business
+  // already uses in this table — a seventh boat gets the same fields as the
+  // other six rather than a blank slate.
+  for (const [k, v] of Object.entries(row || {})) {
+    if (!isBlank(v)) usedByBusiness.add(k);
+  }
+
+  const byRank = (a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name);
+  const inUse = cols.filter((c) => usedByBusiness.has(c.name)).sort(byRank);
+  const unused = cols.filter((c) => !usedByBusiness.has(c.name)).sort(byRank);
+
+  // A brand-new table with no rows anywhere would otherwise open empty, so
+  // fall back to showing everything rather than nothing.
+  if (!inUse.length) return { inUse: unused, unused: [] };
+  return { inUse, unused };
+}
+
+
+/**
+ * The row editor.
+ *
+ * Opens on the fields this business actually uses. Everything else the table
+ * supports sits behind "Add a field" — so a charter's boat is not asked for a
+ * bedroom count, but the operator of a 65ft sportfish can add "Head: 1"
+ * without anyone changing the schema or the code.
+ */
+function RowEditor({ section, row, onSave, onCancel, onDelete }) {
+  const { inUse, unused } = useMemo(() => splitFields(section, row), [section, row]);
+  const [added, setAdded] = useState([]);
+  const [picking, setPicking] = useState(false);
+  const [filter, setFilter] = useState('');
+
+  const shown = useMemo(
+    () => [...inUse, ...unused.filter((c) => added.includes(c.name))]
+      .sort((a, b) => fieldRank(a) - fieldRank(b) || a.name.localeCompare(b.name)),
+    [inUse, unused, added],
+  );
+
+  const offer = useMemo(
+    () => unused
+      .filter((c) => !added.includes(c.name))
+      .filter((c) => !filter || c.name.replace(/_/g, ' ').includes(filter.toLowerCase())),
+    [unused, added, filter],
+  );
+
+  return (
+    <>
+      <SchemaForm
+        schema={shown.map(fieldFor)}
+        initialValues={row || {}}
+        onSubmit={onSave}
+        onCancel={onCancel}
+        submitLabel={row?.id ? 'Save changes' : 'Add row'}
+        extraActions={
+          row?.id ? <Button variant="danger" onClick={onDelete}>Delete</Button> : null
+        }
+      />
+
+      {unused.length > 0 && (
+        <div className="bp__addfield">
+          {!picking ? (
+            <Button variant="ghost" onClick={() => setPicking(true)}>
+              + Add a field ({unused.length - added.length} not used yet)
+            </Button>
+          ) : (
+            <>
+              <p className="an__note">
+                Fields this table supports that {section.label || section.table} has not used.
+                Nothing is hidden by industry — only by whether it has ever been filled in.
+              </p>
+              <SearchInput value={filter} onChange={setFilter} placeholder="Find a field…" />
+              <div className="bp__chips">
+                {offer.map((c) => (
+                  <button
+                    type="button"
+                    key={c.name}
+                    className="bp__chip"
+                    onClick={() => { setAdded((a) => [...a, c.name]); setFilter(''); }}
+                  >
+                    + {c.name.replace(/_/g, ' ')}
+                  </button>
+                ))}
+                {!offer.length && <span className="an__note">Nothing left to add.</span>}
+              </div>
+              <Button variant="ghost" onClick={() => setPicking(false)}>Done</Button>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
 }
 
 /** Sentinel for the analytics pane, which is not a table. */
@@ -295,6 +419,8 @@ export default function BusinessProfile() {
   const [navOpen, setNavOpen] = useState(false);
   const [showEmpty, setShowEmpty] = useState(false);
   const [editing, setEditing] = useState(null);   // { section, row } | { section, row: null } for new
+  const [addingSection, setAddingSection] = useState(false);
+  const [sectionFilter, setSectionFilter] = useState('');
   const toast = useToast();
 
   /* business picker — only when no slug is chosen */
@@ -310,6 +436,17 @@ export default function BusinessProfile() {
       query: showEmpty ? { include_empty: 'true' } : undefined,
     }) : null),
     [slugParam, showEmpty],
+    { initialData: null },
+  );
+
+  /* Every slug-keyed table, including the ones with no rows — the catalogue
+     behind "Add section". Kept separate from the main read so switching it on
+     does not reshuffle what is on screen. */
+  const catalogue = useAsync(
+    async () => (slugParam
+      ? api.get(endpoints.businessProfile.get(slugParam), { query: { include_empty: 'true' } })
+      : null),
+    [slugParam],
     { initialData: null },
   );
 
@@ -338,6 +475,12 @@ export default function BusinessProfile() {
       return bn - an;
     });
   }, [sections]);
+
+  /** Tables that exist but this business has never put a row in. */
+  const unusedSections = useMemo(() => {
+    const all = Array.isArray(catalogue.data?.sections) ? catalogue.data.sections : [];
+    return all.filter((s) => !s.count).sort((a, b) => a.table.localeCompare(b.table));
+  }, [catalogue.data]);
 
   useEffect(() => {
     if (!active && sections.length) setActive(ANALYTICS_KEY);
@@ -493,6 +636,19 @@ export default function BusinessProfile() {
                     <span className="bp__navitem-count">{stats.data?.totals?.page_views ?? '—'}</span>
                   </button>
                 </div>
+                {unusedSections.length > 0 && (
+                  <div className="bp__navgroup">
+                    <p className="bp__navgroup-title">Not used yet</p>
+                    <button
+                      type="button"
+                      className="bp__navitem bp__navitem--add"
+                      onClick={() => setAddingSection(true)}
+                    >
+                      <span className="bp__navitem-label">+ Add a section</span>
+                      <span className="bp__navitem-count">{unusedSections.length}</span>
+                    </button>
+                  </div>
+                )}
                 {groups.map(([group, items]) => (
                   <div className="bp__navgroup" key={group}>
                     <p className="bp__navgroup-title">{group}</p>
@@ -583,6 +739,51 @@ export default function BusinessProfile() {
             </div>
           )}
 
+          {addingSection && (
+            <Modal
+              open
+              title="Add a section"
+              subtitle={`${unusedSections.length} tables this business has not used`}
+              onClose={() => setAddingSection(false)}
+              size="lg"
+            >
+              <Notice tone="info" title="Every table, not a shortlist">
+                <p>
+                  These are all the slug-keyed tables in the database that {profile.data?.entity?.name || slugParam}
+                  {' '}has no rows in. Nothing is filtered by what kind of business this is — a charter can start a
+                  Units section if one of its boats has berths, and a condo can start Vessels if it runs a shuttle.
+                  Adding the first row makes it a live section.
+                </p>
+              </Notice>
+              <div style={{ height: 'var(--space-3)' }} />
+              <SearchInput
+                value={sectionFilter}
+                onChange={setSectionFilter}
+                placeholder="Find a section…"
+              />
+              <div className="bp__chips bp__chips--tall">
+                {unusedSections
+                  .filter((s) => !sectionFilter
+                    || `${s.label} ${s.table} ${s.group}`.toLowerCase().includes(sectionFilter.toLowerCase()))
+                  .map((s) => (
+                    <button
+                      type="button"
+                      key={s.table}
+                      className="bp__chip"
+                      onClick={() => {
+                        setAddingSection(false);
+                        setSectionFilter('');
+                        setEditing({ section: s, row: null });
+                      }}
+                      title={s.table}
+                    >
+                      + {s.group} · {s.label || s.table}
+                    </button>
+                  ))}
+              </div>
+            </Modal>
+          )}
+
           {editing && (
             <Modal
               open
@@ -591,25 +792,15 @@ export default function BusinessProfile() {
               onClose={() => setEditing(null)}
               size="lg"
             >
-              <SchemaForm
-                schema={schemaFor(editing.section)}
-                initialValues={editing.row || {}}
-                onSubmit={saveRow}
+              <RowEditor
+                section={editing.section}
+                row={editing.row}
+                onSave={saveRow}
                 onCancel={() => setEditing(null)}
-                submitLabel={editing.row ? 'Save changes' : 'Add row'}
-                extraActions={
-                  editing.row?.id ? (
-                    <Button
-                      variant="danger"
-                      onClick={async () => {
-                        await deleteRow(editing.section, editing.row);
-                        setEditing(null);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  ) : null
-                }
+                onDelete={async () => {
+                  await deleteRow(editing.section, editing.row);
+                  setEditing(null);
+                }}
               />
             </Modal>
           )}
