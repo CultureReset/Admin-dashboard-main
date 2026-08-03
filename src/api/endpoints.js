@@ -493,6 +493,22 @@ export const endpoints = {
     promo: (id) => `${ADMIN}/platform/promos/${seg(id)}`,
 
     waivers: () => `${ADMIN}/platform/waivers`,
+
+    /**
+     * Booking sources — where bookings actually come from.
+     *
+     * There are no live API connections to Peek Pro, FareHarbor and the rest.
+     * Their confirmation emails arrive at gcr-<slug>@parse.gulfcoastradar.com
+     * and routes/email-parser.js parses them, recognising 24 platforms and
+     * logging every attempt. So "what is this business attached to?" is
+     * answered by what has actually arrived, not by a field someone set.
+     *
+     * These are the admin-scoped views. The public /api/email-parser/log has
+     * no auth and returns raw email bodies, so the dashboard never calls it.
+     */
+    parserSources: () => `${ADMIN}/platform/parser/sources`,
+    parserLog: () => `${ADMIN}/platform/parser/log`,
+    parserPlatforms: () => `${ADMIN}/platform/parser/platforms`,
     /** Third-party connections per business (FareHarbor and anything else). */
     integrations: () => `${ADMIN}/platform/integrations`,
   },

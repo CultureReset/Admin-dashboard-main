@@ -38,12 +38,14 @@ const INTEGRATIONS = [
 ];
 
 /**
- * Providers the platform knows how to talk to but has no code for yet, so the
- * absence is visible rather than looking like an oversight.
+ * Booking systems the platform reads WITHOUT an API connection.
+ *
+ * Peek Pro, FareHarbor, Rezdy and twenty-one others are handled by the email
+ * parser: their confirmation emails arrive at gcr-<slug>@parse.gulfcoastradar.com
+ * and are extracted into the booking calendar. There is deliberately no live
+ * API integration for them, so "not connected here" is correct and not a gap.
  */
-const NOT_BUILT = [
-  { name: 'Peek Pro', purpose: 'Activity booking sync', note: 'No integration exists in the API.' },
-];
+const VIA_EMAIL_PARSER = 24;
 
 export default function Integrations() {
   const toast = useToast();
@@ -217,21 +219,17 @@ export default function Integrations() {
 
       <div style={{ height: 'var(--space-5)' }} />
 
-      <Card title="Not built yet" subtitle="Providers with no integration in the API.">
-        <div className="integrations">
-          {NOT_BUILT.map((item) => (
-            <div className="integration" key={item.name}>
-              <div className="integration__body">
-                <div className="integration__name">{item.name}</div>
-                <div className="integration__purpose">{item.purpose}</div>
-                <div className="integration__probe">{item.note}</div>
-              </div>
-              <div className="integration__status">
-                <Badge tone="warning">Not implemented</Badge>
-              </div>
-            </div>
-          ))}
-        </div>
+      <Card
+        title="Read without an API connection"
+        subtitle={`${VIA_EMAIL_PARSER} booking systems are handled by the email parser instead.`}
+      >
+        <p className="muted">
+          Peek Pro, FareHarbor, Rezdy, Bókun, Airbnb, VRBO, OpenTable, Toast and the rest do not
+          need a live integration — their confirmation emails arrive at{' '}
+          <code className="mono">gcr-&lt;slug&gt;@parse.gulfcoastradar.com</code> and are extracted
+          into the booking calendar. To see which system each business is actually on, use{' '}
+          <Link to="/booking/sources">Booking Sources</Link>.
+        </p>
       </Card>
 
     </>

@@ -224,6 +224,16 @@ const definitions = [
     load: () => import('./booking/Promos.jsx'),
   },
   {
+    id: 'booking-sources',
+    label: 'Booking Sources',
+    icon: '📨',
+    group: 'booking',
+    path: '/booking/sources',
+    description:
+      'Which booking system each business actually uses — Peek Pro, FareHarbor and the rest — derived from the emails that arrive and get parsed.',
+    load: () => import('./booking/Sources.jsx'),
+  },
+  {
     id: 'booking-connections',
     label: 'Connections',
     icon: '🔌',

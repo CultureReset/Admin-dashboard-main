@@ -201,6 +201,10 @@
       "bookingPlatform.waivers",
       "entities.list"
     ],
+    "booking-sources": [
+      "bookingPlatform.parserLog",
+      "bookingPlatform.parserSources"
+    ],
     "booking-connections": [
       "connections.catalog",
       "connections.catalogItem",
