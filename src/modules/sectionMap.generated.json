@@ -168,6 +168,12 @@
       "businessProfile.row",
       "entities.list"
     ],
+    "platform-text-dashboard": [
+      "dashboardSms.allowlist",
+      "dashboardSms.allowlistItem",
+      "dashboardSms.ask",
+      "dashboardSms.log"
+    ],
     "platform-intake": [
       "intake.deliveries",
       "intake.endpoint",

@@ -165,6 +165,16 @@ const definitions = [
     load: () => import('./directory/BusinessProfile.jsx'),
   },
   {
+    id: 'platform-text-dashboard',
+    label: 'Text the Dashboard',
+    icon: '💬',
+    group: 'platform',
+    path: '/platform/text',
+    description:
+      'Ask a question by SMS and get an answer built from real data. Separate from the customer SMS pipeline.',
+    load: () => import('./platform/TextTheDashboard.jsx'),
+  },
+  {
     id: 'platform-intake',
     label: 'Intake',
     icon: '📥',

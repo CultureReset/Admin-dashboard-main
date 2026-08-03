@@ -109,3 +109,25 @@
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* Text-the-dashboard */
+.tsd__reply {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+}
+
+.tsd__answer { margin: 0 0 6px; font-size: 15px; }
+
+.tsd__add {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) auto;
+  gap: var(--space-2);
+  align-items: start;
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .tsd__add { grid-template-columns: 1fr; }
+}

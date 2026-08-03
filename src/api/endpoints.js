@@ -185,6 +185,19 @@ export const endpoints = {
     deliveries: () => `${ADMIN}/intake/webhooks/deliveries`,
   },
 
+  /**
+   * Texting the dashboard. A separate system from the customer SMS pipeline
+   * (/api/sms) — different provider path, different table, different purpose.
+   * `ask` runs the same question-answering the SMS webhook uses, so it can be
+   * tried from a browser without sending a text.
+   */
+  dashboardSms: {
+    ask: () => '/api/dashboard-sms/ask',
+    allowlist: () => '/api/dashboard-sms/allowlist',
+    allowlistItem: (id) => `/api/dashboard-sms/allowlist/${seg(id)}`,
+    log: () => '/api/dashboard-sms/log',
+  },
+
   /** Collections that each have their own dedicated route pair. */
   collections: {
     pricingItems: {
