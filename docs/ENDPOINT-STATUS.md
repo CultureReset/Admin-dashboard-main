@@ -286,6 +286,22 @@ bedrooms (`stay_units`). That is why `/match` classifies a matched child by its
 PARENT's industry — otherwise "2 bed 2 bath" finds unit 1204 and then discards
 it because a `condo_unit` is not a `condo`.
 
+**The building is yours, the unit is theirs.** `stay_properties` is marked
+`managedBy: 'operator'` — the operator fills a complex in once (pool, lazy
+river, floors, parking, images) and every unit inherits it. Nothing on the
+property is `required`, a unit owner is only ever asked about their own unit,
+and `GET /listing/:slug` for a unit returns the building's row and amenities as
+a read-only `inherited` block so a blank field on a unit is never ambiguous
+between "no" and "ask upstairs".
+
+That inheritance has to reach the search or it is decorative. A guest asking
+for "two bed two bath **with a lazy river**" is naming one thing on `stay_units`
+and one on `stay_property_amenities`; intersecting a set of unit slugs with a
+set of building slugs is empty every time. So a listing-level filter expands to
+the building's children before intersecting — the building stays in the set
+too, since a whole-house rental has no children and is itself the bookable
+thing.
+
 **A name can live on two tables.** `max_anglers` is on both `charter_boats` (what
 the boat holds) and `charter_trips` (what this trip takes). Left alone, which one
 a filter hits would depend on loop order, so duplicates collapse to the first

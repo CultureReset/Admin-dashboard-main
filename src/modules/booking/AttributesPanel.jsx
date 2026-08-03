@@ -181,17 +181,31 @@ export default function AttributesPanel({ slug }) {
 
   return (
     <>
-      <Notice tone="info" title="Real columns, not a blob">
-        <p>
-          This writes to <code className="mono">{data.table}</code> — a real table with real typed
-          columns, so &ldquo;two bedroom two bath&rdquo; is an indexed integer comparison. Try it in{' '}
-          <Link to="/booking/match">Find a Match</Link>.
-        </p>
-        {data.level === 'unit' && (
+      <Notice
+        tone={data.managed_by === 'operator' ? 'warning' : 'info'}
+        title={
+          data.managed_by === 'operator'
+            ? 'You fill this in once — owners never see it'
+            : 'Real columns, not a blob'
+        }
+      >
+        {data.managed_by === 'operator' ? (
+          <p>
+            {data.managed_note} Every unit in it inherits these details, so a unit owner is only
+            ever asked about their own unit. Writes to{' '}
+            <code className="mono">{data.table}</code>.
+          </p>
+        ) : (
+          <p>
+            This writes to <code className="mono">{data.table}</code> — a real table with real typed
+            columns, so &ldquo;two bedroom two bath&rdquo; is an indexed integer comparison. Try it
+            in <Link to="/booking/match">Find a Match</Link>.
+          </p>
+        )}
+        {data.level === 'unit' && data.parent_name && (
           <p style={{ marginTop: 8 }}>
-            This is a unit of <strong>{data.parent_name}</strong>. The building&apos;s own details —
-            pool, floors, front desk — live on{' '}
-            <Link to={`/directory/entity/${encodeURIComponent(data.parent_slug)}`}>its page</Link>.
+            A unit of <strong>{data.parent_name}</strong>. Everything the building provides is
+            inherited and shown below — there is nothing to re-enter.
           </p>
         )}
       </Notice>
@@ -265,6 +279,13 @@ export default function AttributesPanel({ slug }) {
         </>
       )}
 
+      {data.inherited && (
+        <>
+          <div style={{ height: 'var(--space-5)' }} />
+          <InheritedCard inherited={data.inherited} catalog={catalogQuery.data} />
+        </>
+      )}
+
       {(spec?.collections || []).map((coll) => (
         <CollectionCard
           key={coll.table}
@@ -322,6 +343,74 @@ export default function AttributesPanel({ slug }) {
         </>
       )}
     </>
+  );
+}
+
+/**
+ * What this unit gets from its building, read-only.
+ *
+ * Shown rather than hidden because a blank field on a unit is otherwise
+ * ambiguous — "no balcony" and "ask upstairs" look identical — and because an
+ * owner should be able to see the pool and the lazy river are already recorded
+ * instead of wondering whether to add them.
+ */
+function InheritedCard({ inherited, catalog }) {
+  const chosen = new Set(inherited.amenities || []);
+  const amenityLabels = (catalog?.sections || [])
+    .flatMap((s) => s.amenities)
+    .filter((a) => chosen.has(a.id));
+
+  const filled = (inherited.columns || [])
+    .filter((c) => inherited.record && inherited.record[c.name] !== null && inherited.record[c.name] !== '')
+    .filter((c) => inherited.record[c.name] !== false);
+
+  return (
+    <Card
+      title={`Inherited from ${inherited.entity_name}`}
+      subtitle={
+        inherited.record
+          ? `From ${inherited.table}. Nothing here is yours to fill in.`
+          : `Nothing recorded on ${inherited.table} yet.`
+      }
+      actions={
+        <Link className="ui-btn ui-btn--default ui-btn--sm" to={`/directory/entity/${encodeURIComponent(inherited.entity_slug)}`}>
+          Open the building
+        </Link>
+      }
+    >
+      {!inherited.record ? (
+        <p className="muted">
+          The building&apos;s details have not been filled in yet. Guests searching on them —
+          beachfront, a pool, a lazy river — will not find this unit until they are.
+        </p>
+      ) : (
+        <>
+          <div className="grid-auto" style={{ gap: 'var(--space-3)' }}>
+            {filled.map((column) => {
+              const v = inherited.record[column.name];
+              return (
+                <div key={column.name}>
+                  <div className="ui-field__label">{column.label}</div>
+                  <div>
+                    {v === true ? 'Yes' : `${v}${column.unit && column.unit !== '$' ? ` ${column.unit}` : ''}`}
+                  </div>
+                </div>
+              );
+            })}
+            {filled.length === 0 && <p className="muted">Nothing filled in on the building yet.</p>}
+          </div>
+
+          {amenityLabels.length > 0 && (
+            <div style={{ marginTop: 'var(--space-4)' }}>
+              <div className="ui-field__label" style={{ marginBottom: 6 }}>Building amenities</div>
+              <div className="row-wrap" style={{ gap: 4 }}>
+                {amenityLabels.map((a) => <Badge key={a.id} tone="info">{a.label}</Badge>)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </Card>
   );
 }
 
