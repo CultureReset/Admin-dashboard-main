@@ -324,7 +324,7 @@ export default function BusinessProfile() {
         title={entity?.name || slugParam}
         description={
           profile.data
-            ? `${profile.data.sections_with_data} sections · ${profile.data.total_rows} rows · ${profile.data.tables_scanned} tables scanned`
+            ? `${profile.data.sections_with_data} sections · ${profile.data.total_rows} rows · searched ${profile.data.tables_scanned} database tables`
             : 'Loading this business…'
         }
         actions={
@@ -348,7 +348,7 @@ export default function BusinessProfile() {
           <div className="bp__stats">
             <Stat label="Sections with data" value={profile.data.sections_with_data} />
             <Stat label="Total rows" value={profile.data.total_rows} />
-            <Stat label="Tables scanned" value={profile.data.tables_scanned} hint="from the live schema" />
+            <Stat label="Database tables searched" value={profile.data.tables_scanned} hint="every table keyed by slug" />
             <Stat label="Type" value={entity?.entity_type || '—'} hint={entity?.city || ''} />
           </div>
 

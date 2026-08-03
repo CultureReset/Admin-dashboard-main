@@ -76,9 +76,12 @@
 
 /* ── shared analytics layout ─────────────────────────────────────────────── */
 
+/* 135px, not 160px: these often sit inside a padded Card, so the usable width
+   on a 390px phone is ~325px. At 160px only one column fit and the numbers
+   stacked into a long scroll. */
 .an__stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
