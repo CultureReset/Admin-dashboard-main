@@ -164,6 +164,7 @@
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.ingest",
       "businessProfile.row",
       "entities.list"
     ],
@@ -175,6 +176,7 @@
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.ingest",
       "businessProfile.row",
       "entities.list"
     ],

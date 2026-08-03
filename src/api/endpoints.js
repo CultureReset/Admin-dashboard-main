@@ -161,6 +161,12 @@ export const endpoints = {
      */
     createRow: (slug, table) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}`,
     row: (slug, table, id) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}/${seg(id)}`,
+    /**
+     * Read the business's own links and propose column values for a table.
+     * Proposes only — the response is never saved by the API, so a bad
+     * extraction cannot reach the database without someone approving it.
+     */
+    ingest: (slug, table) => `${ADMIN}/gcr/ingest/${seg(slug)}/${seg(table)}`,
   },
 
   /** Collections that each have their own dedicated route pair. */

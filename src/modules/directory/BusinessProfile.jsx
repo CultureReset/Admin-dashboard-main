@@ -325,6 +325,129 @@ function RowEditor({ section, row, onSave, onCancel, onDelete }) {
   );
 }
 
+
+/**
+ * Fill a section from the business's own links.
+ *
+ * Paste a website, a Google Business page, an Airbnb listing, a Facebook page.
+ * The API fetches them, reads the text, and proposes values for THIS table's
+ * real columns — not a fixed set of fields, and not a prose blob.
+ *
+ * Nothing is saved here. Each proposal opens in the ordinary row editor so a
+ * person sees every field before it lands. Extraction from a web page is a
+ * guess, and a guess should not reach the database unreviewed.
+ */
+function IngestPanel({ section, slug, onUse }) {
+  const [open, setOpen] = useState(false);
+  const [urls, setUrls] = useState('');
+  const [notes, setNotes] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const run = async () => {
+    setBusy(true); setError(null); setResult(null);
+    try {
+      const list = urls.split(/[\n,]/).map((u) => u.trim()).filter(Boolean);
+      setResult(await api.post(endpoints.businessProfile.ingest(slug, section.table), {
+        urls: list, notes: notes.trim() || undefined,
+      }));
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div className="bp__ingest">
+        <Button variant="ghost" onClick={() => setOpen(true)}>
+          ✨ Fill from a website or listing
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bp__ingest bp__ingest--open">
+      <p className="an__note">
+        Paste any links about this business — its website, Google Business page, Airbnb or booking
+        listing, a Facebook or Instagram page. They are read and turned into values for{' '}
+        <code>{section.table}</code>. Nothing is saved until you review it.
+      </p>
+
+      <textarea
+        className="bp__urls"
+        rows={3}
+        value={urls}
+        onChange={(e) => setUrls(e.target.value)}
+        placeholder={'https://example.com/rates\nhttps://www.google.com/maps/place/…'}
+      />
+      <textarea
+        className="bp__urls"
+        rows={2}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Or paste text directly — an email, a rate sheet, a brochure."
+      />
+
+      <div className="bp__rowactions">
+        <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
+        <Button onClick={run} disabled={busy || (!urls.trim() && !notes.trim())}>
+          {busy ? 'Reading…' : 'Read and propose'}
+        </Button>
+      </div>
+
+      {busy && <LoadingBlock label="Fetching the pages and extracting…" />}
+      {error && <ErrorState error={error} onRetry={run} context="ingest" />}
+
+      {result && (
+        <div className="bp__proposals">
+          <ul className="bp__sources">
+            {result.sources?.map((src) => (
+              <li key={src.url}>
+                <Badge tone={src.ok ? 'success' : 'warning'}>{src.ok ? `${src.chars} chars` : src.error}</Badge>
+                <span className="bp__srcurl">{src.url}</span>
+              </li>
+            ))}
+          </ul>
+
+          {result.model_notes && (
+            <Notice tone="info" title="What it could not place">
+              <p>{result.model_notes}</p>
+            </Notice>
+          )}
+
+          {!result.proposed?.length && (
+            <EmptyState title="Nothing extractable found" description="The pages were read but held nothing that maps to this table." />
+          )}
+
+          {result.proposed?.map((p, i) => (
+            <Card
+              key={i}
+              title={`Proposed row ${i + 1}`}
+              actions={<Button onClick={() => onUse(p.values)}>Review & add</Button>}
+            >
+              <dl className="bp__facts">
+                {Object.entries(p.values).map(([k, v]) => (
+                  <div className="bp__fact" key={k}>
+                    <dt>{k.replace(/_/g, ' ')}</dt>
+                    <dd>{renderValue(v)}</dd>
+                  </div>
+                ))}
+              </dl>
+              {p.dropped?.length > 0 && (
+                <p className="an__note">Ignored, not columns of this table: {p.dropped.join(', ')}</p>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Sentinel for the analytics pane, which is not a table. */
 const ANALYTICS_KEY = '__analytics__';
 
@@ -733,6 +856,12 @@ export default function BusinessProfile() {
                         Showing the first {current.rows.length} of {current.count} rows.
                       </p>
                     )}
+
+                    <IngestPanel
+                      section={current}
+                      slug={slugParam}
+                      onUse={(values) => setEditing({ section: current, row: values })}
+                    />
                   </Card>
                 )}
               </div>

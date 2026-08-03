@@ -252,3 +252,43 @@
 .bp__chips--tall { max-height: 320px; }
 
 .bp__navitem--add { color: var(--primary); font-weight: 600; }
+
+/* Fill-from-links. Sits at the foot of a section so it reads as "and here is
+   another way to fill this in", not as the primary action. */
+.bp__ingest {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--card-border);
+}
+
+.bp__urls {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.bp__proposals { margin-top: var(--space-3); display: grid; gap: var(--space-3); }
+
+.bp__sources { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+
+.bp__sources li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.bp__srcurl {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
