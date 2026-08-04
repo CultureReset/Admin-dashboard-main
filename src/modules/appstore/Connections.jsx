@@ -29,6 +29,7 @@ import './Connections.css';
 export default function Connections() {
   const toast = useToast();
   const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState('');
   const [confirm, confirmElement] = useConfirm();
 
   const catalogue = useAsync(async () => api.get(endpoints.connections.catalog()), [], { initialData: null });
@@ -60,14 +61,47 @@ export default function Connections() {
     });
     if (!ok) return;
     setSyncing(true);
+    setSyncNote('Starting…');
     try {
-      const result = await api.post(endpoints.connections.sync(), {});
-      toast.success(`${result.synced} toolkits · ${result.new} new · ${result.categories} categories.`);
-      await catalogue.reload();
+      // One request per slice of the catalogue, not one for the whole thing.
+      //
+      // Composio holds over a thousand toolkits behind a cursor, a hundred at a
+      // time. Asking for all of them in a single call outlives the serverless
+      // function — it is killed mid-flight and the browser reports a dropped
+      // connection, which is what happened the first time anyone pressed this.
+      //
+      // So the server returns a cursor and this walks it. The loop bound is a
+      // backstop against a server that never stops handing back cursors; the
+      // real exit is `done`.
+      let cursor = null;
+      let total = 0;
+      let fresh = 0;
+      let categoryCount = 0;
+
+      for (let slice = 0; slice < 40; slice += 1) {
+        const result = await api.post(endpoints.connections.sync(), {
+          cursor,
+          total_synced: total,
+        });
+
+        total = result.total_synced ?? total + (result.synced || 0);
+        fresh += result.new || 0;
+        categoryCount = result.categories || categoryCount;
+        cursor = result.next_cursor || null;
+
+        setSyncNote(`${total} pulled in…`);
+        // Show the catalogue filling up rather than nothing until the end.
+        await catalogue.reload();
+
+        if (result.done || !cursor) break;
+      }
+
+      toast.success(`${total} toolkits · ${fresh} new · ${categoryCount} categories.`);
     } catch (err) {
       toast.error(err);
     } finally {
       setSyncing(false);
+      setSyncNote('');
     }
   };
 
@@ -80,7 +114,7 @@ export default function Connections() {
           <>
             <Button onClick={catalogue.reload} disabled={catalogue.loading}>Refresh</Button>
             <Button variant="primary" onClick={sync} loading={syncing} disabled={!configured}>
-              Sync from Composio
+              {syncNote || 'Sync from Composio'}
             </Button>
           </>
         }
