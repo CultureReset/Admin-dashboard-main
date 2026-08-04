@@ -17,7 +17,6 @@
  *   /api/sms          → routes/sms.js
  *   /api/ar-hunts     → routes/ar-hunts.js
  *   /api/artists      → routes/artists.js
- *   /api/apps         → routes/apps.js
  *   /api/bookings     → routes/bookings.js
  *   /api/reviews      → routes/reviews.js
  *   /api/analytics    → routes/analytics.js
@@ -444,15 +443,17 @@ export const endpoints = {
     invite: () => `${ADMIN}/invite-business`,
   },
 
+  // The admin-scoped app records under /api/admin. `catalog`, `install` and
+  // `uninstall` used to sit here too, pointing at /api/apps — a router
+  // gcr-api-clean has commented out in server.js, superseded by the App Store
+  // (routes/composio.js). Nothing called them and nothing can: the paths 404.
+  // Connecting tools is `connections` below, which is the live replacement.
   apps: {
     list: () => `${ADMIN}/apps`,
     create: () => `${ADMIN}/apps`,
     update: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     remove: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     siteApps: () => `${ADMIN}/site-apps`,
-    catalog: () => '/api/apps',
-    install: () => '/api/apps/install',
-    uninstall: (appId) => `/api/apps/uninstall/${seg(appId)}`,
   },
 
   leads: {
