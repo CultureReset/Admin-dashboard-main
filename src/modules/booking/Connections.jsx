@@ -127,6 +127,44 @@ export default function Connections() {
     await catalogQuery.reload();
   };
 
+  /**
+   * Build the catalog from Composio rather than by hand.
+   *
+   * Adding a thousand toolkits one modal at a time was never going to happen,
+   * which is why the catalog sat empty and both App Stores had nothing to
+   * show. Everything this adds arrives with is_active off — the sync decides
+   * what exists, an admin still decides what is offered.
+   */
+  const syncCatalog = async () => {
+    const ok = await confirm({
+      title: 'Sync from Composio',
+      message:
+        'Pull the full toolkit list from Composio into the catalog. New tools arrive unlisted, so nothing becomes visible to a business until you list it. Tools already in the catalog keep their settings.',
+      confirmLabel: 'Sync',
+    });
+    if (!ok) return;
+    setBusy('__sync');
+    try {
+      // The API answers { synced, new, categories, activated }. `synced` is
+      // every toolkit it wrote; `new` is the subset it had not seen before —
+      // a re-sync refreshes names and logos without touching curation, so on
+      // the second run `new` is 0 and that is the correct, quiet outcome.
+      const result = await api.post(endpoints.connections.sync(), {});
+      const synced = result?.synced ?? 0;
+      const fresh = result?.new ?? 0;
+      toast.success(
+        fresh
+          ? `Synced ${synced} tools — ${fresh} new, added unlisted.`
+          : `Synced ${synced} tools — nothing new, existing entries refreshed.`,
+      );
+      await Promise.all([catalogQuery.reload(), statusQuery.reload()]);
+    } catch (err) {
+      toast.error(err);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const removeTool = async (tool) => {
     const ok = await confirm({
       title: 'Unlist tool',
@@ -213,7 +251,24 @@ export default function Connections() {
               Refresh
             </Button>
             {tab === 'catalog' && (
-              <Button variant="primary" onClick={() => setEditingTool({})}>Add tool</Button>
+              <>
+                {/* Disabled rather than hidden when the key is missing: the
+                    button is how an admin learns this screen can be filled at
+                    all, and the notice below already says why it is unavailable. */}
+                <Button
+                  loading={busy === '__sync'}
+                  disabled={status.configured === false}
+                  title={
+                    status.configured === false
+                      ? 'Set COMPOSIO_API_KEY on the API and redeploy to enable this.'
+                      : 'Pull the full toolkit list from Composio'
+                  }
+                  onClick={syncCatalog}
+                >
+                  Sync from Composio
+                </Button>
+                <Button variant="primary" onClick={() => setEditingTool({})}>Add tool</Button>
+              </>
             )}
           </>
         }

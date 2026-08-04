@@ -698,7 +698,14 @@ export const endpoints = {
     status: () => `${ADMIN}/connections/status`,
     catalog: () => `${ADMIN}/connections/catalog`,
     catalogItem: (toolId) => `${ADMIN}/connections/catalog/${seg(toolId)}`,
-    /** Pull every toolkit Composio offers into the catalogue. */
+    /**
+     * Pull every toolkit Composio offers into the catalogue, in one call.
+     *
+     * The catalogue could otherwise only be built by hand, one tool at a time,
+     * which is not a realistic way to enter a thousand of them — so it stayed
+     * empty and both App Stores rendered nothing. Everything this adds arrives
+     * unlisted; an admin still chooses what is offered.
+     */
     sync: () => `${ADMIN}/connections/sync`,
     /** Auth configs on the Composio project, to point a catalogue row at one. */
     authConfigs: () => `${ADMIN}/connections/auth-configs`,
