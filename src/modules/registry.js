@@ -221,6 +221,19 @@ const definitions = [
     description: 'Approve or reject business claim requests.',
     load: () => import('./directory/Claims.jsx'),
   },
+  {
+    // Next to Claims because they are the two ways a business arrives, and
+    // deliberately separate because they are opposite questions: a claim asks
+    // who owns an existing listing, a sign-up asks whether a new listing
+    // should exist at all.
+    id: 'gcr-signups',
+    label: 'Sign-ups',
+    icon: '🆕',
+    group: 'directory',
+    path: '/directory/signups',
+    description: 'Businesses that added themselves, waiting to be approved.',
+    load: () => import('./platform/Signups.jsx'),
+  },
 
   // ----------------------------------------------------- booking platform --
   // The universal booking engine: boat rentals, fishing charters, dolphin

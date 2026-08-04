@@ -205,6 +205,11 @@
       "claims.list",
       "claims.update"
     ],
+    "gcr-signups": [
+      "signups.get",
+      "signups.list",
+      "signups.update"
+    ],
     "booking-overview": [
       "bookingPlatform.integrations",
       "bookingPlatform.summary",

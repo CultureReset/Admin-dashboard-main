@@ -259,6 +259,19 @@ export const endpoints = {
     submit: () => `${GCR}/claim`,
   },
 
+  /**
+   * Self-serve business sign-ups awaiting review — /api/admin/signups.
+   *
+   * Distinct from `claims` above. A claim is someone asking for control of a
+   * listing that already exists; a sign-up is a listing that did not exist
+   * until they made it, sitting hidden until it is approved.
+   */
+  signups: {
+    list: () => `${ADMIN}/signups`,
+    get: (id) => `${ADMIN}/signups/${seg(id)}`,
+    update: (id) => `${ADMIN}/signups/${seg(id)}`,
+  },
+
   // ---------------------------------------------------------- ads/rails ---
   ads: {
     list: () => `${ADMIN}/gcr/ads`,
