@@ -394,7 +394,10 @@ const definitions = [
     id: 'booking-connections',
     label: 'Connections',
     icon: '🔌',
-    group: 'booking',
+    // Lives under App Store, not Booking. Connecting a business's third-party
+    // accounts and browsing the tool catalogue is an app-store job; it only
+    // sat under Booking because Composio arrived alongside the booking work.
+    group: 'appstore',
     path: '/booking/connections',
     description: 'Third-party accounts a business connects through Composio, and the tool catalog.',
     load: () => import('./booking/Connections.jsx'),
