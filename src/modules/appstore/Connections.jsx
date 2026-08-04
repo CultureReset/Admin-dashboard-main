@@ -150,7 +150,7 @@ export default function Connections() {
           subtitle={<><b>{offered}</b> of {tools.length} offered to businesses</>}
           tools={tools}
           categories={categories}
-          perPage={24}
+          perPage={60}
           loading={catalogue.loading}
           error={catalogue.error ? String(catalogue.error.message || catalogue.error) : ''}
           onToggleOffer={toggleOffer}
