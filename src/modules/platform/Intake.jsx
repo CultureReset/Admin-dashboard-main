@@ -180,7 +180,7 @@ export default function Intake() {
                 {s.replace('_', ' ')}
               </Button>
             ))}
-            <Button onClick={queue.run}>Refresh</Button>
+            <Button onClick={() => queue.reload()}>Refresh</Button>
           </>
         }
       />
@@ -210,7 +210,7 @@ export default function Intake() {
 
       <Card title="Queue" subtitle={`${requests.length} ${status === 'all' ? 'total' : status.replace('_', ' ')}`}>
         {queue.loading && <LoadingBlock label="Loading requests…" />}
-        {queue.error && <ErrorState error={queue.error} onRetry={queue.run} context="intake queue" />}
+        {queue.error && <ErrorState error={queue.error} onRetry={queue.reload} context="intake queue" />}
         {!queue.loading && !queue.error && (
           requests.length
             ? <DataTable columns={columns} rows={requests} pageSize={25} searchable emptyLabel="Nothing here" />
@@ -226,7 +226,7 @@ export default function Intake() {
         actions={<Button onClick={() => setEditingEndpoint({ event: 'intake.created', is_active: true })}>Add destination</Button>}
       >
         {hooks.loading && <LoadingBlock label="Loading destinations…" />}
-        {hooks.error && <ErrorState error={hooks.error} onRetry={hooks.run} context="webhook endpoints" />}
+        {hooks.error && <ErrorState error={hooks.error} onRetry={hooks.reload} context="webhook endpoints" />}
         {!hooks.loading && !hooks.error && (
           hooks.data?.endpoints?.length
             ? <DataTable columns={endpointColumns} rows={hooks.data.endpoints} pageSize={10} />
