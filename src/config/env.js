@@ -39,13 +39,34 @@ function normalizeBase(value) {
   return String(value).replace(/\/+$/, '');
 }
 
+/**
+ * Where the API lives when nothing says otherwise.
+ *
+ * This used to fall back to an empty string, meaning "same origin" — correct
+ * only when the dashboard is served behind the same domain as the API, which
+ * it is not. Deployed to its own Vercel domain without VITE_API_BASE_URL set,
+ * every call went to the static site instead: `POST /api/admin/login` came
+ * back 405 Method Not Allowed, because static hosting does not take a POST.
+ * Signing in was impossible and the reason was two layers away from the
+ * error message.
+ *
+ * The live API is a known value, so it belongs here rather than in a variable
+ * somebody has to remember to set. Both overrides still win: set
+ * VITE_API_BASE_URL to point somewhere else, or window.__ADMIN_CONFIG__ to
+ * repoint a built bundle without rebuilding. Same default the business
+ * dashboard carries in its own config.
+ *
+ * For same-origin deployments, set the override to '/' explicitly.
+ */
+const DEFAULT_API_BASE = 'https://gcr-api-clean.vercel.app';
+
 export const config = {
   /**
-   * Base URL for the gcr-api-clean API. An empty string means "same origin",
+   * Base URL for the gcr-api-clean API. A single '/' means "same origin",
    * which is what you want when the dashboard is served behind the same
    * domain as the API.
    */
-  apiBaseUrl: normalizeBase(read('apiBaseUrl', 'VITE_API_BASE_URL', '')),
+  apiBaseUrl: normalizeBase(read('apiBaseUrl', 'VITE_API_BASE_URL', DEFAULT_API_BASE)),
 
   /** localStorage key for the admin JWT. */
   authTokenKey: read('authTokenKey', 'VITE_AUTH_TOKEN_KEY', 'cc_admin_token'),
