@@ -771,6 +771,17 @@ const definitions = [
     load: () => import('./appstore/AppManager.jsx'),
   },
   {
+    // The Composio catalogue. Renders the same AppStoreView the business
+    // dashboard uses, with the offer switch instead of the connect buttons.
+    id: 'app-store',
+    label: 'App Store',
+    icon: '🛍️',
+    group: 'appstore',
+    path: '/apps/store',
+    description: 'Every toolkit Composio offers. Choose what businesses can connect.',
+    load: () => import('./appstore/Connections.jsx'),
+  },
+  {
     id: 'biz-apps',
     label: 'Business Apps',
     icon: '🔌',

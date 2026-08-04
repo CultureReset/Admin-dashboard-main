@@ -698,6 +698,10 @@ export const endpoints = {
     status: () => `${ADMIN}/connections/status`,
     catalog: () => `${ADMIN}/connections/catalog`,
     catalogItem: (toolId) => `${ADMIN}/connections/catalog/${seg(toolId)}`,
+    /** Pull every toolkit Composio offers into the catalogue. */
+    sync: () => `${ADMIN}/connections/sync`,
+    /** Auth configs on the Composio project, to point a catalogue row at one. */
+    authConfigs: () => `${ADMIN}/connections/auth-configs`,
     /** What Composio itself offers, for building the catalog from. */
     available: () => `${ADMIN}/connections/available`,
     connect: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}/connect`,

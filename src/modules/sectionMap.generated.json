@@ -577,6 +577,12 @@
       "apps.list",
       "apps.update"
     ],
+    "app-store": [
+      "connections.catalog",
+      "connections.catalogItem",
+      "connections.status",
+      "connections.sync"
+    ],
     "biz-apps": [
       "apps.list",
       "apps.siteApps",
