@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, PageHeader, Stat } from '../../ui/primitives.jsx';
+import { Badge, Button, Card, EmptyState, ErrorState, LoadingBlock, Notice, PageHeader, Stat } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
 import { SchemaForm } from '../../ui/SchemaForm.jsx';
 import { Modal, useConfirm } from '../../ui/Modal.jsx';
@@ -21,7 +21,15 @@ import { endpoints } from '../../api/endpoints.js';
 import { columns, fields } from '../../lib/fields.jsx';
 
 const inviteSchema = [
-  fields.email('email', 'Owner email', { required: true, span: 2 }),
+  fields.email('email', 'Owner email', {
+    required: true,
+    span: 2,
+    help: 'The address the account is created under. They sign in with it afterwards.',
+  }),
+  fields.bool('send', 'Email the link now', {
+    span: 2,
+    help: 'Turn off to just get the link and send it yourself.',
+  }),
 ];
 
 const linkSchema = [
@@ -33,6 +41,8 @@ export default function PlatformBusinesses() {
   const toast = useToast();
   const [ownersFor, setOwnersFor] = useState(null);
   const [inviteFor, setInviteFor] = useState(null);
+  const [inviteResult, setInviteResult] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const { data, loading, error, reload } = useAsync(
     async () => unwrapList(await api.get(endpoints.businesses.list()), ['businesses']),
@@ -42,13 +52,33 @@ export default function PlatformBusinesses() {
 
   const businesses = data || [];
 
+  // The link is the deliverable, not the email. Until an SMS sender is
+  // approved, the reliable way to reach an owner is to hand them the URL and
+  // send it yourself — so the result stays on screen to be copied whether the
+  // email went out or not.
   const invite = async (values) => {
-    await api.post(endpoints.businesses.invite(), {
+    const result = await api.post(endpoints.businesses.invite(), {
       entity_slug: inviteFor,
       email: values.email,
+      send: values.send !== false,
     });
-    toast.success(`Invitation sent to ${values.email}.`);
+    setInviteResult({ ...result, entity_slug: inviteFor });
     setInviteFor(null);
+    if (result?.sent) toast.success(`Invitation emailed to ${values.email}.`);
+    else if (result?.send_error) toast.error(`Link created, but the email failed: ${result.send_error}`);
+    else toast.success('Invite link created.');
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteResult.claim_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard is blocked outside a secure context. The input below holds
+      // the same URL and is selectable, so this is not a dead end.
+      toast.error('Could not copy automatically — select the link and copy it.');
+    }
   };
 
   return (
@@ -128,11 +158,76 @@ export default function PlatformBusinesses() {
       >
         <SchemaForm
           schema={inviteSchema}
+          initialValues={{ send: true }}
           onSubmit={invite}
           onCancel={() => setInviteFor(null)}
-          submitLabel="Send invitation"
+          submitLabel="Create invite"
           columns={1}
         />
+      </Modal>
+
+      <Modal
+        open={Boolean(inviteResult)}
+        onClose={() => { setInviteResult(null); setCopied(false); }}
+        title="Invite link"
+        description={
+          inviteResult
+            ? `${inviteResult.business_name || inviteResult.entity_slug} — for ${inviteResult.email}`
+            : undefined
+        }
+      >
+        {inviteResult && (
+          <div className="stack">
+            <Notice tone={inviteResult.sent ? 'success' : 'info'}>
+              {inviteResult.sent
+                ? `Emailed to ${inviteResult.email}. You can also send this link yourself.`
+                : inviteResult.send_error
+                  ? `The email did not go out (${inviteResult.send_error}), but the link works — send it yourself.`
+                  : 'No email was sent. Copy the link and send it however you like.'}
+            </Notice>
+
+            {/* Readonly rather than disabled so it stays selectable when the
+                clipboard API is unavailable. */}
+            <input
+              className="ui-input mono"
+              readOnly
+              value={inviteResult.claim_url}
+              onFocus={(e) => e.target.select()}
+              aria-label="Invite link"
+            />
+
+            <div className="row-wrap" style={{ gap: 'var(--space-2)' }}>
+              <Button variant="primary" onClick={copyLink}>
+                {copied ? '✓ Copied' : 'Copy link'}
+              </Button>
+              {/* Plain anchors, styled as buttons — Button always renders a
+                  <button>, which ignores href. These hand off to whatever the
+                  machine uses for SMS and mail, so the link goes out from you
+                  rather than from the platform. */}
+              <a
+                className="ui-btn ui-btn--default ui-btn--md"
+                href={`sms:?&body=${encodeURIComponent(
+                  `Set up your ${inviteResult.business_name || 'business'} listing: ${inviteResult.claim_url}`,
+                )}`}
+              >
+                <span>Text it</span>
+              </a>
+              <a
+                className="ui-btn ui-btn--default ui-btn--md"
+                href={`mailto:${encodeURIComponent(inviteResult.email)}?subject=${encodeURIComponent(
+                  `Set up ${inviteResult.business_name || 'your listing'}`,
+                )}&body=${encodeURIComponent(inviteResult.claim_url)}`}
+              >
+                <span>Email it</span>
+              </a>
+            </div>
+
+            <p className="faint">
+              Single use, expires in {inviteResult.expires_in_days || 14} days. Whoever
+              opens it sets a password and takes over the listing, so treat it like one.
+            </p>
+          </div>
+        )}
       </Modal>
     </>
   );
