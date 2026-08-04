@@ -80,13 +80,13 @@ export default function Behaviour() {
                 {w}d
               </Button>
             ))}
-            <Button onClick={query.run}>Refresh</Button>
+            <Button onClick={() => query.reload()}>Refresh</Button>
           </>
         }
       />
 
       {query.loading && <LoadingBlock label="Reading recorded behaviour…" />}
-      {query.error && <ErrorState error={query.error} onRetry={query.run} context="platform behaviour" />}
+      {query.error && <ErrorState error={query.error} onRetry={query.reload} context="platform behaviour" />}
 
       {!query.loading && !query.error && d && (
         <>

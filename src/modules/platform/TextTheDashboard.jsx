@@ -161,7 +161,7 @@ export default function TextTheDashboard() {
         </div>
 
         {list.loading && <LoadingBlock label="Loading…" />}
-        {list.error && <ErrorState error={list.error} onRetry={list.run} context="allowlist" />}
+        {list.error && <ErrorState error={list.error} onRetry={list.reload} context="allowlist" />}
         {!list.loading && !list.error && (
           list.data?.numbers?.length
             ? (
@@ -211,7 +211,7 @@ export default function TextTheDashboard() {
       <Card
         title="What has been asked"
         subtitle="every question and answer, including the ones that were refused"
-        actions={<Button onClick={log.run}>Refresh</Button>}
+        actions={<Button onClick={() => log.reload()}>Refresh</Button>}
       >
         {tools.length > 0 && (
           <>
