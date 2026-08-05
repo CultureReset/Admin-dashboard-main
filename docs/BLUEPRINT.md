@@ -426,6 +426,36 @@ tab-specific sheets). **No colour literal appears in a component.**
 
 ---
 
+## §9b — ⟲ The stylesheets, read (27 files, 3,139 lines)
+
+Previously listed by name only. Read in full; the result is a clean bill, and
+worth recording as the contrast case.
+
+**`src/styles/theme.css` (119)** defines **72 tokens** and handles both themes
+through a three-tier cascade: `:root` (dark, *"matching the existing
+dashboard"*), then `:root[data-theme='light']`, then
+`@media (prefers-color-scheme: light) { :root:not([data-theme]) }` — so an
+explicit choice always beats the OS preference, in both directions.
+
+**No colliding `:root` blocks.** One file owns the tokens; nothing else opens
+`:root`. Compare `gcr-unified`, where six files do and eight tokens collide
+(that paper's Appendix H.1).
+
+**36 raw hex values across every component stylesheet combined**, against 34
+inside `theme.css` itself. So roughly 5% of colour escapes the token system —
+against 71% in `gcr-unified`.
+
+**One `!important` in 3,139 lines.**
+
+The per-component sheets (`primitives.css` 441, `DataTable.css`, `Field.css`,
+`SchemaForm.css`, `Modal.css`, `Tabs.css`, `Toast.css`, `MonthCalendar.css`,
+`chips.css`, `AppShell.css`, `Sidebar.css`, `TopBar.css`, `EntityPicker.css`,
+`SectionedItemsEditor.css`, `BusinessProfile.css`, `charts.css`, and four
+tab-specific sheets) each style only their own component's namespace. The
+README's claim — *"No colour literals in components. Everything routes through
+the design tokens in `src/styles/theme.css`, which is also what makes the
+light/dark toggle a single attribute flip"* — **holds up on inspection.**
+
 ## §10 — ⟲ Docs in this repo
 
 - **`docs/ENDPOINT-STATUS.md` (420)** — the audit's written form: 117 legacy
