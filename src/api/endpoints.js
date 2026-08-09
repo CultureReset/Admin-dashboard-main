@@ -450,9 +450,13 @@ export const endpoints = {
     update: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     remove: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     siteApps: () => `${ADMIN}/site-apps`,
-    catalog: () => '/api/apps',
-    install: () => '/api/apps/install',
-    uninstall: (appId) => `/api/apps/uninstall/${seg(appId)}`,
+    // catalog/install/uninstall pointed at /api/apps, which server.js
+    // deliberately does not mount — routes/apps.js was superseded by
+    // routes/composio.js and its two backing tables no longer match the code.
+    // Nothing called them; the App Store screens use list() and siteApps()
+    // above, which are real routes in admin.js. Removed rather than moved to
+    // `unverified`, because they are not waiting on a route — the feature
+    // moved to /api/connections.
   },
 
   leads: {

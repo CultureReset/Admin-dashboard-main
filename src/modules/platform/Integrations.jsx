@@ -25,7 +25,10 @@ import './Integrations.css';
  */
 const INTEGRATIONS = [
   { id: 'stripe', name: 'Stripe', purpose: 'Payments and Connect payouts', probe: '/api/stripe/config' },
-  { id: 'square', name: 'Square', purpose: 'In-person payments', probe: '/api/square/config' },
+  // Square has no /config route — Stripe does, which is where this probe was
+  // copied from. /status exists and is authRequired, and a 401 still proves
+  // the router is mounted.
+  { id: 'square', name: 'Square', purpose: 'In-person payments', probe: '/api/square/status' },
   { id: 'fareharbor', name: 'FareHarbor', purpose: 'Activity booking sync', probe: '/api/integrations/fareharbor/status' },
   { id: 'sms', name: 'SMS', purpose: 'Outbound text messaging', probe: '/api/sms/qr-codes' },
   // Probe ai-config, not /api/ai-provider — the latter is POST /call only, so
