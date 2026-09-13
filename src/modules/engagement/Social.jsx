@@ -22,27 +22,64 @@ const CARD_TYPES = [
   { value: 'story', label: 'Story' },
 ];
 
+// Two kinds of row go in this feed, and the form has to serve both.
+//
+//   A social post    scraped from Instagram, Facebook or TikTok. post_url is
+//                    the whole card — the page embeds it.
+//
+//   An authored post written here. Anything that is not already a social post:
+//                    a notice, an announcement, a closure, weather. It has no
+//                    embeddable URL, so the title, image and caption are the
+//                    card, and card_title is what gives it a headline.
+//
+// `entity_slug` is optional for the second kind. It used to be required, which
+// made every feed item belong to one business and left no way to post anything
+// about the coast in general — the API has always accepted a null slug.
 const postSchema = {
   groups: [
     {
       title: 'Post',
       fields: [
-        fields.text('entity_slug', 'Business slug', {
-          required: true,
-          help: 'Use the scraper below to fill this in automatically.',
+        fields.text('card_title', 'Headline', {
+          span: 2,
+          help: 'For a post you are writing yourself. Scraped social posts do not need one.',
         }),
-        fields.select('card_type', 'Card type', CARD_TYPES),
-        fields.url('post_url', 'Post URL', { span: 2 }),
+        fields.textarea('caption', 'Body', {
+          rows: 4,
+          span: 2,
+          help: 'Shown in full on an authored card; clipped under an embedded social post.',
+        }),
         fields.image('image_url', 'Image URL'),
-        fields.textarea('caption', 'Caption', { rows: 3 }),
+        fields.select('card_type', 'Card type', CARD_TYPES),
+        fields.url('post_url', 'Link', {
+          span: 2,
+          help: 'A social post URL to embed, or somewhere for "Read more" to point. Leave empty for a notice that stands on its own.',
+        }),
+      ],
+    },
+    {
+      title: 'Who it is about',
+      fields: [
+        fields.text('entity_slug', 'Business slug', {
+          help: 'Optional. Leave empty for coast-wide news that is not about one business.',
+        }),
+        fields.text('card_entity_name', 'Name shown on the card', {
+          help: 'Defaults to the business name when a slug is set.',
+        }),
+        fields.text('card_city', 'City'),
       ],
     },
     {
       title: 'Placement',
       fields: [
-        fields.bool('show_on_home', 'Show on home feed', { defaultValue: true }),
-        fields.sortOrder(),
-        fields.datetime('posted_at', 'Posted at'),
+        fields.bool('show_on_home', 'Show in the Live Feed', { defaultValue: true }),
+        // post_date, not posted_at: the API reads post_date and the public
+        // feed orders by it. The form sent `posted_at`, which the handler
+        // never destructured — so every post silently took the time it was
+        // saved and this field did nothing at all.
+        fields.datetime('post_date', 'Post date', {
+          help: 'Orders the feed. Defaults to now.',
+        }),
       ],
     },
   ],
@@ -90,8 +127,8 @@ export default function Social() {
   return (
     <>
       <PageHeader
-        title="Social & connections"
-        description="Posts pulled from social accounts and surfaced on the GCR home feed."
+        title="Live Feed"
+        description="Everything on the Gulf Coast Radar feed at /feed. Write a post here, or scrape one from Instagram, Facebook or TikTok."
         actions={
           <Button variant="primary" onClick={() => setScrapeOpen(true)}>
             Scrape post URLs
@@ -106,8 +143,8 @@ export default function Social() {
         labelFor={(row) => row.caption?.slice(0, 40) || row.post_url || 'Post'}
         createLabel="Add post"
         modalSize="lg"
-        emptyTitle="No social posts"
-        emptyDescription="Scrape some post URLs to populate the feed."
+        emptyTitle="Nothing in the feed yet"
+        emptyDescription="Write a post with New, or scrape one from a social URL."
         searchPlaceholder="Search posts…"
         columns={[
           columns.thumb('image_url'),
@@ -117,9 +154,11 @@ export default function Social() {
             render: (row) => (
               <div>
                 <div className="ui-cell-primary truncate" style={{ maxWidth: 340 }}>
-                  {row.caption || <span className="faint">No caption</span>}
+                  {row.card_title || row.caption || <span className="faint">No caption</span>}
                 </div>
-                <div className="ui-cell-sub mono">{row.entity_slug}</div>
+                <div className="ui-cell-sub mono">
+                  {row.entity_slug || <span className="faint">Coast-wide</span>}
+                </div>
               </div>
             ),
           },
@@ -127,14 +166,17 @@ export default function Social() {
           columns.link('post_url', 'Source', { label: 'View' }),
           {
             key: 'show_on_home',
-            header: 'Home feed',
+            header: 'Live Feed',
             render: (row) =>
               row.show_on_home ? <Badge tone="success">Shown</Badge> : <Badge>Hidden</Badge>,
           },
-          columns.dateTime('posted_at', 'Posted'),
+          // post_date, not posted_at — see the note on postSchema. This column
+          // and the sort below both read a field the API has never returned,
+          // so "Posted" was blank on every row and the default sort did nothing.
+          columns.dateTime('post_date', 'Posted'),
         ]}
         formSchema={postSchema}
-        initialSort={{ key: 'posted_at', direction: 'desc' }}
+        initialSort={{ key: 'post_date', direction: 'desc' }}
       />
 
       <Modal

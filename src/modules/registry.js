@@ -583,11 +583,11 @@ const definitions = [
   },
   {
     id: 'gcr-social',
-    label: 'Social & Connections',
-    icon: '🔗',
+    label: 'Live Feed',
+    icon: '📡',
     group: 'engagement',
     path: '/engagement/social',
-    description: 'Scraped social posts and the home-feed cards built from them.',
+    description: 'The Gulf Coast Radar feed — write a post, or pull one in from social.',
     load: () => import('./engagement/Social.jsx'),
   },
 
