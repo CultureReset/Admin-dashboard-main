@@ -103,7 +103,6 @@ function toRecord(columns, values) {
 }
 
 export default function AttributesPanel({ slug }) {
-  const toast = useToast();
   const [open, setOpen] = useState(null);   // which capability is expanded
 
   const listing = useAsync(
@@ -396,7 +395,7 @@ function CapabilityEditor({ slug, capability, state, amenityCatalog, onChanged }
 }
 
 /** Amenities and child rows for one boat, unit or space. */
-function RowExtras({ slug, capability, row, chosen, children, amenityCatalog, onChanged }) {
+function RowExtras({ capability, row, chosen, children, amenityCatalog, onChanged }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [addingTo, setAddingTo] = useState(null);
@@ -546,7 +545,7 @@ function EntityLists({ slug, lists, values, onChanged }) {
   );
 }
 
-function EntityListCard({ slug, list, chosen, busy, onSave }) {
+function EntityListCard({ list, chosen, busy, onSave }) {
   const catalog = useAsync(
     async () => api.get(endpoints.bookingPlatform.catalog(list.catalog)),
     [list.catalog],

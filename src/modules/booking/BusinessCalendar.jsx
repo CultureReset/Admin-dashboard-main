@@ -9,7 +9,7 @@
 
 import { useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, PageHeader } from '../../ui/primitives.jsx';
+import { Card, PageHeader } from '../../ui/primitives.jsx';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
 import BusinessCalendarPanel from './BusinessCalendarPanel.jsx';
 

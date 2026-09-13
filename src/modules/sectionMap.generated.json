@@ -370,16 +370,6 @@
       "sms.blast",
       "sms.blastPreview"
     ],
-    "booking-connections": [
-      "connections.catalog",
-      "connections.catalogItem",
-      "connections.connect",
-      "connections.disconnect",
-      "connections.list",
-      "connections.refresh",
-      "connections.status",
-      "entities.list"
-    ],
     "gcr-events": [
       "entities.list",
       "events.backfillTypes",
@@ -572,16 +562,26 @@
       "photos.community",
       "photos.communityItem"
     ],
-    "app-manager": [
-      "apps.create",
-      "apps.list",
-      "apps.update"
-    ],
     "app-store": [
       "connections.catalog",
       "connections.catalogItem",
       "connections.status",
       "connections.sync"
+    ],
+    "booking-connections": [
+      "connections.catalog",
+      "connections.catalogItem",
+      "connections.connect",
+      "connections.disconnect",
+      "connections.list",
+      "connections.refresh",
+      "connections.status",
+      "entities.list"
+    ],
+    "app-manager": [
+      "apps.create",
+      "apps.list",
+      "apps.update"
     ],
     "biz-apps": [
       "apps.list",

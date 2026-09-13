@@ -27,7 +27,7 @@ import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import {
-  PageHeader, Card, Badge, Button, Notice, Stat,
+  PageHeader, Card, Badge, Button, Notice,
   LoadingBlock, ErrorState, EmptyState,
 } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
