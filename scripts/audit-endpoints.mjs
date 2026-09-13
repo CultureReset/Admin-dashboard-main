@@ -41,6 +41,11 @@ const KNOWN_MISSING = new Set([
   'endpoints.leads.businessLead',
   'endpoints.photos.community',
   'endpoints.photos.communityItem',
+  // routes/apps.js is unmounted in server.js on purpose (superseded by the
+  // Composio store); App Manager says so on screen.
+  'endpoints.apps.catalog',
+  'endpoints.apps.install',
+  'endpoints.apps.uninstall',
 ]);
 
 /* ── read the API's real route table, in registration order ──────────────── */

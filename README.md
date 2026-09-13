@@ -98,6 +98,9 @@ All 62 nav entries from the legacy dashboard, in the same nine groups:
   Concierge Test, Swipe Questions, Sponsored, Tonight Cards, Points & Rewards,
   Text Sign-Up QR Codes, Auth Settings, Button Config, SMS Settings, SMS Blasts,
   Business Leads, Guest Photos
+- **Automations** — Automations, the builder, Rollouts, Run log. Build a
+  trigger + steps, test against one business, publish a version, push it to
+  every business's dashboard. See `src/modules/automations/`.
 - **App Store** — App Manager, Business Apps
 - **Platform** — Businesses, Leads, Bookings, Sales Pages, AR Hunts,
   Integrations, Users, API Keys, Settings

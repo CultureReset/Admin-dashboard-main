@@ -567,6 +567,31 @@
       "photos.community",
       "photos.communityItem"
     ],
+    "automations": [
+      "automations.create",
+      "automations.list"
+    ],
+    "automation-builder": [
+      "automations.create",
+      "automations.deploy",
+      "automations.deployPreview",
+      "automations.deployments",
+      "automations.install",
+      "automations.installs",
+      "automations.item",
+      "automations.list",
+      "automations.meta",
+      "automations.publish",
+      "automations.run",
+      "automations.test",
+      "entities.list"
+    ],
+    "automation-rollouts": [
+      "automations.deployments"
+    ],
+    "automation-runs": [
+      "automations.runs"
+    ],
     "app-manager": [
       "apps.create",
       "apps.list",

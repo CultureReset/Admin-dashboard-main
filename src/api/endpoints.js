@@ -186,6 +186,34 @@ export const endpoints = {
   },
 
   /**
+   * The automation builder — /api/admin/automations.
+   *
+   * Build a trigger + steps once, publish it as a version, push that version
+   * to every business (or some). A business runs the version it was given,
+   * never the draft, so editing here changes nothing on a dashboard until the
+   * next publish and push. `meta` is the step palette, trigger types, events
+   * and industries the builder draws itself from — nothing about a step type
+   * is written into this app.
+   */
+  automations: {
+    meta: () => `${ADMIN}/automations/meta`,
+    list: () => `${ADMIN}/automations`,
+    create: () => `${ADMIN}/automations`,
+    item: (id) => `${ADMIN}/automations/${seg(id)}`,
+    publish: (id) => `${ADMIN}/automations/${seg(id)}/publish`,
+    deployPreview: (id) => `${ADMIN}/automations/${seg(id)}/deploy/preview`,
+    deploy: (id) => `${ADMIN}/automations/${seg(id)}/deploy`,
+    /** Runs the DRAFT against one business, side effects off unless asked. */
+    test: (id) => `${ADMIN}/automations/${seg(id)}/test`,
+    /** Runs the INSTALLED version for one business, for real. */
+    run: (id) => `${ADMIN}/automations/${seg(id)}/run`,
+    installs: (id) => `${ADMIN}/automations/${seg(id)}/installs`,
+    install: (id, slug) => `${ADMIN}/automations/${seg(id)}/installs/${seg(slug)}`,
+    runs: () => `${ADMIN}/automations/runs/recent`,
+    deployments: () => `${ADMIN}/automations/deployments/recent`,
+  },
+
+  /**
    * Texting the dashboard. A separate system from the customer SMS pipeline
    * (/api/sms) — different provider path, different table, different purpose.
    * `ask` runs the same question-answering the SMS webhook uses, so it can be

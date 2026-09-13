@@ -32,6 +32,7 @@ export const NAV_GROUPS = [
   { key: 'ai', label: '🤖 AI Tools' },
   { key: 'engagement', label: '📊 Engagement' },
   { key: 'tripswipe', label: '❤️ Trip Swipe' },
+  { key: 'automation', label: '⚡ Automations' },
   { key: 'appstore', label: '🛍️ App Store' },
   { key: 'platform', label: '⚙️ Platform' },
 ];
@@ -745,6 +746,46 @@ const definitions = [
     status: 'partial',
     description: 'Moderate guest-submitted photos before they go live.',
     load: () => import('./tripswipe/CommunityPhotos.jsx'),
+  },
+
+  // -------------------------------------------------------- automations --
+  // Build a trigger + steps once, publish a version, push it to every
+  // business's dashboard. Backed by /api/admin/automations.
+  {
+    id: 'automations',
+    label: 'Automations',
+    icon: '⚡',
+    group: 'automation',
+    path: '/automations',
+    description:
+      'Every automation and script you have built — its trigger, its version, and how many businesses have it.',
+    load: () => import('./automations/Automations.jsx'),
+  },
+  {
+    id: 'automation-builder',
+    label: 'Automation builder',
+    group: 'automation',
+    path: '/automations/build/:id',
+    hidden: true,
+    load: () => import('./automations/Builder.jsx'),
+  },
+  {
+    id: 'automation-rollouts',
+    label: 'Rollouts',
+    icon: '🚀',
+    group: 'automation',
+    path: '/automations/rollouts',
+    description: 'Every push to every business — which version went where, and how it went.',
+    load: () => import('./automations/Rollouts.jsx'),
+  },
+  {
+    id: 'automation-runs',
+    label: 'Run log',
+    icon: '🧾',
+    group: 'automation',
+    path: '/automations/runs',
+    description: 'Every execution across every business, step by step.',
+    load: () => import('./automations/Runs.jsx'),
   },
 
   // ---------------------------------------------------------- app store --
