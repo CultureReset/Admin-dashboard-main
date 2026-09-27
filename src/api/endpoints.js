@@ -699,6 +699,13 @@ export const endpoints = {
    * site-config, sms-config, auth-config — and none of them existed. They are
    * one route now, so another settings screen needs no new endpoint at all.
    */
+  /** The fleet of Ghost boxes (routes/admin-ghost.js). Read-only. */
+  ghost: {
+    summary: () => `${ADMIN}/ghost/summary`,
+    nodes: () => `${ADMIN}/ghost/nodes`,
+    requests: (id) => `${ADMIN}/ghost/nodes/${seg(id)}/requests`,
+  },
+
   settings: {
     all: () => `${ADMIN}/settings`,
     get: (key) => `${ADMIN}/settings/${seg(key)}`,

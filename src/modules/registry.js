@@ -769,6 +769,15 @@ const definitions = [
 
   // ----------------------------------------------------------- platform --
   {
+    id: 'ghost-boxes',
+    label: 'Ghost boxes',
+    icon: '📦',
+    group: 'platform',
+    path: '/platform/ghost',
+    description: 'Every Ghost box in the fleet: which release it runs, whether it is online, what it was asked.',
+    load: () => import('./platform/GhostBoxes.jsx'),
+  },
+  {
     id: 'businesses',
     label: 'Businesses',
     icon: '🏛️',
