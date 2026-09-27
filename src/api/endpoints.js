@@ -17,7 +17,6 @@
  *   /api/sms          → routes/sms.js
  *   /api/ar-hunts     → routes/ar-hunts.js
  *   /api/artists      → routes/artists.js
- *   /api/apps         → routes/apps.js
  *   /api/bookings     → routes/bookings.js
  *   /api/reviews      → routes/reviews.js
  *   /api/analytics    → routes/analytics.js
@@ -259,6 +258,19 @@ export const endpoints = {
     submit: () => `${GCR}/claim`,
   },
 
+  /**
+   * Self-serve business sign-ups awaiting review — /api/admin/signups.
+   *
+   * Distinct from `claims` above. A claim is someone asking for control of a
+   * listing that already exists; a sign-up is a listing that did not exist
+   * until they made it, sitting hidden until it is approved.
+   */
+  signups: {
+    list: () => `${ADMIN}/signups`,
+    get: (id) => `${ADMIN}/signups/${seg(id)}`,
+    update: (id) => `${ADMIN}/signups/${seg(id)}`,
+  },
+
   // ---------------------------------------------------------- ads/rails ---
   ads: {
     list: () => `${ADMIN}/gcr/ads`,
@@ -444,15 +456,17 @@ export const endpoints = {
     invite: () => `${ADMIN}/invite-business`,
   },
 
+  // The admin-scoped app records under /api/admin. `catalog`, `install` and
+  // `uninstall` used to sit here too, pointing at /api/apps — a router
+  // gcr-api-clean has commented out in server.js, superseded by the App Store
+  // (routes/composio.js). Nothing called them and nothing can: the paths 404.
+  // Connecting tools is `connections` below, which is the live replacement.
   apps: {
     list: () => `${ADMIN}/apps`,
     create: () => `${ADMIN}/apps`,
     update: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     remove: (appId) => `${ADMIN}/apps/${seg(appId)}`,
     siteApps: () => `${ADMIN}/site-apps`,
-    catalog: () => '/api/apps',
-    install: () => '/api/apps/install',
-    uninstall: (appId) => `/api/apps/uninstall/${seg(appId)}`,
   },
 
   leads: {
@@ -685,6 +699,17 @@ export const endpoints = {
     status: () => `${ADMIN}/connections/status`,
     catalog: () => `${ADMIN}/connections/catalog`,
     catalogItem: (toolId) => `${ADMIN}/connections/catalog/${seg(toolId)}`,
+    /**
+     * Pull every toolkit Composio offers into the catalogue, in one call.
+     *
+     * The catalogue could otherwise only be built by hand, one tool at a time,
+     * which is not a realistic way to enter a thousand of them — so it stayed
+     * empty and both App Stores rendered nothing. Everything this adds arrives
+     * unlisted; an admin still chooses what is offered.
+     */
+    sync: () => `${ADMIN}/connections/sync`,
+    /** Auth configs on the Composio project, to point a catalogue row at one. */
+    authConfigs: () => `${ADMIN}/connections/auth-configs`,
     /** What Composio itself offers, for building the catalog from. */
     available: () => `${ADMIN}/connections/available`,
     connect: (slug, toolId) => `${ADMIN}/connections/${seg(slug)}/${seg(toolId)}/connect`,

@@ -1,0 +1,33 @@
+/* Token bridge for AppStoreView.
+ *
+ * AppStoreView.jsx and AppStoreView.css are byte-identical to the copies in
+ * the business dashboard — the whole point is one component, so neither file
+ * is edited to fit a host. What differs is only the names each dashboard gives
+ * its palette, and that is resolved here rather than in the component.
+ *
+ * Business dashboard        Admin console
+ *   --accent          →       --primary
+ *   --panel           →       --card-bg
+ *   --border          →       --card-border
+ *   --muted           →       --text-muted
+ *
+ * Anything the admin theme already names the same way (--bg, --text,
+ * --input-bg, --danger) needs no line here and is left alone.
+ */
+
+.appstore-host {
+  --accent: var(--primary);
+  --accent-bg: var(--primary-soft);
+  --panel: var(--card-bg);
+  --border: var(--card-border);
+  --muted: var(--text-muted);
+  --menu-shadow: var(--shadow);
+
+  /* The admin palette has no equivalents for these two. */
+  --on-accent: #ffffff;  /* white reads on the purple primary in both themes */
+  --star: var(--warning);
+}
+
+/* The store sits inside a routed section that already provides page padding,
+   so it does not add its own. */
+.appstore-host .as-wrap { gap: 14px; }

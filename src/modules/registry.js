@@ -221,6 +221,19 @@ const definitions = [
     description: 'Approve or reject business claim requests.',
     load: () => import('./directory/Claims.jsx'),
   },
+  {
+    // Next to Claims because they are the two ways a business arrives, and
+    // deliberately separate because they are opposite questions: a claim asks
+    // who owns an existing listing, a sign-up asks whether a new listing
+    // should exist at all.
+    id: 'gcr-signups',
+    label: 'Sign-ups',
+    icon: '🆕',
+    group: 'directory',
+    path: '/directory/signups',
+    description: 'Businesses that added themselves, waiting to be approved.',
+    load: () => import('./platform/Signups.jsx'),
+  },
 
   // ----------------------------------------------------- booking platform --
   // The universal booking engine: boat rentals, fishing charters, dolphin
@@ -389,15 +402,6 @@ const definitions = [
     description:
       'Near-term dates that still have spots — post a last-minute deal, or text the guests who already saved that business.',
     load: () => import('./booking/Openings.jsx'),
-  },
-  {
-    id: 'booking-connections',
-    label: 'Connections',
-    icon: '🔌',
-    group: 'booking',
-    path: '/booking/connections',
-    description: 'Third-party accounts a business connects through Composio, and the tool catalog.',
-    load: () => import('./booking/Connections.jsx'),
   },
 
   // ------------------------------------------------------------- content --
@@ -748,22 +752,58 @@ const definitions = [
   },
 
   // ---------------------------------------------------------- app store --
+  //
+  // Two app systems live here, and only one of them is real.
+  //
+  //   Composio    platform_connections + entity_connections. The live one.
+  //               The two screens directly below.
+  //   apps        the original system: `apps` + `site_apps`, both empty,
+  //               superseded by Composio. Its API routes still answer, so the
+  //               screens still load — they just describe a catalogue nothing
+  //               reads. Labelled, not deleted, so nobody rediscovers them and
+  //               assumes they are the App Store.
+  //
+  // Ordered so the working pair comes first. The catalogue screen used to sit
+  // under Booking Platform, which is where an operator would never look for it.
+  {
+    // The Composio catalogue. Renders the same AppStoreView the business
+    // dashboard uses, with the offer switch instead of the connect buttons.
+    // Start here: this is the screen with the Sync button.
+    id: 'app-store',
+    label: 'App Store',
+    icon: '🛍️',
+    group: 'appstore',
+    path: '/apps/store',
+    description: 'Every toolkit Composio offers. Sync the catalogue, then choose what businesses can connect.',
+    load: () => import('./appstore/Connections.jsx'),
+  },
+  {
+    // Moved out of the Booking Platform group — it is an App Store screen, not
+    // a booking one. Path kept so existing links still resolve.
+    id: 'booking-connections',
+    label: 'Connections',
+    icon: '🔌',
+    group: 'appstore',
+    path: '/booking/connections',
+    description: 'Which business has connected which tool, and hand-editing of individual catalogue entries.',
+    load: () => import('./booking/Connections.jsx'),
+  },
   {
     id: 'app-manager',
-    label: 'App Manager',
+    label: 'App Manager (legacy)',
     icon: '🧩',
     group: 'appstore',
     path: '/apps/manager',
-    description: 'The app catalogue: pricing, category, and availability.',
+    description: 'The original `apps` table — empty, and superseded by the App Store above. Kept for reference.',
     load: () => import('./appstore/AppManager.jsx'),
   },
   {
     id: 'biz-apps',
-    label: 'Business Apps',
+    label: 'Business Apps (legacy)',
     icon: '🔌',
     group: 'appstore',
     path: '/apps/business-apps',
-    description: 'Which apps each business has installed.',
+    description: 'Installs from the original `site_apps` table — empty. The live equivalent is Connections above.',
     load: () => import('./appstore/BusinessApps.jsx'),
   },
 

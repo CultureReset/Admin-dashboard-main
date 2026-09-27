@@ -51,6 +51,14 @@ export function ConfigCard({
       setError(err);
       // A missing route still gets an empty form so the shape is visible,
       // but the notice above it makes clear that saving will fail.
+      //
+      // Only a missing route. Any other failure — a 500, a timeout, a dropped
+      // connection — means the route is there and we simply did not get the
+      // current values back. An empty form in that state is live ammunition:
+      // the fields render blank, Save is enabled, and submitting PUTs
+      // {"headline":"", …} straight over whatever is really stored. The render
+      // below refuses to draw the form unless the load succeeded or the route
+      // is genuinely absent.
       setValues({});
     } finally {
       setLoading(false);
@@ -107,7 +115,7 @@ export function ConfigCard({
 
       {!loading && children}
 
-      {!loading && values && (
+      {!loading && values && (!error || error.isMissingEndpoint) && (
         <SchemaForm
           schema={schema}
           initialValues={values}

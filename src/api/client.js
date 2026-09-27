@@ -181,6 +181,26 @@ export async function request(path, options = {}) {
 
   const parsed = await parseBody(response);
 
+  // A 2xx HTML body means this request never reached the API — some host
+  // answered with an SPA shell instead. The usual cause is an unset
+  // VITE_API_BASE_URL: `apiUrl()` then returns a bare path, the browser
+  // resolves it against the dashboard's own origin, and the SPA rewrite in
+  // vercel.json serves index.html with a 200.
+  //
+  // Left alone this is invisible rather than loud. `response.ok` is true, so
+  // nothing throws; parseBody hands back the HTML as a string; unwrapList sees
+  // a non-array non-object and returns []. Every list screen renders empty,
+  // with no error and no toast — which reads as "the data is gone" rather than
+  // "the dashboard is pointed at itself".
+  if (response.ok && typeof parsed === 'string' && /^\s*<(?:!doctype|html)\b/i.test(parsed)) {
+    throw new ApiError(
+      config.apiBaseUrl
+        ? `Expected JSON from ${config.apiBaseUrl} but got an HTML page. That base URL is serving a website, not the API.`
+        : 'Expected JSON but got an HTML page. VITE_API_BASE_URL is not set, so this request went to the dashboard’s own origin instead of the API.',
+      { status: response.status, path: fullPath, body: parsed },
+    );
+  }
+
   if (!response.ok) {
     const error = new ApiError(messageFrom(parsed, response, fullPath), {
       status: response.status,

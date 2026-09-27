@@ -472,10 +472,10 @@ function AnalyticsPane({ query, name }) {
     <Card
       title="Analytics"
       subtitle={d ? `last ${d.window_days} days · since ${d.since}` : 'visitor behaviour'}
-      actions={<Button variant="ghost" onClick={query.run}>Refresh</Button>}
+      actions={<Button variant="ghost" onClick={() => query.reload()}>Refresh</Button>}
     >
       {query.loading && <LoadingBlock label="Reading recorded behaviour…" />}
-      {query.error && <ErrorState error={query.error} onRetry={query.run} context="business analytics" />}
+      {query.error && <ErrorState error={query.error} onRetry={query.reload} context="business analytics" />}
 
       {!query.loading && !query.error && d && (
         <>
@@ -679,7 +679,7 @@ export default function BusinessProfile() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search name, slug or city…" />
           <div style={{ height: 'var(--space-3)' }} />
           {list.loading && <LoadingBlock label="Loading businesses…" />}
-          {list.error && <ErrorState error={list.error} onRetry={list.run} context="business list" />}
+          {list.error && <ErrorState error={list.error} onRetry={list.reload} context="business list" />}
           {!list.loading && !list.error && (
             <ul className="bp__picker">
               {filtered.slice(0, 400).map((b) => (
@@ -721,13 +721,13 @@ export default function BusinessProfile() {
             <Button variant="ghost" onClick={() => setShowEmpty((v) => !v)}>
               {showEmpty ? 'Hide empty' : 'Show what is missing'}
             </Button>
-            <Button onClick={profile.run}>Refresh</Button>
+            <Button onClick={() => profile.reload()}>Refresh</Button>
           </>
         }
       />
 
       {profile.loading && <LoadingBlock label="Reading every table for this slug…" />}
-      {profile.error && <ErrorState error={profile.error} onRetry={profile.run} context="business profile" />}
+      {profile.error && <ErrorState error={profile.error} onRetry={profile.reload} context="business profile" />}
 
       {!profile.loading && !profile.error && profile.data && (
         <>
