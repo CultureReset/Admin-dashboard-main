@@ -33,7 +33,7 @@ booking and Trip Swipe tooling that lives in the same API.
 
 *Read from GitHub on 2026-09-29. 12 branches.*
 
-- **Default branch on GitHub:** `claude/cybercheck-modular-react-dashboard-7on41c`. It does **not** yet have this README or the audit fixes; those are on `claude/repo-code-analysis-y4n1k7`, which contains every commit of `claude/cybercheck-modular-react-dashboard-7on41c` and more, so it can be fast-forwarded without losing anything.
+- **Default branch on GitHub:** `claude/cybercheck-modular-react-dashboard-7on41c`. On 2026-09-29 it was fast-forwarded to `claude/repo-code-analysis-y4n1k7`, so it now has this README and the audit fixes; nothing was overwritten (it previously ended at `66c8ab1`).
 - **`claude/repo-code-analysis-y4n1k7`** is where the README audit, the screenshots and the fixes were made.
 - **5 other branches hold commits that `claude/repo-code-analysis-y4n1k7` does not have.** The newest is `claude/admin-dashboard-repo-review-47q2vc` (last commit 2026-09-13, 2 commits not in the work branch). Check those before assuming the work branch is the whole story.
 
