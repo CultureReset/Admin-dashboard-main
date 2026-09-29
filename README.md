@@ -26,6 +26,36 @@ booking and Trip Swipe tooling that lives in the same API.
 
 *Overview. Captured against a test backend, so the counters read 0.*
 
+<!-- branches:start -->
+## Branches
+
+*Read from GitHub on 2026-09-29. 12 branches.*
+
+- **Default branch on GitHub:** `claude/cybercheck-modular-react-dashboard-7on41c`.
+- **`claude/repo-code-analysis-y4n1k7`** is where this README and the audit fixes live. It contains every commit on `claude/cybercheck-modular-react-dashboard-7on41c` and more (this README, the audit fixes and the screenshots).
+- **5 other branches hold commits that `claude/repo-code-analysis-y4n1k7` does not have.** The newest is `claude/admin-dashboard-repo-review-47q2vc` (last commit 2026-09-13, 2 commits not in the work branch). Check those before assuming the work branch is the whole story.
+
+<details><summary>All 12 branches</summary>
+
+| Branch | Last commit | Not in the work branch | Last commit message |
+| --- | --- | --- | --- |
+| `claude/repo-code-analysis-y4n1k7` (work branch) | 2026-09-29 | - | this README and the audit fixes |
+| `claude/admin-dashboard-automation-builder-s0j5ht` | 2026-09-13 | 0 | Add the Automations group: list, builder, rollouts, run log |
+| `claude/admin-dashboard-repo-review-47q2vc` | 2026-09-13 | 2 | Make the Live Feed section somewhere you can actually write a post |
+| `claude/gcr-api-review-o45xml` | 2026-08-09 | 1 | Point the Square probe at a route that exists, drop three dead app paths |
+| `claude/gcr-api-claim-docs-g4e42t` | 2026-08-05 | 3 | Read the stylesheets |
+| `claude/platform-integration-launch-test-abi95i` | 2026-08-04 | 0 | Point the production build at the API instead of at itself |
+| `main` | 2026-08-04 | 0 | Trigger production deployment from current main |
+| `claude/new-session-1e1dj0` | 2026-08-04 | 1 | Make the App Store search find things |
+| `claude/tourist-dashboard-layout-hi2yxu` | 2026-08-04 | 1 | Move Connections out of Booking and into App Store |
+| `claude/dashboard-inventory-purposes-m5wtba` | 2026-08-04 | 0 | Show the invite link so it can be sent by hand |
+| `build/nextgent-map-control` | 2026-08-03 | 0 | Add Text the Dashboard |
+| `claude/cybercheck-modular-react-dashboard-7on41c` (default) | 2026-08-03 | 0 | Add Text the Dashboard |
+
+</details>
+
+<!-- branches:end -->
+
 ## Store and Ghost boxes
 
 Two sections were added for the Ghost product (Store sits in the App Store
