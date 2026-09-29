@@ -1,0 +1,140 @@
+/* Automation builder. Layout only — every colour is a token. */
+
+.au__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.au__gap { height: var(--space-4); }
+
+.au__name { display: flex; align-items: center; gap: var(--space-2); }
+.au__name-icon { font-size: 18px; }
+.au__name-text { display: flex; flex-direction: column; }
+.au__name-sub { font-size: 12px; color: var(--text-muted); }
+
+/* Step list */
+.au__steps { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.au__step {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+.au__step[data-disabled='true'] { opacity: 0.55; }
+
+.au__step-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+}
+.au__step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--primary-soft);
+  color: var(--primary);
+  flex: none;
+}
+.au__step-icon { font-size: 18px; flex: none; }
+.au__step-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.au__step-title b { font-size: 14px; }
+.au__step-title span { font-size: 12px; color: var(--text-muted); }
+.au__step-tools { display: flex; gap: var(--space-1); flex: none; }
+.au__step-body {
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 1px solid var(--card-border);
+  padding-top: var(--space-3);
+}
+
+.au__step-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.au__step-grid .ui-field--span-full { grid-column: 1 / -1; }
+
+/* Step palette */
+.au__palette { display: flex; flex-direction: column; gap: var(--space-4); }
+.au__palette-cat { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 0 0 var(--space-2); }
+.au__palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-2); }
+.au__palette-item {
+  text-align: left;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  padding: var(--space-3);
+  display: flex;
+  gap: var(--space-3);
+  cursor: pointer;
+  color: var(--text);
+}
+.au__palette-item:hover { border-color: var(--primary-border); }
+.au__palette-item b { display: block; font-size: 13px; }
+.au__palette-item span { font-size: 12px; color: var(--text-muted); }
+
+/* Settings a business fills in */
+.au__setting {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.9fr 1.2fr auto;
+  gap: var(--space-2);
+  align-items: end;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--card-border);
+}
+@media (max-width: 900px) {
+  .au__setting { grid-template-columns: 1fr 1fr; }
+  .au__step-grid { grid-template-columns: 1fr; }
+}
+
+/* Run log */
+.au__runsteps { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-3); }
+.au__runstep {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 13px;
+}
+.au__runstep pre {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow: auto;
+  color: var(--text-muted);
+}
+.au__runstep-err { color: var(--danger); font-size: 12px; margin-top: 2px; }
+
+.au__code { font-family: var(--font-mono); font-size: 12px; line-height: 1.5; }
+
+.au__hint { font-size: 12px; color: var(--text-muted); margin: var(--space-2) 0 0; }
+.au__hint code { font-family: var(--font-mono); background: var(--primary-soft); padding: 1px 5px; border-radius: 4px; }
+
+.au__audience { display: flex; flex-direction: column; gap: var(--space-2); }
+.au__radio { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-2) 0; cursor: pointer; }
+.au__radio input { margin-top: 3px; }
+.au__radio b { font-size: 13px; display: block; }
+.au__radio span { font-size: 12px; color: var(--text-muted); }
+
+.au__preview {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  font-size: 13px;
+}
