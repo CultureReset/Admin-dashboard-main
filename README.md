@@ -5,8 +5,44 @@ A modular React rebuild of the CyberCheck admin dashboard, wired to the
 
 This replaces the single 23,000-line `admin.html` in `cybercheck-login` with 60+
 independent section modules, a shared UI kit, and one place that knows every API
-path. Nothing in `gcr-api-clean` was changed, and nothing in `cybercheck-login`
-was removed — this is a new application alongside them.
+path. Nothing in `cybercheck-login` was removed — this is a new application
+alongside it.
+
+**This is the operator console: you, seeing every business at once.** The screen
+a business owner logs into is `Dashboards-users-`. Both talk to the same
+backend, `gcr-api-clean`. Production: `admin-dashboard-main.vercel.app`.
+
+![Overview](docs/images/overview.png)
+
+*Overview. Captured against a test backend, so the counters read 0.*
+
+## Store and Ghost boxes
+
+Two sections were added for the Ghost product (both under Platform, both backed
+by routes in `gcr-api-clean`):
+
+**Store** (`/store`, `src/modules/store/`) is the App Store control panel: add an
+item (app, module, map, parser, automation, box release), publish versions,
+decide who gets it (free, in a plan, or granted to one business), and push it
+(release, offer, install, or force, with a preview of who would receive it).
+
+![Store: items](docs/images/store.png)
+
+**Ghost boxes** (`/platform/ghost`) is the fleet: every box at every business,
+the release it runs, and whether it is online. Read-only.
+
+![Ghost boxes](docs/images/ghost-boxes.png)
+
+*Both captures use sample items and sample boxes on a test backend.*
+
+**Automations** (`/automations`) builds a trigger and steps once, publishes a
+version and pushes it to businesses.
+
+![Automations](docs/images/automations.png)
+
+*Empty state, as it looks before the first automation is built.*
+
+![Where this repo sits in the whole system](docs/images/where-it-fits.png)
 
 ## Running it
 
@@ -84,7 +120,8 @@ src/
 
 ## Sections
 
-All 62 nav entries from the legacy dashboard, in the same nine groups:
+The 62 nav entries from the legacy dashboard, in the same nine groups, plus
+Store and Ghost boxes:
 
 - **Overview**
 - **Menu & QR** — Menu Builder, QR Menus, QR Tracker, Reviews, Referral
@@ -101,9 +138,11 @@ All 62 nav entries from the legacy dashboard, in the same nine groups:
 - **Automations** — Automations, the builder, Rollouts, Run log. Build a
   trigger + steps, test against one business, publish a version, push it to
   every business's dashboard. See `src/modules/automations/`.
-- **App Store** — App Manager, Business Apps
+- **App Store** — App Manager, Business Apps (the older pages; hidden but still
+  routable, replaced by **Store** below)
 - **Platform** — Businesses, Leads, Bookings, Sales Pages, AR Hunts,
-  Integrations, Users, API Keys, Settings
+  Integrations (labelled "Connections catalog"), Users, API Keys, Settings,
+  **Store**, **Ghost boxes**
 
 The Entity Editor carries nine tabs: Info, Hours, Photos, Tags, Features,
 Content (menu / drinks / happy hour / events / specials), Sections, Details (ten
@@ -127,7 +166,7 @@ passes `response.ok` and would otherwise look like a clean save.
 
 ## Verification
 
-`npm run build` and `npm run lint` both pass clean. All 61 routes were walked in
+`npm run build` passes and `npm run lint` reports no errors (a few unused-import warnings). All 61 routes were walked in
 headless Chromium against a stubbed API: every section mounted and rendered with
 zero page errors and zero console errors.
 
