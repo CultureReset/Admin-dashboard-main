@@ -807,11 +807,30 @@ const definitions = [
   // Ordered so the working pair comes first. The catalogue screen used to sit
   // under Booking Platform, which is where an operator would never look for it.
   {
+    // The one store: everything the operator ships (apps, modules, maps,
+    // parsers, box releases), who may have it, and every push.
+    id: 'store',
+    label: 'Store',
+    icon: '🏪',
+    group: 'appstore',
+    path: '/store',
+    description: 'Add what you sell, publish versions, choose who gets it (plans, grants) and push updates.',
+    load: () => import('./store/Store.jsx'),
+  },
+  {
+    id: 'store-item',
+    label: 'Store item',
+    group: 'appstore',
+    path: '/store/items/:id',
+    hidden: true,
+    load: () => import('./store/StoreItem.jsx'),
+  },
+  {
     // The Composio catalogue. Renders the same AppStoreView the business
     // dashboard uses, with the offer switch instead of the connect buttons.
     // Start here: this is the screen with the Sync button.
     id: 'app-store',
-    label: 'App Store',
+    label: 'Connections catalog',
     icon: '🛍️',
     group: 'appstore',
     path: '/apps/store',
@@ -836,6 +855,7 @@ const definitions = [
     group: 'appstore',
     path: '/apps/manager',
     description: 'The original `apps` table — empty, and superseded by the App Store above. Kept for reference.',
+    hidden: true, // legacy: routable, off the sidebar (see the Store)
     load: () => import('./appstore/AppManager.jsx'),
   },
   {
@@ -845,6 +865,7 @@ const definitions = [
     group: 'appstore',
     path: '/apps/business-apps',
     description: 'Installs from the original `site_apps` table — empty. The live equivalent is Connections above.',
+    hidden: true, // legacy: routable, off the sidebar (see the Store)
     load: () => import('./appstore/BusinessApps.jsx'),
   },
 

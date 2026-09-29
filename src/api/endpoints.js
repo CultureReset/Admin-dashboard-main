@@ -752,6 +752,27 @@ export const endpoints = {
    * site-config, sms-config, auth-config — and none of them existed. They are
    * one route now, so another settings screen needs no new endpoint at all.
    */
+  /**
+   * The store (routes/store.js): one catalog for everything the operator
+   * ships, who may have it (free, a plan, a grant), and every push.
+   */
+  store: {
+    meta: () => `${ADMIN}/store/meta`,
+    items: () => `${ADMIN}/store/items`,
+    item: (id) => `${ADMIN}/store/items/${seg(id)}`,
+    versions: (id) => `${ADMIN}/store/items/${seg(id)}/versions`,
+    deployPreview: (id) => `${ADMIN}/store/items/${seg(id)}/deploy/preview`,
+    deploy: (id) => `${ADMIN}/store/items/${seg(id)}/deploy`,
+    installs: (id) => `${ADMIN}/store/items/${seg(id)}/installs`,
+    deployments: () => `${ADMIN}/store/deployments/recent`,
+    plans: () => `${ADMIN}/store/plans`,
+    plan: (key) => `${ADMIN}/store/plans/${seg(key)}`,
+    grants: () => `${ADMIN}/store/grants`,
+    grant: (id) => `${ADMIN}/store/grants/${seg(id)}`,
+    business: (slug) => `${ADMIN}/store/businesses/${seg(slug)}`,
+    businessPlan: (slug) => `${ADMIN}/store/businesses/${seg(slug)}/plan`,
+  },
+
   /** The fleet of Ghost boxes (routes/admin-ghost.js). Read-only. */
   ghost: {
     summary: () => `${ADMIN}/ghost/summary`,
