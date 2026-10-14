@@ -24,6 +24,7 @@
 import { lazy } from 'react';
 
 export const NAV_GROUPS = [
+  { key: 'nextgent', label: 'NEXT GENT' },
   { key: 'home', label: '' },
   { key: 'menu', label: '🍽️ Menu & QR' },
   { key: 'directory', label: '🗺️ GCR Directory' },
@@ -42,6 +43,42 @@ export const NAV_GROUPS = [
  * so nothing that existed there is lost.
  */
 const definitions = [
+  {
+    id: 'ng-store',
+    label: 'Store publishing',
+    icon: '🛍️',
+    group: 'nextgent',
+    path: '/nextgent',
+    description: 'Create store items, release updates, and publish them to every business.',
+    load: () => import('./nextgent/StorePublishing.jsx'),
+  },
+  {
+    id: 'ng-core-menu',
+    label: 'Core menu',
+    icon: '🧭',
+    group: 'nextgent',
+    path: '/nextgent/menu',
+    description: 'The menu entries every business sees before installing anything.',
+    load: () => import('./nextgent/CoreMenu.jsx'),
+  },
+  {
+    id: 'ng-businesses',
+    label: 'Platform businesses',
+    icon: '🏢',
+    group: 'nextgent',
+    path: '/nextgent/businesses',
+    description: 'Every business on the Paperclip server.',
+    load: () => import('./nextgent/Businesses.jsx'),
+  },
+  {
+    id: 'ng-users',
+    label: 'Platform users',
+    icon: '👤',
+    group: 'nextgent',
+    path: '/nextgent/users',
+    description: 'Everyone who can sign in to Paperclip.',
+    load: () => import('./nextgent/Users.jsx'),
+  },
   // ---------------------------------------------------------------- home --
   {
     id: 'overview',

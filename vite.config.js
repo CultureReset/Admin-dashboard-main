@@ -6,20 +6,23 @@ import react from '@vitejs/plugin-react';
 // relative /api calls hit your local gcr-api-clean instead of production.
 export default defineConfig(({ mode }) => {
   const proxyTarget = process.env.VITE_DEV_API_PROXY;
+  const paperclip = process.env.PAPERCLIP_DEV_SERVER || 'http://localhost:3100';
+  const proxy = {
+    '/api/paperclip': {
+      target: paperclip,
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/api\/paperclip/, '/api'),
+    },
+  };
+  if (proxyTarget) {
+    proxy['/api'] = { target: proxyTarget, changeOrigin: true, secure: false };
+  }
 
   return {
     plugins: [react()],
     server: {
       port: Number(process.env.PORT) || 5173,
-      proxy: proxyTarget
-        ? {
-            '/api': {
-              target: proxyTarget,
-              changeOrigin: true,
-              secure: false,
-            },
-          }
-        : undefined,
+      proxy,
     },
     build: {
       outDir: 'dist',
