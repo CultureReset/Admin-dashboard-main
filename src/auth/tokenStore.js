@@ -56,7 +56,21 @@ export const tokenStore = {
     else storage.removeItem(config.authUserKey);
   },
 
+  /** Supabase refresh token (OAuth sessions only). */
+  getRefresh() {
+    const storage = safeStorage();
+    return storage ? storage.getItem(`${config.authTokenKey}_refresh`) : null;
+  },
+
+  setRefresh(value) {
+    const storage = safeStorage();
+    if (!storage) return;
+    if (value) storage.setItem(`${config.authTokenKey}_refresh`, value);
+    else storage.removeItem(`${config.authTokenKey}_refresh`);
+  },
+
   clear() {
+    safeStorage()?.removeItem(`${config.authTokenKey}_refresh`);
     memoryToken = null;
     memoryUser = null;
     const storage = safeStorage();

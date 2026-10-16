@@ -76,6 +76,12 @@ export const config = {
     return `${this.authTokenKey}_user`;
   },
 
+  /** OAuth providers enabled in Supabase Auth, shown as buttons. Empty hides them. */
+  oauthProviders: read('oauthProviders', 'VITE_OAUTH_PROVIDERS', 'google,github'),
+
+  /** Set VITE_PASSWORD_LOGIN=false to make OAuth the only way in. */
+  passwordLogin: String(read('passwordLogin', 'VITE_PASSWORD_LOGIN', 'true')) !== 'false',
+
   /** Role the JWT must carry for the dashboard to render. */
   requiredRole: read('requiredRole', 'VITE_REQUIRED_ROLE', 'admin'),
 

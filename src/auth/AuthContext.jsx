@@ -12,6 +12,10 @@ import { api, onAuthFailure } from '../api/client.js';
 import { endpoints } from '../api/endpoints.js';
 import { config } from '../config/env.js';
 import { tokenStore, decodeToken, isTokenExpired } from './tokenStore.js';
+import { isOAuthCallback, completeOAuthFromUrl, refreshOAuthSession } from './oauth.js';
+
+/** Supabase Auth tokens carry role 'authenticated'; the API decides admin-ness. */
+const isSupabaseToken = (claims) => /\/auth\/v1$/.test(String(claims?.iss || ''));
 
 const AuthContext = createContext(null);
 
@@ -56,12 +60,16 @@ export function AuthProvider({ children }) {
     }
 
     if (isTokenExpired(token)) {
-      signOut('Your session expired. Please sign in again.');
-      return false;
+      // OAuth sessions are short-lived (1h); renew instead of logging out.
+      const renewed = tokenStore.getRefresh() && await renewSession().catch(() => false);
+      if (!renewed) {
+        signOut('Your session expired. Please sign in again.');
+        return false;
+      }
     }
 
-    const claims = decodeToken(token);
-    if (claims?.role && claims.role !== config.requiredRole) {
+    const claims = decodeToken(tokenStore.get());
+    if (claims?.role && !isSupabaseToken(claims) && claims.role !== config.requiredRole) {
       signOut(`This account does not have ${config.requiredRole} access.`);
       return false;
     }
@@ -86,13 +94,45 @@ export function AuthProvider({ children }) {
     }
   }, [signOut]);
 
+  // Page load: finish an OAuth redirect if we are on /auth/callback, then
+  // confirm the session with the API before anything renders.
   useEffect(() => {
-    verifyToken();
+    (async () => {
+      if (isOAuthCallback()) {
+        try {
+          adoptSupabaseSession(await completeOAuthFromUrl());
+        } catch (err) {
+          tokenStore.clear();
+          setStatus(STATUS.ANONYMOUS);
+          setError(err.message);
+          return;
+        }
+      }
+      const ok = await verifyToken();
+      // An OAuth account that is not a platform admin gets 403 from the API.
+      if (!ok) return;
+    })();
   }, [verifyToken]);
 
-  // A 401 from any request anywhere ends the session.
+  // Keep an OAuth session alive: renew ~1 minute before the access token expires.
+  useEffect(() => {
+    if (status !== STATUS.AUTHENTICATED || !tokenStore.getRefresh()) return undefined;
+    const exp = decodeToken(tokenStore.get())?.exp;
+    if (!exp) return undefined;
+    const wait = Math.max(5000, exp * 1000 - Date.now() - 60000);
+    const t = setTimeout(() => {
+      renewSession().catch(() => signOut('Your session expired. Please sign in again.'));
+    }, wait);
+    return () => clearTimeout(t);
+  }, [status, user, signOut]);
+
+  // A 401 from any request anywhere ends the session; a 403 on an OAuth
+  // session means the account is signed in but is not a platform admin.
   useEffect(() => onAuthFailure((err) => {
     if (err.status === 401) signOut('Your session is no longer valid. Please sign in again.');
+    if (err.status === 403 && isSupabaseToken(decodeToken(tokenStore.get()))) {
+      signOut('This Google/GitHub account does not have admin access.');
+    }
   }), [signOut]);
 
   const signIn = useCallback(async (email, password) => {
@@ -139,6 +179,20 @@ export function AuthProvider({ children }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+/** Store a Supabase session (OAuth) as the admin session. */
+function adoptSupabaseSession(session) {
+  tokenStore.set(session.access_token);
+  tokenStore.setRefresh(session.refresh_token);
+  tokenStore.setUser({ id: session.user?.id, email: session.user?.email, role: 'admin', provider: session.user?.provider });
+}
+
+async function renewSession() {
+  const next = await refreshOAuthSession(tokenStore.getRefresh());
+  if (!next?.access_token) throw new Error('renew failed');
+  adoptSupabaseSession(next);
+  return true;
 }
 
 function claimsToUser(claims) {

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { config } from '../config/env.js';
 import { Button } from '../ui/primitives.jsx';
+import { startOAuth, oauthProviders } from './oauth.js';
 import './LoginPage.css';
 
 export function LoginPage() {
@@ -33,7 +34,7 @@ export function LoginPage() {
 
   return (
     <div className="login">
-      <form className="login__card" onSubmit={submit}>
+      <form className="login__card" onSubmit={config.passwordLogin ? submit : (e) => e.preventDefault()}>
         <div className="login__brand">
           <span className="login__logo" aria-hidden="true">◈</span>
           <h1 className="login__title">{config.appName}</h1>
@@ -46,6 +47,24 @@ export function LoginPage() {
           </div>
         )}
 
+        {oauthProviders.length > 0 && (
+          <div className="login__oauth">
+            {oauthProviders.map((p) => (
+              <Button
+                key={p}
+                type="button"
+                variant="secondary"
+                size="lg"
+                className="login__submit"
+                onClick={() => { setBusy(true); startOAuth(p).catch((e) => { setBusy(false); setError(e.message); }); }}
+              >
+                Continue with {p === 'github' ? 'GitHub' : p.charAt(0).toUpperCase() + p.slice(1)}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {config.passwordLogin && (<>
         <label className="login__field">
           <span>Email</span>
           <input
@@ -72,6 +91,7 @@ export function LoginPage() {
         <Button type="submit" variant="primary" size="lg" loading={busy} className="login__submit">
           Sign in
         </Button>
+        </>)}
 
         <p className="login__api mono" title="Configured with VITE_API_BASE_URL">
           {apiTarget}
