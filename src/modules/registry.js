@@ -545,6 +545,15 @@ const definitions = [
 
   // ------------------------------------------------------------ ai tools --
   {
+    id: 'jarvis-chat',
+    label: 'Jarvis',
+    icon: '🤖',
+    group: 'ai',
+    path: '/ai/jarvis',
+    description: 'Chat with Jarvis on the Droplet (server-side proxy, admin only).',
+    load: () => import('./jarvis/JarvisChat.jsx'),
+  },
+  {
     id: 'ai-chat',
     label: 'AI Chat',
     icon: '✨',

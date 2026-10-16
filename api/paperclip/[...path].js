@@ -3,10 +3,15 @@
 
 export const config = { runtime: 'edge' }
 
+const DEFAULT_PAPERCLIP = 'http://165.22.133.121.sslip.io:3100'
+
 const HOP_BY_HOP = ['connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'host', 'content-length']
 
 export default async function handler(request) {
-  const server = (process.env.PAPERCLIP_SERVER_URL || '').replace(/\/+$/, '')
+  // Vercel's fetch refuses raw IP hosts, so the Droplet is reached by its
+  // sslip.io name (165.22.133.121.sslip.io resolves to 165.22.133.121).
+  // PAPERCLIP_SERVER_URL still wins; this is only the fallback.
+  const server = (process.env.PAPERCLIP_SERVER_URL || DEFAULT_PAPERCLIP).replace(/\/+$/, '')
   if (!server) {
     return Response.json({ error: 'PAPERCLIP_SERVER_URL is not set for this deployment' }, { status: 503 })
   }
