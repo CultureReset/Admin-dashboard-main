@@ -53,7 +53,7 @@ export function LoginPage() {
               <Button
                 key={p}
                 type="button"
-                variant="secondary"
+                variant="default"
                 size="lg"
                 className="login__submit"
                 onClick={() => { setBusy(true); startOAuth(p).catch((e) => { setBusy(false); setError(e.message); }); }}
