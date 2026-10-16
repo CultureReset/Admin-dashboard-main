@@ -16,9 +16,16 @@ export default async function handler(request) {
     return Response.json({ error: 'PAPERCLIP_SERVER_URL is not set for this deployment' }, { status: 503 })
   }
 
+  // vercel.json rewrites /api/paperclip/<deep/path> to /api/paperclip?__pc=<deep/path>
+  // (a [...path].js catch-all only matches one segment outside Next.js).
   const incoming = new URL(request.url)
-  const rest = incoming.pathname.replace(/^\/api\/paperclip/, '') || '/'
-  const target = `${server}/api${rest}${incoming.search}`
+  const fromQuery = incoming.searchParams.get('__pc')
+  incoming.searchParams.delete('__pc')
+  const rest = fromQuery != null
+    ? `/${fromQuery.replace(/^\/+/, '')}`
+    : incoming.pathname.replace(/^\/api\/paperclip/, '') || '/'
+  const search = incoming.searchParams.toString()
+  const target = `${server}/api${rest}${search ? `?${search}` : ''}`
 
   const headers = new Headers(request.headers)
   for (const name of HOP_BY_HOP) headers.delete(name)
