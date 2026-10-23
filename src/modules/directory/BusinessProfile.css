@@ -285,3 +285,10 @@
 }
 
 .bp__module--off { opacity: 0.45; text-decoration: line-through; }
+
+/* edit history */
+.bp__history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bp__history-item { padding: 8px 10px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; font-size: 13px; }
+.bp__history-when { color: var(--muted, #6b7280); margin-right: 8px; }
+.bp__history-by { color: var(--muted, #6b7280); }
+.bp__history-diff { margin-top: 4px; font-family: ui-monospace, monospace; font-size: 12px; word-break: break-word; }
