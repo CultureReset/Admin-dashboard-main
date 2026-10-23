@@ -6,14 +6,13 @@
 // the dashboard sends to gcr-api-clean) is checked against the API first.
 //
 // Env:
-//   JARVIS_SERVER_URL    default http://165.22.133.121.sslip.io:8000 (raw IPs are blocked by Vercel fetch)
+//   JARVIS_SERVER_URL    required; use an https:// URL (the key is sent as a Bearer header)
 //   OPENJARVIS_API_KEY   required
 //   JARVIS_MODEL         optional default model
 //   ADMIN_VERIFY_URL     default https://gcr-api-clean.vercel.app/api/admin/gcr/claims?limit=1
 
 export const config = { runtime: 'edge' }
 
-const DEFAULT_SERVER = 'http://165.22.133.121.sslip.io:8000'
 const DEFAULT_VERIFY = 'https://gcr-api-clean.vercel.app/api/admin/gcr/claims?limit=1'
 const MAX_BODY = 200_000
 
@@ -52,7 +51,8 @@ export default async function handler(request) {
     temperature: typeof body.temperature === 'number' ? body.temperature : undefined,
   }
 
-  const server = (process.env.JARVIS_SERVER_URL || DEFAULT_SERVER).replace(/\/+$/, '')
+  const server = (process.env.JARVIS_SERVER_URL || '').replace(/\/+$/, '')
+  if (!server) return json(503, { error: 'JARVIS_SERVER_URL is not set for this deployment' })
   let upstream
   try {
     upstream = await fetch(`${server}/v1/chat/completions`, {

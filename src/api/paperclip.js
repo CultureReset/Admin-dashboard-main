@@ -7,6 +7,8 @@
  * local dev (defaults to http://localhost:3100).
  */
 
+import { tokenStore } from '../auth/tokenStore.js';
+
 export class ApiError extends Error {
   constructor(message, status, body) {
     super(message);
@@ -17,10 +19,13 @@ export class ApiError extends Error {
 }
 
 async function request(method, path, body) {
+  const headers = body === undefined ? { accept: 'application/json' } : { 'content-type': 'application/json', accept: 'application/json' };
+  const token = tokenStore.get();
+  if (token) headers.authorization = `Bearer ${token}`;
   const res = await fetch(`/api/paperclip${path}`, {
     method,
     credentials: 'include',
-    headers: body === undefined ? { accept: 'application/json' } : { 'content-type': 'application/json', accept: 'application/json' },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (res.status === 204) return null;

@@ -3,15 +3,31 @@
 
 export const config = { runtime: 'edge' }
 
-const DEFAULT_PAPERCLIP = 'http://165.22.133.121.sslip.io:3100'
+// Only these request headers are forwarded. Cookies and Authorization (the
+// dashboard admin token) never reach the droplet.
+const FORWARD_HEADERS = ['accept', 'accept-language', 'content-type', 'user-agent']
+const DEFAULT_VERIFY = 'https://gcr-api-clean.vercel.app/api/admin/gcr/claims?limit=1'
 
-const HOP_BY_HOP = ['connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'host', 'content-length']
+// Same admin check as api/jarvis/chat.js: the dashboard Bearer token must be
+// accepted by gcr-api-clean's admin-only endpoint.
+async function isAdmin(authorization) {
+  if (!authorization?.startsWith('Bearer ')) return false
+  try {
+    const r = await fetch(process.env.ADMIN_VERIFY_URL || DEFAULT_VERIFY, {
+      headers: { authorization, accept: 'application/json', 'cache-control': 'no-cache' },
+    })
+    return r.ok
+  } catch {
+    return false
+  }
+}
 
 export default async function handler(request) {
-  // Vercel's fetch refuses raw IP hosts, so the Droplet is reached by its
-  // sslip.io name (165.22.133.121.sslip.io resolves to 165.22.133.121).
-  // PAPERCLIP_SERVER_URL still wins; this is only the fallback.
-  const server = (process.env.PAPERCLIP_SERVER_URL || DEFAULT_PAPERCLIP).replace(/\/+$/, '')
+  if (!(await isAdmin(request.headers.get('authorization')))) {
+    return Response.json({ error: 'Admin sign-in required' }, { status: 401 })
+  }
+  // Target comes only from env (no hardcoded HTTP fallback) so it can be HTTPS.
+  const server = (process.env.PAPERCLIP_SERVER_URL || '').replace(/\/+$/, '')
   if (!server) {
     return Response.json({ error: 'PAPERCLIP_SERVER_URL is not set for this deployment' }, { status: 503 })
   }
@@ -27,8 +43,11 @@ export default async function handler(request) {
   const search = incoming.searchParams.toString()
   const target = `${server}/api${rest}${search ? `?${search}` : ''}`
 
-  const headers = new Headers(request.headers)
-  for (const name of HOP_BY_HOP) headers.delete(name)
+  const headers = new Headers()
+  for (const name of FORWARD_HEADERS) {
+    const v = request.headers.get(name)
+    if (v) headers.set(name, v)
+  }
   headers.set('x-forwarded-host', incoming.host)
   headers.set('x-forwarded-proto', incoming.protocol.replace(':', ''))
 
@@ -44,5 +63,6 @@ export default async function handler(request) {
   const out = new Headers(upstream.headers)
   out.delete('content-encoding')
   out.delete('content-length')
+  out.delete('set-cookie')
   return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: out })
 }
