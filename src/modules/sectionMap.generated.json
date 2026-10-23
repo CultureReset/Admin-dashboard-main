@@ -168,6 +168,7 @@
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.history",
       "businessProfile.ingest",
       "businessProfile.row",
       "entities.list"
@@ -194,6 +195,7 @@
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
+      "businessProfile.history",
       "businessProfile.ingest",
       "businessProfile.row",
       "entities.list"

@@ -451,6 +451,51 @@ function IngestPanel({ section, slug, onUse }) {
 
 /** Sentinel for the analytics pane, which is not a table. */
 const ANALYTICS_KEY = '__analytics__';
+const HISTORY_KEY = '__history__';
+
+/** Short, readable form of an edit's old/new values. */
+function editSummary(e) {
+  const keys = Object.keys(e.new_value || e.old_value || {});
+  if (!keys.length) return e.field_name || '';
+  return keys.slice(0, 4).map((k) => {
+    const from = e.old_value?.[k];
+    const to = e.new_value?.[k];
+    const fmt = (v) => (v === null || v === undefined || v === '' ? '∅' : String(typeof v === 'object' ? JSON.stringify(v) : v).slice(0, 40));
+    return e.action === 'update' ? `${k}: ${fmt(from)} → ${fmt(to)}` : `${k}: ${fmt(to ?? from)}`;
+  }).join(' · ') + (keys.length > 4 ? ` · +${keys.length - 4} more` : '');
+}
+
+/** Every recorded edit to this business, from every channel, newest first. */
+function HistoryPane({ query }) {
+  const edits = query.data?.edits || [];
+  return (
+    <Card
+      title="Edit history"
+      subtitle="admin, menu editor, dashboard and SMS edits — newest first"
+      actions={<Button variant="ghost" onClick={() => query.reload()}>Refresh</Button>}
+    >
+      {query.loading && <LoadingBlock label="Reading the edit log…" />}
+      {query.error && <ErrorState error={query.error} onRetry={query.reload} context="edit history" />}
+      {!query.loading && !query.error && !edits.length && (
+        <EmptyState title="No edits recorded yet" description="Edits made from here are logged automatically." />
+      )}
+      {!query.loading && !query.error && edits.length > 0 && (
+        <ul className="bp__history">
+          {edits.map((e) => (
+            <li key={e.id} className="bp__history-item">
+              <span className="bp__history-when">{new Date(e.created_at).toLocaleString()}</span>
+              <Badge>{e.channel || '—'}</Badge>
+              <strong>{e.action}</strong> <code>{e.table_name}</code>
+              {e.record_id ? <span className="bp__null"> #{String(e.record_id).slice(0, 8)}</span> : null}
+              <span className="bp__history-by"> by {e.actor_name || e.actor_role || 'unknown'}</span>
+              <div className="bp__history-diff">{editSummary(e)}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
 
 
 /**
@@ -581,6 +626,13 @@ export default function BusinessProfile() {
     { initialData: null },
   );
 
+  /* who changed what — read from entity_edit_log through the API */
+  const history = useAsync(
+    async () => (slugParam ? api.get(endpoints.businessProfile.history(slugParam)) : null),
+    [slugParam],
+    { initialData: null },
+  );
+
   const sections = useMemo(
     () => (Array.isArray(profile.data?.sections) ? profile.data.sections : []),
     [profile.data],
@@ -621,7 +673,8 @@ export default function BusinessProfile() {
   }, [sections, active]);
 
   const showingAnalytics = active === ANALYTICS_KEY;
-  const current = showingAnalytics ? null : (sections.find((s) => s.table === active) || sections[0] || null);
+  const showingHistory = active === HISTORY_KEY;
+  const current = showingAnalytics || showingHistory ? null : (sections.find((s) => s.table === active) || sections[0] || null);
 
   const pick = useCallback((table) => {
     setActive(table);
@@ -642,15 +695,17 @@ export default function BusinessProfile() {
       toast.success(isNew ? 'Row added' : 'Saved');
     }
     setEditing(null);
-    profile.run();
-  }, [editing, slugParam, profile, toast]);
+    profile.reload();
+    history.reload();
+  }, [editing, slugParam, profile, history, toast]);
 
   const deleteRow = useCallback(async (section, row) => {
     if (!row?.id) return;
     await api.del(endpoints.businessProfile.row(slugParam, section.table, row.id));
     toast.success('Deleted');
-    profile.run();
-  }, [slugParam, profile, toast]);
+    profile.reload();
+    history.reload();
+  }, [slugParam, profile, history, toast]);
 
   /* ── no business chosen yet ─────────────────────────────────────────── */
 
@@ -754,7 +809,7 @@ export default function BusinessProfile() {
                 onClick={() => setNavOpen((v) => !v)}
                 aria-expanded={navOpen}
               >
-                ☰ {showingAnalytics ? 'Analytics' : current ? current.label : 'Sections'}
+                ☰ {showingAnalytics ? 'Analytics' : showingHistory ? 'Edit history' : current ? current.label : 'Sections'}
                 <span className="bp__navtoggle-count">{sections.length}</span>
               </button>
 
@@ -768,6 +823,14 @@ export default function BusinessProfile() {
                   >
                     <span className="bp__navitem-label">Analytics</span>
                     <span className="bp__navitem-count">{stats.data?.totals?.page_views ?? '—'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`bp__navitem ${showingHistory ? 'bp__navitem--on' : ''}`}
+                    onClick={() => pick(HISTORY_KEY)}
+                  >
+                    <span className="bp__navitem-label">Edit history</span>
+                    <span className="bp__navitem-count">{history.data?.edits?.length ?? '—'}</span>
                   </button>
                 </div>
                 {modules.length > 0 && (
@@ -822,7 +885,8 @@ export default function BusinessProfile() {
                 {showingAnalytics && (
                   <AnalyticsPane query={stats} name={profile.data?.entity?.name || slugParam} />
                 )}
-                {!showingAnalytics && current && (
+                {showingHistory && <HistoryPane query={history} />}
+                {!showingAnalytics && !showingHistory && current && (
                   <Card
                     title={current.label || current.table}
                     subtitle={<code className="bp__tablename">{current.table}</code>}

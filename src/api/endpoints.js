@@ -158,6 +158,8 @@ export const endpoints = {
      * body, and the API checks the table against the live schema before
      * touching it — so a row belonging to another business cannot be reached.
      */
+    /** Recorded edits for one business (entity_edit_log), newest first. */
+    history: (slug) => `${ADMIN}/gcr/profile/${seg(slug)}/history`,
     createRow: (slug, table) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}`,
     row: (slug, table, id) => `${ADMIN}/gcr/profile/${seg(slug)}/${seg(table)}/${seg(id)}`,
     /**
