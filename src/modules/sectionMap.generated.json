@@ -165,6 +165,7 @@
       "specials.update"
     ],
     "gcr-business-profile": [
+      "admin.impersonate",
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
@@ -192,6 +193,7 @@
       "analytics.behaviourHealth"
     ],
     "gcr-business-profile-slug": [
+      "admin.impersonate",
       "analytics.entity",
       "businessProfile.createRow",
       "businessProfile.get",
@@ -643,6 +645,7 @@
       "businesses.modules"
     ],
     "biz-apps": [
+      "admin.impersonate",
       "businesses.list",
       "businesses.modules"
     ],
