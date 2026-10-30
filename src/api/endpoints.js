@@ -419,12 +419,31 @@ export const endpoints = {
     reorder: () => `${ADMIN}/setup-questions/reorder`,
   },
 
-  optinForms: {
-    list: () => `${ADMIN}/optin-forms`,
-    create: () => `${ADMIN}/optin-forms`,
-    update: (id) => `${ADMIN}/optin-forms/${seg(id)}`,
-    remove: (id) => `${ADMIN}/optin-forms/${seg(id)}`,
-    reorder: () => `${ADMIN}/optin-forms/reorder`,
+  /**
+   * Opt-in campaigns (PR #64 schema: optin_campaigns + optin_campaign_fields).
+   *
+   * Tourist-facing routes already exist on gcr-api-clean PR #64:
+   *   GET  /api/tourist-auth/optin-config
+   *   GET  /api/tourist-auth/sms-cta
+   *   POST /api/tourist-auth/optin-submit
+   *
+   * Admin CRUD does NOT exist in PR #64. The dashboard editor needs these
+   * admin routes added to gcr-api-clean (do not invent them here):
+   *   GET    /api/admin/optin-campaigns
+   *   POST   /api/admin/optin-campaigns
+   *   GET    /api/admin/optin-campaigns/:id
+   *   PUT    /api/admin/optin-campaigns/:id
+   *   DELETE /api/admin/optin-campaigns/:id
+   * Create/update bodies should accept a nested `fields` array and upsert
+   * into optin_campaign_fields (field_key, label, input_type, placeholder,
+   * help_text, required, options, maps_to, sort_order).
+   */
+  optinCampaigns: {
+    list: () => `${ADMIN}/optin-campaigns`,
+    create: () => `${ADMIN}/optin-campaigns`,
+    detail: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    update: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    remove: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
   },
 
   // -------------------------------------------------------------- sms ---

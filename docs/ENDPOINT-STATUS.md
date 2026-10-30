@@ -418,3 +418,24 @@ short script at `gcr-api-clean/server.js` and the route files it mounts — the
 mount table is the authority, since several routers exist in the repo but are
 deliberately commented out (`messaging`, `modules`, `google-business`,
 `whatsapp`, and others whose backing tables are not in the live database).
+
+## Opt-in campaigns (dashboard PR #8 / API PR #64)
+
+Tourist routes live on gcr-api-clean PR #64 (`feat/data-driven-optin-campaigns`):
+
+- `GET /api/tourist-auth/optin-config`
+- `GET /api/tourist-auth/sms-cta`
+- `POST /api/tourist-auth/optin-submit`
+
+**Admin CRUD is not in PR #64.** The Opt-In Forms editor needs these routes
+added to gcr-api-clean (tables `optin_campaigns` + `optin_campaign_fields`):
+
+- `GET /api/admin/optin-campaigns`
+- `POST /api/admin/optin-campaigns`
+- `GET /api/admin/optin-campaigns/:id`
+- `PUT /api/admin/optin-campaigns/:id`
+- `DELETE /api/admin/optin-campaigns/:id`
+
+Create/update should accept a nested `fields` array and upsert into
+`optin_campaign_fields`. Until those exist, the editor shows the shared
+missing-endpoint notice (404). Do not call Supabase from the dashboard.

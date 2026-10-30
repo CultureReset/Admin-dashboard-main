@@ -526,10 +526,9 @@
       "setupQuestions.update"
     ],
     "tripswipe-optin-forms": [
-      "optinForms.create",
-      "optinForms.list",
-      "optinForms.reorder",
-      "optinForms.update"
+      "optinCampaigns.create",
+      "optinCampaigns.list",
+      "optinCampaigns.update"
     ],
     "tripswipe-sponsored": [
       "tripswipe.sponsored",
