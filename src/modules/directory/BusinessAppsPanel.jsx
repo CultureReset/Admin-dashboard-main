@@ -10,15 +10,17 @@
  * Concierge is adding the modules route in gcr-api-clean; until it is live a
  * 404 surfaces as a "pending API" notice and buttons stay disabled.
  *
- * Key aliasing (gallery↔photos, menu↔menu_sections) lives in
- * src/lib/moduleKeys.js so it can sync with Dashboards-users- moduleNav.js.
+ * Key aliasing lives in src/lib/moduleKeys.js (mirrors Dashboards-users-
+ * moduleNav.js). API catalog mappings override the local fallback when present.
  */
 
 import { useCallback, useMemo, useState } from 'react';
 import { api, unwrapList, ApiError } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { useAsync } from '../../hooks/useAsync.js';
-import { keysMatch, canonicalModuleKey } from '../../lib/moduleKeys.js';
+import {
+  keysMatch, canonicalModuleKey, applyCatalogFromApi, clearCatalogFromApi,
+} from '../../lib/moduleKeys.js';
 import {
   Badge, Button, Card, Notice, LoadingBlock, ErrorState, EmptyState,
 } from '../../ui/primitives.jsx';
@@ -37,16 +39,34 @@ export default function BusinessAppsPanel({ businessId, onChanged }) {
   const [busyKey, setBusyKey] = useState(null);
 
   const catalogQuery = useAsync(
-    async () => unwrapList(await api.get(endpoints.apps.list()), ['apps']),
+    async () => {
+      const payload = await api.get(endpoints.apps.list());
+      // Only apply when the payload actually carries mappings — an empty
+      // apply would wipe overrides already taken from the modules response.
+      if (
+        payload
+        && typeof payload === 'object'
+        && !Array.isArray(payload)
+        && (payload.catalog || payload.module_catalog || payload.mappings)
+      ) {
+        applyCatalogFromApi(payload);
+      }
+      return unwrapList(payload, ['apps']);
+    },
     [],
     { initialData: [] },
   );
 
   const modulesQuery = useAsync(
     async () => {
-      if (!businessId) return { modules: [], pendingApi: false };
+      if (!businessId) {
+        clearCatalogFromApi();
+        return { modules: [], pendingApi: false };
+      }
       try {
         const data = await api.get(endpoints.businesses.modules(businessId));
+        // API-provided catalog mappings override the local fallback map.
+        applyCatalogFromApi(data);
         const modules = Array.isArray(data?.modules)
           ? data.modules
           : Array.isArray(data)
@@ -55,6 +75,7 @@ export default function BusinessAppsPanel({ businessId, onChanged }) {
         return { modules, pendingApi: false };
       } catch (err) {
         if (err instanceof ApiError && err.isMissingEndpoint) {
+          clearCatalogFromApi();
           return { modules: [], pendingApi: true, pendingError: err };
         }
         throw err;
