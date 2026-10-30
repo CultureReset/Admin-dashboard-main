@@ -31,7 +31,14 @@ export default function Tourists() {
     { initialData: [] },
   );
 
+  const guestsQuery = useAsync(
+    async () => api.get(endpoints.guests.summary()),
+    [],
+    { initialData: null },
+  );
+
   const tourists = data || [];
+  const smsOkCount = tourists.filter((t) => t.sms_opt_in).length;
 
   const remove = async (row) => {
     const id = row.user_id || row.id;
@@ -58,6 +65,21 @@ export default function Tourists() {
         actions={<Button onClick={reload} disabled={loading}>Refresh</Button>}
       />
 
+      <div className="grid-auto" style={{ marginBottom: 'var(--space-5)' }}>
+        <Stat label="Tourists" value={tourists.length} />
+        <Stat label="SMS OK" value={smsOkCount} tone="success" />
+        <Stat
+          label="Guests (browse only)"
+          value={guestsQuery.data?.guests ?? '—'}
+          hint="No phone — not SMS-able until opt-in"
+        />
+        <Stat
+          label="Formal consent grants"
+          value={guestsQuery.data?.message_consent_granted ?? '—'}
+          hint="message_consent status=granted"
+        />
+      </div>
+
       <Card padded={false}>
         <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
           <DataTable
@@ -65,6 +87,18 @@ export default function Tourists() {
               columns.primary('name', 'Name', 'email'),
               columns.text('email', 'Email'),
               columns.text('phone', 'Phone'),
+              {
+                key: 'sms_opt_in',
+                header: 'SMS OK',
+                render: (row) =>
+                  row.sms_opt_in ? <Badge tone="success">SMS OK</Badge> : <span className="faint">No</span>,
+              },
+              {
+                key: 'sms_opted_in_at',
+                header: 'Opted in',
+                render: (row) =>
+                  row.sms_opted_in_at ? formatDateTime(row.sms_opted_in_at) : <span className="faint">—</span>,
+              },
               columns.number('saves_count', 'Saves'),
               columns.number('points', 'Points'),
               columns.dateTime('created_at', 'Joined'),
@@ -181,6 +215,17 @@ function TouristDetail({ userId, confirm, onChanged }) {
       <div className="row-wrap">
         <strong>{detail?.name || detail?.email || userId}</strong>
         {detail?.email && <Badge tone="info">{detail.email}</Badge>}
+        {detail?.phone && <Badge>{detail.phone}</Badge>}
+        {(detail?.sms_opt_in || detail?.profile?.sms_opt_in) ? (
+          <Badge tone="success">SMS OK</Badge>
+        ) : (
+          <Badge>No SMS consent flag</Badge>
+        )}
+        {(detail?.sms_opted_in_at || detail?.profile?.sms_opted_in_at) && (
+          <span className="faint">
+            Opted in {formatDateTime(detail?.sms_opted_in_at || detail?.profile?.sms_opted_in_at)}
+          </span>
+        )}
         {detail?.points != null && <Badge tone="primary">{detail.points} points</Badge>}
         {detail?.created_at && <span className="faint">Joined {formatDateTime(detail.created_at)}</span>}
       </div>

@@ -20,8 +20,19 @@ export default function Customers() {
         columns.primary('name', 'Name', 'email'),
         columns.text('email', 'Email'),
         columns.text('phone', 'Phone'),
-        columns.text('entity_slug', 'Business'),
-        columns.text('source', 'Source'),
+        {
+          key: 'sms_opt_in',
+          header: 'SMS OK',
+          render: (row) =>
+            row.sms_opt_in ? (
+              <span className="ui-badge ui-badge--success">SMS OK</span>
+            ) : (
+              <span className="faint">No</span>
+            ),
+        },
+        columns.dateTime('sms_opted_in_at', 'Opted in'),
+        columns.text('status', 'Status'),
+        columns.text('destination', 'Destination'),
         columns.dateTime('created_at', 'First seen'),
       ]}
       initialSort={{ key: 'created_at', direction: 'desc' }}
