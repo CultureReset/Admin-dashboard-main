@@ -515,11 +515,11 @@ export const endpoints = {
     modules: (id) => `${ADMIN}/businesses/${seg(id)}/modules`,
   },
 
-  // The admin-scoped app records under /api/admin. `catalog`, `install` and
-  // `uninstall` used to sit here too, pointing at /api/apps — a router
-  // gcr-api-clean has commented out in server.js, superseded by the App Store
-  // (routes/composio.js). Nothing called them and nothing can: the paths 404.
-  // Connecting tools is `connections` below, which is the live replacement.
+  /**
+   * Legacy `apps` / `site_apps` table routes. The live catalogue is
+   * module_catalog via businesses.modules(); App manager and Business apps
+   * screens use that. These paths remain only for older references / audits.
+   */
   apps: {
     list: () => `${ADMIN}/apps`,
     create: () => `${ADMIN}/apps`,

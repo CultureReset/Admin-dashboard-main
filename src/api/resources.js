@@ -212,12 +212,15 @@ export const communityPhotosResource = createResource({
 
 /* ------------------------------------------------------------- platform -- */
 
+/**
+ * Legacy apps-table resource. Prefer module_catalog via
+ * endpoints.businesses.modules(id) (see AppManager / BusinessApps / BusinessAppsPanel).
+ * Kept so audits still resolve the old path builders; do not wire new screens here.
+ */
 export const appsResource = createResource({
   name: 'App',
   idField: 'app_id',
   listPath: () => ep.apps.list(),
-  createPath: () => ep.apps.create(),
-  itemPath: (appId) => ep.apps.update(appId),
   listKeys: ['apps'],
   itemKeys: ['app'],
 });
