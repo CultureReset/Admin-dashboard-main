@@ -56,6 +56,7 @@ export async function fetchModuleCatalog(api, endpoints, businessId) {
       name: catalogLabel(row),
       description: row.description || row.tagline || null,
       active: row.active !== false,
+      is_core: row.is_core === true,
     };
   });
 }

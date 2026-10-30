@@ -464,6 +464,16 @@ export const endpoints = {
     qrCodeScans: (id) => `/api/sms/qr-codes/${seg(id)}/scans`,
   },
 
+  /** TCPA ledger — GET /api/admin/message-consent (phones masked). */
+  messageConsent: {
+    list: () => `${ADMIN}/message-consent`,
+  },
+
+  /** Anonymous guest usage counts — GET /api/admin/guests/summary. */
+  guests: {
+    summary: () => `${ADMIN}/guests/summary`,
+  },
+
   // ------------------------------------------------------------ qr/ar ---
   qr: {
     list: () => '/api/qr',
@@ -523,6 +533,14 @@ export const endpoints = {
      * Catalog is public.module_catalog — not the legacy empty apps table.
      */
     modules: (id) => `${ADMIN}/businesses/${seg(id)}/modules`,
+  },
+
+  /**
+   * Bulk module_catalog + installs keyed by entity_slug
+   * (GET /api/admin/entity-modules/summary). Not the legacy businesses table.
+   */
+  entityModules: {
+    summary: () => `${ADMIN}/entity-modules/summary`,
   },
 
   /**

@@ -76,6 +76,8 @@ const SOURCES = [
       role: 'customer',
       slug: row.entity_slug || null,
       created_at: row.created_at,
+      sms_opt_in: !!row.sms_opt_in,
+      sms_opted_in_at: row.sms_opted_in_at || null,
       extra: row.source || null,
     }),
   },
@@ -92,6 +94,8 @@ const SOURCES = [
       role: 'tourist',
       slug: null,
       created_at: row.created_at,
+      sms_opt_in: !!row.sms_opt_in,
+      sms_opted_in_at: row.sms_opted_in_at || null,
       extra: row.points != null ? `${row.points} points` : null,
     }),
   },
@@ -116,6 +120,11 @@ const SOURCES = [
 export default function People() {
   const { entities } = useEntities();
   const [kind, setKind] = useState('');
+  const guestsQuery = useAsync(
+    async () => api.get(endpoints.guests.summary()),
+    [],
+    { initialData: null },
+  );
 
   const load = useCallback(async () => {
     // Settle every source independently — a 404 on one must not empty the page.
@@ -205,7 +214,13 @@ export default function People() {
         </>
       )}
 
-      <Card padded={false}>
+            <div className="grid-auto" style={{ marginBottom: 'var(--space-5)' }}>
+        <Stat label="Guests (browse only)" value={guestsQuery.data?.guests ?? '—'} hint="No phone until opt-in" />
+        <Stat label="SMS OK profiles" value={guestsQuery.data?.sms_opt_in_profiles ?? '—'} />
+        <Stat label="Formal consent" value={guestsQuery.data?.message_consent_granted ?? '—'} tone="success" />
+      </div>
+
+<Card padded={false}>
         <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
           <DataTable
             columns={[
@@ -227,6 +242,18 @@ export default function People() {
                 ),
               },
               columns.text('phone', 'Phone'),
+              {
+                key: 'sms_opt_in',
+                header: 'SMS OK',
+                render: (row) =>
+                  row.sms_opt_in ? <Badge tone="success">SMS OK</Badge> : <span className="faint">—</span>,
+              },
+              {
+                key: 'sms_opted_in_at',
+                header: 'Opted in',
+                render: (row) =>
+                  row.sms_opted_in_at ? formatDateTime(row.sms_opted_in_at) : <span className="faint">—</span>,
+              },
               columns.text('role', 'Role'),
               {
                 key: '__business',

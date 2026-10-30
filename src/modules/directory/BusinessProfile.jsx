@@ -552,7 +552,7 @@ export default function BusinessProfile() {
 
   /* business picker — only when no slug is chosen */
   const list = useAsync(
-    async () => (slugParam ? null : api.get(endpoints.entities.list(), { query: { limit: 2000 } })),
+    async () => (slugParam ? null : api.get(endpoints.entities.list())),
     [slugParam],
     { initialData: null },
   );
