@@ -832,6 +832,20 @@ export const endpoints = {
     item: (id) => `${ADMIN}/gcr/category-cards/${seg(id)}`,
   },
 
+  /**
+   * Business ↔ customer messaging — /api/messaging (routes/messaging.js).
+   *
+   * Mounted on message_threads + business_messages. Auth: authRequired.
+   * GET conversations/:entity_slug returns a bare array of threads with
+   * legacy aliases (business_id, participant_phone, conversation_id).
+   */
+  messaging: {
+    conversations: (slug) => `/api/messaging/conversations/${seg(slug)}`,
+    messages: (threadId) => `/api/messaging/conversations/${seg(threadId)}/messages`,
+    createConversation: () => `/api/messaging/conversations`,
+    send: () => `/api/messaging/messages`,
+  },
+
   // ------------------------------------ paths with no route in the API ---
   // Wired as the legacy dashboard calls them. Modules using these render an
   // "endpoint unavailable" notice rather than pretending the save worked.
@@ -840,7 +854,6 @@ export const endpoints = {
     entityPages: (slug) => `${ADMIN}/gcr/entity-pages/${seg(slug)}`,
     pageAssignments: (slug) => `${ADMIN}/gcr/page-assignments/${seg(slug)}`,
     businessData: (slug) => `${ADMIN}/gcr/business-data/${seg(slug)}`,
-    messaging: (slug) => `${ADMIN}/gcr/messaging/${seg(slug)}`,
     grokChat: () => `${ADMIN}/gcr/grok-chat`,
     autoActivateTop5: () => `${ADMIN}/gcr/auto-activate-top5`,
     dailyRotationOptions: (slug) => `${ADMIN}/daily-rotation/options/${seg(slug)}`,

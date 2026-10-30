@@ -476,7 +476,7 @@
     ],
     "gcr-messaging": [
       "entities.list",
-      "unverified.messaging"
+      "messaging.conversations"
     ],
     "gcr-social": [
       "entities.list",

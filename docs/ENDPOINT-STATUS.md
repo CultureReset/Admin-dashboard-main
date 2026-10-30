@@ -94,7 +94,7 @@ Two things were deliberately **not** rebuilt:
 | `/api/admin/gcr/category-cards[/:id]` | Category tiles | **fixed** — route + `category_cards` table added |
 | `/api/admin/gcr/category-page-config/:category` | Category page config | not surfaced; Page Rails covers the need |
 | `/api/admin/gcr/entity-pages/:slug`, `/api/admin/gcr/page-assignments/:slug` | Page placement | **replaced** — the Pages tab writes the real `entity_type` / `also_appears_on` columns |
-| `/api/admin/gcr/messaging/:slug` | Message threads | Messaging — wired, reports the gap |
+| `/api/messaging/conversations/:entity_slug` | Message threads | Messaging — live (`authRequired`) |
 | `/api/admin/gcr/import-csv` | CSV import | **replaced** — Bulk Upload uses the real `import-*` routes |
 | `/api/admin/gcr/business-data/:slug` | Business data blob | not surfaced; the entity read model covers it |
 | `/api/admin/gcr/grok-chat` | AI chat | **replaced** — AI Chat uses `POST /api/admin/gcr/ask` |
