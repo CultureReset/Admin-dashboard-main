@@ -18,6 +18,7 @@ import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { columns } from '../../lib/fields.jsx';
 import { entityInfoSchema, ENTITY_TYPES, pickEntityFields } from './entitySchema.js';
+import { businessDashboardViewUrl } from '../../config/env.js';
 
 export default function Businesses() {
   const { entities, loading, error, reload } = useEntities();
@@ -100,16 +101,29 @@ export default function Businesses() {
       sortable: false,
       searchable: false,
       stopPropagation: true,
-      render: (row) => (
-        <span className="ui-cell-actions">
-          <Button size="sm" onClick={() => navigate(`/directory/entity/${encodeURIComponent(row.slug)}`)}>
-            Edit
-          </Button>
-          <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>
-            Delete
-          </Button>
-        </span>
-      ),
+      render: (row) => {
+        const viewAsUrl = businessDashboardViewUrl(row.slug);
+        return (
+          <span className="ui-cell-actions">
+            <Button size="sm" onClick={() => navigate(`/directory/entity/${encodeURIComponent(row.slug)}`)}>
+              Edit
+            </Button>
+            {viewAsUrl && (
+              <Button
+                size="sm"
+                variant="ghost"
+                title={`Open ${row.slug} in the business dashboard`}
+                onClick={() => window.open(viewAsUrl, '_blank', 'noopener,noreferrer')}
+              >
+                View as
+              </Button>
+            )}
+            <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>
+              Delete
+            </Button>
+          </span>
+        );
+      },
     },
   ];
 
