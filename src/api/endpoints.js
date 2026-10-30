@@ -506,6 +506,13 @@ export const endpoints = {
     list: () => `${ADMIN}/businesses`,
     linkUser: () => `${ADMIN}/link-user`,
     invite: () => `${ADMIN}/invite-business`,
+    /**
+     * Per-business module installs (entity_modules via Concierge).
+     * GET  → { modules: [{ key, enabled }] }
+     * POST → { key, enabled }  (install when enabled:true, uninstall when false)
+     * May 404 until gcr-api-clean ships the route — callers show a pending notice.
+     */
+    modules: (id) => `${ADMIN}/businesses/${seg(id)}/modules`,
   },
 
   // The admin-scoped app records under /api/admin. `catalog`, `install` and
