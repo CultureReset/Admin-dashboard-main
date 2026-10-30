@@ -1,9 +1,8 @@
 /**
  * Guest photo moderation.
  *
- * /api/admin/community-photos is called by the legacy dashboard but is absent
- * from gcr-api-clean, so this reports the gap rather than showing an empty
- * queue that looks like "nothing to moderate".
+ * /api/admin/community-photos reads tourist_photos (guest uploads from the
+ * tourist app). Empty queue means nothing pending — not a missing route.
  */
 
 import { useState } from 'react';
@@ -78,9 +77,9 @@ export default function CommunityPhotos() {
 
       {error?.isMissingEndpoint && (
         <>
-          <Notice tone="warning" title="This screen's API route is not deployed">
-            <code className="mono">{error.path}</code> is called by the previous dashboard but does
-            not exist in <code>gcr-api-clean</code>. Approving or rejecting will fail until it does.
+          <Notice tone="warning" title="Guest photos unavailable">
+            <code className="mono">{error.path}</code> did not respond. Expected backing table is{' '}
+            <code className="mono">tourist_photos</code> via gcr-api-clean.
           </Notice>
           <div style={{ height: 'var(--space-4)' }} />
         </>

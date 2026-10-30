@@ -1,6 +1,10 @@
 {
   "generatedFrom": "src/modules/registry.js + each section's import graph",
   "sections": {
+    "ng-store": [],
+    "ng-core-menu": [],
+    "ng-businesses": [],
+    "ng-users": [],
     "overview": [
       "ads.list",
       "claims.list",
@@ -370,16 +374,6 @@
       "sms.blast",
       "sms.blastPreview"
     ],
-    "booking-connections": [
-      "connections.catalog",
-      "connections.catalogItem",
-      "connections.connect",
-      "connections.disconnect",
-      "connections.list",
-      "connections.refresh",
-      "connections.status",
-      "entities.list"
-    ],
     "gcr-events": [
       "entities.list",
       "events.backfillTypes",
@@ -531,6 +525,11 @@
       "setupQuestions.list",
       "setupQuestions.update"
     ],
+    "tripswipe-optin-forms": [
+      "optinCampaigns.create",
+      "optinCampaigns.list",
+      "optinCampaigns.update"
+    ],
     "tripswipe-sponsored": [
       "tripswipe.sponsored",
       "tripswipe.sponsoredItem"
@@ -597,10 +596,29 @@
     "automation-runs": [
       "automations.runs"
     ],
-    "app-manager": [
-      "apps.create",
-      "apps.list",
-      "apps.update"
+    "store": [
+      "store.business",
+      "store.businessPlan",
+      "store.items",
+      "store.meta",
+      "store.plan",
+      "store.plans"
+    ],
+    "store-item": [
+      "automations.deployments",
+      "store.business",
+      "store.businessPlan",
+      "store.deploy",
+      "store.deployPreview",
+      "store.grant",
+      "store.grants",
+      "store.installs",
+      "store.item",
+      "store.items",
+      "store.meta",
+      "store.plan",
+      "store.plans",
+      "store.versions"
     ],
     "app-store": [
       "connections.catalog",
@@ -608,10 +626,30 @@
       "connections.status",
       "connections.sync"
     ],
+    "booking-connections": [
+      "connections.catalog",
+      "connections.catalogItem",
+      "connections.connect",
+      "connections.disconnect",
+      "connections.list",
+      "connections.refresh",
+      "connections.status",
+      "entities.list"
+    ],
+    "app-manager": [
+      "apps.create",
+      "apps.list",
+      "apps.update"
+    ],
     "biz-apps": [
       "apps.list",
       "apps.siteApps",
       "businesses.list"
+    ],
+    "ghost-boxes": [
+      "ghost.nodes",
+      "ghost.requests",
+      "ghost.summary"
     ],
     "businesses": [
       "businesses.invite",

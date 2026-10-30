@@ -40,7 +40,8 @@ export default function MenuEditorsHub() {
   const check = async (entity) => {
     setChecking(entity.slug);
     try {
-      const data = await api.get(endpoints.menu.editorData(entity.slug), { auth: false });
+      // Send the admin JWT — menu-editor pinAuth accepts the same Bearer token as /api/admin.
+      const data = await api.get(endpoints.menu.editorData(entity.slug));
       const sections = data?.menu_sections?.length ?? data?.sections?.length ?? 0;
       setChecks((prev) => ({ ...prev, [entity.slug]: { ok: true, sections } }));
       toast.success(`${entity.name}: editor loaded ${sections} sections.`);

@@ -108,8 +108,8 @@ export const endpoints = {
     update: (id) => `${ADMIN}/gcr/events/${seg(id)}`,
     remove: (id) => `${ADMIN}/gcr/events/${seg(id)}`,
     backfillTypes: () => `${ADMIN}/gcr/events/backfill-types`,
-    /** Events are read from the public router — admin.js has no list route. */
-    list: () => `${GCR}/events`,
+    /** Admin list over entity_events (same rows as public /api/gcr/events). */
+    list: () => `${ADMIN}/gcr/events`,
     importBulk: () => `${ADMIN}/gcr/import-events`,
   },
 
@@ -117,7 +117,7 @@ export const endpoints = {
     create: () => `${ADMIN}/gcr/specials`,
     update: (id) => `${ADMIN}/gcr/specials/${seg(id)}`,
     remove: (id) => `${ADMIN}/gcr/specials/${seg(id)}`,
-    list: () => `${GCR}/specials`,
+    list: () => `${ADMIN}/gcr/specials`,
     importBulk: () => `${ADMIN}/gcr/import-specials`,
   },
 
@@ -417,6 +417,30 @@ export const endpoints = {
     update: (id) => `${ADMIN}/setup-questions/${seg(id)}`,
     remove: (id) => `${ADMIN}/setup-questions/${seg(id)}`,
     reorder: () => `${ADMIN}/setup-questions/reorder`,
+  },
+
+  /**
+   * Opt-in campaigns — gcr-api-clean PR #64 admin CRUD.
+   * Tables: optin_campaigns + optin_campaign_fields.
+   *
+   *   GET    /api/admin/optin-campaigns          → {campaigns, total}
+   *          query: ?active=1&entity_slug=&limit=
+   *   POST   /api/admin/optin-campaigns          → 201 {campaign}
+   *          requires keyword, reply_template, page_title
+   *   GET    /api/admin/optin-campaigns/:id      → {campaign}
+   *   PUT    /api/admin/optin-campaigns/:id      → {campaign}
+   *          fields[] replaces the set (send full list + existing ids)
+   *   DELETE /api/admin/optin-campaigns/:id      → {success, id}
+   *
+   * Errors: 400, 409 (duplicate keyword), 404, 503 (migration not applied).
+   * Tourist routes (same PR): GET optin-config, GET sms-cta, POST optin-submit.
+   */
+    optinCampaigns: {
+    list: () => `${ADMIN}/optin-campaigns`,
+    create: () => `${ADMIN}/optin-campaigns`,
+    detail: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    update: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    remove: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
   },
 
   // -------------------------------------------------------------- sms ---
