@@ -896,22 +896,20 @@ const definitions = [
   },
   {
     id: 'app-manager',
-    label: 'App Manager (legacy)',
+    label: 'App Manager',
     icon: '🧩',
     group: 'appstore',
     path: '/apps/manager',
-    description: 'The original `apps` table — empty, and superseded by the App Store above. Kept for reference.',
-    hidden: true, // legacy: routable, off the sidebar (see the Store)
+    description: 'module_catalog — apps businesses can install.',
     load: () => import('./appstore/AppManager.jsx'),
   },
   {
     id: 'biz-apps',
-    label: 'Business Apps (legacy)',
+    label: 'Business Apps',
     icon: '🔌',
     group: 'appstore',
     path: '/apps/business-apps',
-    description: 'Installs from the original `site_apps` table — empty. The live equivalent is Connections above.',
-    hidden: true, // legacy: routable, off the sidebar (see the Store)
+    description: 'Every directory business with installs from entity_modules.',
     load: () => import('./appstore/BusinessApps.jsx'),
   },
 
