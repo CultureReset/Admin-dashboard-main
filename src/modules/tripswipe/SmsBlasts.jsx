@@ -132,9 +132,17 @@ export default function SmsBlasts() {
     <>
       <PageHeader
         title="SMS blasts"
-        description="Text a filtered group of Trip Swipe users."
+        description="Text people with formal message_consent (TCPA ledger), then trip filters."
         actions={<Button onClick={historyQuery.reload}>Refresh history</Button>}
       />
+
+      <Notice tone="warning" title="Formal consent required">
+        <p>
+          Audience is phones with an active <code className="mono">message_consent</code> grant,
+          intersected with tourist filters — not the <code className="mono">sms_opt_in</code> flag alone.
+          Preview before send. This UI never auto-sends.
+        </p>
+      </Notice>
 
       <div className="stack">
         <Card title="Compose">
@@ -171,7 +179,7 @@ export default function SmsBlasts() {
                   <option value="in_town">In town today</option>
                   <option value="everyone">Everyone opted in</option>
                 </select>
-                <p className="ui-field__help">Always limited to guests who opted in and have a phone.</p>
+                <p className="ui-field__help">Limited to formal message_consent grants with a matching tourist phone.</p>
               </div>
               <div className="ui-field">
                 <label className="ui-field__label" htmlFor="blast-tags">Interest tags</label>

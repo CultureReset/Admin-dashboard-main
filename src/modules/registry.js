@@ -610,6 +610,15 @@ const definitions = [
     load: () => import('./engagement/Customers.jsx'),
   },
   {
+    id: 'message-consent',
+    label: 'Message Consent',
+    icon: '✅',
+    group: 'engagement',
+    path: '/engagement/message-consent',
+    description: 'Formal SMS consent ledger (message_consent) with masked phones.',
+    load: () => import('./engagement/MessageConsent.jsx'),
+  },
+  {
     id: 'gcr-messaging',
     label: 'SMS / Messaging',
     icon: '📨',
