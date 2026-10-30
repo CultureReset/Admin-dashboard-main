@@ -177,6 +177,15 @@ export const setupQuestionsResource = createResource({
   listKeys: ['questions', 'setup_questions'],
 });
 
+export const optinCampaignsResource = createResource({
+  name: 'Opt-in campaign',
+  listPath: () => ep.optinCampaigns.list(),
+  createPath: () => ep.optinCampaigns.create(),
+  itemPath: (id) => ep.optinCampaigns.update(id),
+  listKeys: ['campaigns'],
+  itemKeys: ['campaign'],
+});
+
 export const smsQrResource = createResource({
   name: 'QR code',
   listPath: () => ep.sms.qrCodes(),

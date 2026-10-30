@@ -419,6 +419,30 @@ export const endpoints = {
     reorder: () => `${ADMIN}/setup-questions/reorder`,
   },
 
+  /**
+   * Opt-in campaigns — gcr-api-clean PR #64 admin CRUD.
+   * Tables: optin_campaigns + optin_campaign_fields.
+   *
+   *   GET    /api/admin/optin-campaigns          → {campaigns, total}
+   *          query: ?active=1&entity_slug=&limit=
+   *   POST   /api/admin/optin-campaigns          → 201 {campaign}
+   *          requires keyword, reply_template, page_title
+   *   GET    /api/admin/optin-campaigns/:id      → {campaign}
+   *   PUT    /api/admin/optin-campaigns/:id      → {campaign}
+   *          fields[] replaces the set (send full list + existing ids)
+   *   DELETE /api/admin/optin-campaigns/:id      → {success, id}
+   *
+   * Errors: 400, 409 (duplicate keyword), 404, 503 (migration not applied).
+   * Tourist routes (same PR): GET optin-config, GET sms-cta, POST optin-submit.
+   */
+    optinCampaigns: {
+    list: () => `${ADMIN}/optin-campaigns`,
+    create: () => `${ADMIN}/optin-campaigns`,
+    detail: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    update: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+    remove: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,
+  },
+
   // -------------------------------------------------------------- sms ---
   sms: {
     blast: () => `${ADMIN}/sms-blast`,
