@@ -85,6 +85,16 @@ export const config = {
    */
   publicSiteUrl: normalizeBase(read('publicSiteUrl', 'VITE_PUBLIC_SITE_URL', '')),
 
+  /**
+   * Business-owner dashboard (Dashboards-users-). Used by the per-row
+   * "View as" action. The existing acting-slug mechanism there reads
+   * ?business=<slug> (not ?slug=). Override per deploy; never hardcode a
+   * business list here.
+   */
+  businessDashboardUrl: normalizeBase(
+    read('businessDashboardUrl', 'VITE_BUSINESS_DASHBOARD_URL', 'https://dashboards-users.vercel.app'),
+  ),
+
   appName: read('appName', 'VITE_APP_NAME', 'CyberCheck Admin'),
   appShortName: read('appShortName', 'VITE_APP_SHORT_NAME', 'CyberCheck'),
 
@@ -103,6 +113,20 @@ export function apiUrl(path) {
   const suffix = String(path || '');
   const normalized = suffix.startsWith('/') ? suffix : `/${suffix}`;
   return `${config.apiBaseUrl}${normalized}`;
+}
+
+/**
+ * Open the business dashboard as an admin for one listing.
+ * Dashboards-users- AuthContext reads `?business=<slug>` and sets actingSlug.
+ * Do not invent headers — that app already attaches the slug as a query on
+ * /api/business/* calls when an admin is viewing-as.
+ */
+export function businessDashboardViewUrl(slug) {
+  const base = config.businessDashboardUrl;
+  if (!base || !slug) return null;
+  const url = new URL(base.includes('://') ? base : `https://${base}`);
+  url.searchParams.set('business', String(slug));
+  return url.toString();
 }
 
 export default config;
