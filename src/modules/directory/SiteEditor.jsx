@@ -63,9 +63,10 @@ export default function SiteEditor() {
 
       <Notice tone="info" title="Backed by the API">
         The hero is a row in <code className="mono">platform_settings</code> under the{' '}
-        <code className="mono">site_hero</code> key; the tiles are the{' '}
-        <code className="mono">category_cards</code> table. For rails and ordering on a public
-        page, use <Link to="/content/rails">Page Rails</Link>.
+        <code className="mono">site_hero</code> key. Category tiles need the{' '}
+        <code className="mono">category_cards</code> table (draft migration in gcr-api-clean —
+        not applied until Matt OKs it); until then the tiles list returns 503. For rails and
+        ordering on a public page, use <Link to="/content/rails">Page Rails</Link>.
       </Notice>
 
       <div style={{ height: 'var(--space-5)' }} />

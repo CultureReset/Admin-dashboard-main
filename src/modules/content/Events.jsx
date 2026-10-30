@@ -32,7 +32,7 @@ export default function Events() {
   const [backfilling, setBackfilling] = useState(false);
 
   const { data, loading, error, reload } = useAsync(
-    async () => unwrapList(await api.get(endpoints.events.list(), { auth: false }), ['events']),
+    async () => unwrapList(await api.get(endpoints.events.list()), ['events']),
     [],
     { initialData: [] },
   );
