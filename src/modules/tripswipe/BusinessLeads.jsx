@@ -1,10 +1,11 @@
 /**
- * Business leads.
+ * Business leads surfaced by Trip Swipe activity.
  *
- * Backed by the same `leads` table as Platform → Leads (/api/admin/sales-leads).
- * The path /api/admin/business-leads is kept so this screen and the legacy
- * dashboard share one route; gcr-api-clean repoints it rather than inventing
- * a second leads feature.
+ * /api/admin/business-leads is called by the legacy dashboard but is not in
+ * gcr-api-clean. The screen is wired to it and reports the gap.
+ *
+ * The sales pipeline that does work is Platform → Leads
+ * (/api/admin/sales-leads).
  */
 
 import { Link } from 'react-router-dom';
@@ -25,14 +26,13 @@ export default function BusinessLeads() {
     <>
       <PageHeader
         title="Business leads"
-        description="Inbound interest from the public sign-up form and sales pipeline."
+        description="Listings getting enough Trip Swipe attention to be worth a sales call."
       />
 
-      <Notice tone="info" title="Same data as Platform → Leads">
-        This screen reads <code className="mono">/api/admin/business-leads</code>, which is the{' '}
-        <code className="mono">leads</code> table — the same rows as{' '}
-        <Link to="/platform/leads">Platform → Leads</Link>. TripSwipe swipe/save counts are not on
-        that table, so those columns stay empty when absent.
+      <Notice tone="warning" title="This screen's API route is not deployed">
+        <code className="mono">/api/admin/business-leads</code> is called by the previous dashboard
+        but does not exist in <code>gcr-api-clean</code>. The working sales pipeline is{' '}
+        <Link to="/platform/leads">Platform → Leads</Link>.
       </Notice>
 
       <div style={{ height: 'var(--space-4)' }} />
@@ -40,10 +40,11 @@ export default function BusinessLeads() {
       <CrudSection
         title="Leads"
         resource={businessLeadsResource}
-        labelFor={(row) => row.business_name || row.entity_slug || row.name}
+        labelFor={(row) => row.business_name || row.entity_slug}
         canCreate={false}
         emptyTitle="No business leads"
         searchPlaceholder="Search leads…"
+        unavailableNotice="Nothing can load until the business-leads route exists on the API."
         columns={[
           columns.primary('business_name', 'Business', 'entity_slug'),
           columns.number('swipe_count', 'Swipes'),

@@ -418,13 +418,3 @@ short script at `gcr-api-clean/server.js` and the route files it mounts — the
 mount table is the authority, since several routers exist in the repo but are
 deliberately commented out (`messaging`, `modules`, `google-business`,
 `whatsapp`, and others whose backing tables are not in the live database).
-
-## Opt-in campaigns (dashboard PR #8 / API PR #64)
-
-Wired to gcr-api-clean PR #64 admin CRUD (`/api/admin/optin-campaigns`).
-Pending that PR's merge/deploy (and applying
-`sql/optin/2026-10-29-optin-campaigns.sql`). A 503 from the API means the
-migration is not applied yet; the editor shows that notice.
-
-Shapes: list `{campaigns,total}`; create `201 {campaign}`; get/put
-`{campaign}`; delete `{success,id}`. PUT `fields` replaces the set.

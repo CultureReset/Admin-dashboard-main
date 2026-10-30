@@ -694,15 +694,6 @@ const definitions = [
     load: () => import('./tripswipe/SwipeQuestions.jsx'),
   },
   {
-    id: 'tripswipe-optin-forms',
-    label: 'Opt-In Forms',
-    icon: '📝',
-    group: 'tripswipe',
-    path: '/tripswipe/optin-forms',
-    description: 'Keyword → magic-link opt-in campaigns via gcr-api-clean (wired; pending API PR #64 merge).',
-    load: () => import('./tripswipe/OptInForms.jsx'),
-  },
-  {
     id: 'tripswipe-sponsored',
     label: 'Sponsored',
     icon: '⭐',

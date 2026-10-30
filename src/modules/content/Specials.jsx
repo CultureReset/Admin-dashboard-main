@@ -28,7 +28,7 @@ export default function Specials() {
   const [confirm, confirmElement] = useConfirm();
 
   const { data, loading, error, reload } = useAsync(
-    async () => unwrapList(await api.get(endpoints.specials.list()), ['specials']),
+    async () => unwrapList(await api.get(endpoints.specials.list(), { auth: false }), ['specials']),
     [],
     { initialData: [] },
   );
