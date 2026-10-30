@@ -170,6 +170,7 @@
       "businessProfile.get",
       "businessProfile.ingest",
       "businessProfile.row",
+      "businesses.modules",
       "entities.list"
     ],
     "platform-text-dashboard": [
@@ -196,6 +197,7 @@
       "businessProfile.get",
       "businessProfile.ingest",
       "businessProfile.row",
+      "businesses.modules",
       "entities.list"
     ],
     "gcr-site-editor": [
@@ -637,14 +639,12 @@
       "entities.list"
     ],
     "app-manager": [
-      "apps.create",
-      "apps.list",
-      "apps.update"
+      "businesses.list",
+      "businesses.modules"
     ],
     "biz-apps": [
-      "apps.list",
-      "apps.siteApps",
-      "businesses.list"
+      "businesses.list",
+      "businesses.modules"
     ],
     "ghost-boxes": [
       "ghost.nodes",
