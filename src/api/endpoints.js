@@ -419,6 +419,14 @@ export const endpoints = {
     reorder: () => `${ADMIN}/setup-questions/reorder`,
   },
 
+  optinForms: {
+    list: () => `${ADMIN}/optin-forms`,
+    create: () => `${ADMIN}/optin-forms`,
+    update: (id) => `${ADMIN}/optin-forms/${seg(id)}`,
+    remove: (id) => `${ADMIN}/optin-forms/${seg(id)}`,
+    reorder: () => `${ADMIN}/optin-forms/reorder`,
+  },
+
   // -------------------------------------------------------------- sms ---
   sms: {
     blast: () => `${ADMIN}/sms-blast`,
