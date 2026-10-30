@@ -420,25 +420,22 @@ export const endpoints = {
   },
 
   /**
-   * Opt-in campaigns (PR #64 schema: optin_campaigns + optin_campaign_fields).
+   * Opt-in campaigns — gcr-api-clean PR #64 admin CRUD.
+   * Tables: optin_campaigns + optin_campaign_fields.
    *
-   * Tourist-facing routes already exist on gcr-api-clean PR #64:
-   *   GET  /api/tourist-auth/optin-config
-   *   GET  /api/tourist-auth/sms-cta
-   *   POST /api/tourist-auth/optin-submit
+   *   GET    /api/admin/optin-campaigns          → {campaigns, total}
+   *          query: ?active=1&entity_slug=&limit=
+   *   POST   /api/admin/optin-campaigns          → 201 {campaign}
+   *          requires keyword, reply_template, page_title
+   *   GET    /api/admin/optin-campaigns/:id      → {campaign}
+   *   PUT    /api/admin/optin-campaigns/:id      → {campaign}
+   *          fields[] replaces the set (send full list + existing ids)
+   *   DELETE /api/admin/optin-campaigns/:id      → {success, id}
    *
-   * Admin CRUD does NOT exist in PR #64. The dashboard editor needs these
-   * admin routes added to gcr-api-clean (do not invent them here):
-   *   GET    /api/admin/optin-campaigns
-   *   POST   /api/admin/optin-campaigns
-   *   GET    /api/admin/optin-campaigns/:id
-   *   PUT    /api/admin/optin-campaigns/:id
-   *   DELETE /api/admin/optin-campaigns/:id
-   * Create/update bodies should accept a nested `fields` array and upsert
-   * into optin_campaign_fields (field_key, label, input_type, placeholder,
-   * help_text, required, options, maps_to, sort_order).
+   * Errors: 400, 409 (duplicate keyword), 404, 503 (migration not applied).
+   * Tourist routes (same PR): GET optin-config, GET sms-cta, POST optin-submit.
    */
-  optinCampaigns: {
+    optinCampaigns: {
     list: () => `${ADMIN}/optin-campaigns`,
     create: () => `${ADMIN}/optin-campaigns`,
     detail: (id) => `${ADMIN}/optin-campaigns/${seg(id)}`,

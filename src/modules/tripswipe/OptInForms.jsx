@@ -1,22 +1,17 @@
 /**
  * Opt-In Campaigns — keyword → magic-link consent + configurable fields.
  *
- * Admin CRUD against /api/admin/optin-campaigns (gcr-api-clean), matching
- * tables optin_campaigns + optin_campaign_fields from API PR #64.
- *
- * PR #64 only ships tourist routes (GET /optin-config, GET /sms-cta,
- * POST /optin-submit). Admin list/create/update/delete are NOT in that PR —
- * this editor is ready for them and surfaces 404 via the shared API client
- * until gcr-api-clean adds:
+ * Wired to gcr-api-clean admin CRUD (PR #64):
  *   GET/POST /api/admin/optin-campaigns
  *   GET/PUT/DELETE /api/admin/optin-campaigns/:id
- * with nested `fields` upserted into optin_campaign_fields.
  *
+ * Response shapes: list {campaigns,total}; item {campaign}; delete {success,id}.
+ * PUT `fields` replaces the set — always send the full list, preserving field ids.
  * All reads/writes go through src/api/client.js — never Supabase directly.
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { Button, Card, PageHeader } from '../../ui/primitives.jsx';
+import { Button, Card, Notice, PageHeader } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
 import { Modal, useConfirm } from '../../ui/Modal.jsx';
 import { useToast } from '../../ui/Toast.jsx';
@@ -24,27 +19,26 @@ import { useResource } from '../../hooks/useResource.js';
 import { optinCampaignsResource } from '../../api/resources.js';
 import { columns } from '../../lib/fields.jsx';
 
+/** Allowed input_type values from gcr-api-clean lib/optinCampaigns.js. */
 const INPUT_TYPES = [
   { value: 'text', label: 'Text' },
-  { value: 'textarea', label: 'Long text' },
-  { value: 'tel', label: 'Phone' },
-  { value: 'email', label: 'Email' },
   { value: 'date', label: 'Date' },
   { value: 'daterange', label: 'Date range' },
   { value: 'radio', label: 'Pick one (radio)' },
   { value: 'select', label: 'Pick one (select)' },
-  { value: 'multi', label: 'Pick several' },
   { value: 'number', label: 'Number' },
   { value: 'checkbox', label: 'Checkbox' },
   { value: 'consent', label: 'Consent tick' },
 ];
+
+const FIELD_KEY_RE = /^[a-z][a-z0-9_]{0,63}$/;
 
 const emptyField = () => ({
   field_key: '',
   label: '',
   help_text: '',
   input_type: 'text',
-  options: [],
+  options: null,
   placeholder: '',
   required: false,
   maps_to: '',
@@ -68,10 +62,69 @@ const emptyCampaign = () => ({
   fields: [],
 });
 
+function toSnakeKey(raw) {
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .replace(/^[^a-z]+/, '');
+}
+
+function normalizeFields(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((f, i) => ({
+    ...emptyField(),
+    ...f,
+    id: f.id || undefined,
+    field_key: f.field_key || f.key || '',
+    help_text: f.help_text || '',
+    options: Array.isArray(f.options) ? f.options : null,
+    sort_order: Number.isFinite(Number(f.sort_order)) ? Number(f.sort_order) : (i + 1) * 10,
+  }));
+}
+
+/** Build the body the API expects. Always include the full fields list. */
+function serializeCampaign(editing) {
+  const keyword = String(editing.keyword || '').trim().toUpperCase().replace(/\s+/g, ' ');
+  const fields = (editing.fields || []).map((f, i) => {
+    const row = {
+      field_key: f.field_key,
+      label: f.label,
+      input_type: f.input_type,
+      placeholder: f.placeholder ? String(f.placeholder) : null,
+      help_text: f.help_text ? String(f.help_text) : null,
+      required: !!f.required,
+      options: Array.isArray(f.options) && f.options.length ? f.options : null,
+      maps_to: f.maps_to ? String(f.maps_to) : null,
+      sort_order: (i + 1) * 10,
+    };
+    // Preserve existing field ids so PUT upserts instead of recreate+delete.
+    if (f.id) row.id = f.id;
+    return row;
+  });
+
+  return {
+    keyword,
+    entity_slug: editing.entity_slug?.trim() || null,
+    sms_number: editing.sms_number?.trim() || '+12562849584',
+    sms_body: editing.sms_body?.trim() || keyword,
+    reply_template: editing.reply_template?.trim() || '',
+    page_title: editing.page_title?.trim() || '',
+    page_subtitle: editing.page_subtitle?.trim() || null,
+    submit_label: editing.submit_label?.trim() || 'Continue',
+    cta_label: editing.cta_label?.trim() || null,
+    consent_scope: editing.consent_scope === 'business' ? 'business' : 'universal',
+    terms_version: editing.terms_version?.trim() || '2026-10-21.v1',
+    hero_image_url: editing.hero_image_url?.trim() || null,
+    active: !!editing.active,
+    fields,
+  };
+}
+
 function FieldBuilder({ fields, onChange }) {
   const update = (idx, patch) => {
-    const next = fields.map((f, i) => (i === idx ? { ...f, ...patch } : f));
-    onChange(next);
+    onChange(fields.map((f, i) => (i === idx ? { ...f, ...patch } : f)));
   };
   const remove = (idx) => onChange(fields.filter((_, i) => i !== idx));
   const move = (idx, dir) => {
@@ -93,13 +146,13 @@ function FieldBuilder({ fields, onChange }) {
         <p style={{ opacity: 0.7, margin: 0 }}>No fields yet. Add the questions shown on the opt-in page.</p>
       )}
       {fields.map((f, idx) => (
-        <Card key={idx}>
+        <Card key={f.id || `new-${idx}`}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: 12 }}>
             <label>
-              Field key
+              Field key (snake_case)
               <input
                 value={f.field_key}
-                onChange={(e) => update(idx, { field_key: e.target.value.trim() })}
+                onChange={(e) => update(idx, { field_key: toSnakeKey(e.target.value) })}
                 placeholder="e.g. name"
                 required
               />
@@ -131,7 +184,7 @@ function FieldBuilder({ fields, onChange }) {
               />
             </label>
             <label style={{ gridColumn: '1 / -1' }}>
-              Options (comma-separated; for radio/select/multi)
+              Options (comma-separated; for radio/select)
               <input
                 value={Array.isArray(f.options) ? f.options.map((o) => (typeof o === 'string' ? o : o?.value || o?.label || '')).join(', ') : ''}
                 onChange={(e) => update(idx, {
@@ -155,31 +208,22 @@ function FieldBuilder({ fields, onChange }) {
   );
 }
 
-function normalizeFields(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((f, i) => ({
-    ...emptyField(),
-    ...f,
-    field_key: f.field_key || f.key || '',
-    help_text: f.help_text || f.subtitle || '',
-    sort_order: f.sort_order ?? (i + 1) * 10,
-  }));
-}
-
 export default function OptInForms() {
   const toast = useToast();
   const [confirm, confirmElement] = useConfirm();
-  const { rows, loading, error, reload, save, remove } = useResource(optinCampaignsResource, {
+  const { rows, loading, error, reload, remove } = useResource(optinCampaignsResource, {
     labelFor: (row) => row.keyword,
   });
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const migrationMissing = error?.status === 503;
+
   const openCreate = () => setEditing(emptyCampaign());
   const openEdit = useCallback((row) => setEditing({
     ...emptyCampaign(),
     ...row,
-    entity_slug: row.entity_slug || row.business_slug || '',
+    entity_slug: row.entity_slug || '',
     fields: normalizeFields(row.fields),
   }), []);
   const close = () => setEditing(null);
@@ -194,12 +238,8 @@ export default function OptInForms() {
       toast.error('Page title is required');
       return;
     }
-    if (!editing?.sms_body?.trim()) {
-      toast.error('SMS body is required');
-      return;
-    }
     if (!editing?.reply_template?.trim()) {
-      toast.error('Reply template is required');
+      toast.error('Reply template is required (use {{url}} for the magic link)');
       return;
     }
     for (const f of editing.fields || []) {
@@ -207,42 +247,32 @@ export default function OptInForms() {
         toast.error('Every field needs a key and label');
         return;
       }
+      if (!FIELD_KEY_RE.test(f.field_key)) {
+        toast.error(`Field key must be snake_case: ${f.field_key}`);
+        return;
+      }
     }
     setSaving(true);
     try {
-      const keyword = editing.keyword.trim().toUpperCase();
-      const body = {
-        ...editing,
-        keyword,
-        entity_slug: editing.entity_slug?.trim() || null,
-        sms_body: editing.sms_body?.trim() || keyword,
-        page_subtitle: editing.page_subtitle?.trim() || null,
-        cta_label: editing.cta_label?.trim() || null,
-        hero_image_url: editing.hero_image_url?.trim() || null,
-        consent_scope: editing.consent_scope === 'business' ? 'business' : 'universal',
-        fields: (editing.fields || []).map((f, i) => ({
-          field_key: f.field_key,
-          label: f.label,
-          input_type: f.input_type,
-          placeholder: f.placeholder || null,
-          help_text: f.help_text || null,
-          required: !!f.required,
-          options: Array.isArray(f.options) && f.options.length ? f.options : null,
-          maps_to: f.maps_to || null,
-          sort_order: (i + 1) * 10,
-        })),
-      };
-      // Drop UI-only / legacy keys so the API gets the PR #64 shape.
-      delete body.business_slug;
-      delete body.consent_text;
-      delete body.magic_link_base_url;
-      delete body.sort_order;
-      await save(body);
-      toast.success(editing.id ? 'Campaign updated' : 'Campaign created');
+      const body = serializeCampaign(editing);
+      if (editing.id) {
+        // PUT replaces fields — full list with existing ids required.
+        await optinCampaignsResource.update(editing.id, body);
+        toast.success('Campaign updated');
+      } else {
+        await optinCampaignsResource.create(body);
+        toast.success('Campaign created');
+      }
       close();
       reload();
     } catch (err) {
-      toast.error(err);
+      if (err?.status === 503) {
+        toast.error('Migration not applied yet — apply sql/optin/2026-10-29-optin-campaigns.sql first');
+      } else if (err?.status === 409) {
+        toast.error(err.message || 'That keyword already exists');
+      } else {
+        toast.error(err);
+      }
     } finally {
       setSaving(false);
     }
@@ -256,13 +286,13 @@ export default function OptInForms() {
     });
     if (!ok) return;
     try {
-      await remove(row.id);
-      toast.success('Deleted');
-      reload();
+      await remove(row);
     } catch (err) {
-      toast.error(err);
+      if (err?.status === 503) {
+        toast.error('Migration not applied yet');
+      }
     }
-  }, [confirm, remove, reload, toast]);
+  }, [confirm, remove, toast]);
 
   const tableColumns = useMemo(() => [
     columns.primary('keyword', 'Keyword', 'entity_slug'),
@@ -296,31 +326,42 @@ export default function OptInForms() {
     <>
       <PageHeader
         title="Opt-In Forms"
-        description="Keyword-driven magic-link campaigns (optin_campaigns). A tourist texts the keyword, gets a one-time link, fills consent + fields, and is linked by phone. All data goes through gcr-api-clean."
+        description="Keyword-driven magic-link campaigns (optin_campaigns). Data goes through gcr-api-clean only."
         actions={(
           <>
             <Button onClick={reload} disabled={loading}>Refresh</Button>
-            <Button variant="primary" onClick={openCreate}>Add campaign</Button>
+            <Button variant="primary" onClick={openCreate} disabled={migrationMissing}>Add campaign</Button>
           </>
         )}
       />
-      <Card padded={false}>
-        <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
-          <DataTable
-            rows={rows}
-            loading={loading}
-            error={error}
-            onRetry={reload}
-            columns={tableColumns}
-            rowKey="id"
-            initialSort={{ key: 'keyword', direction: 'asc' }}
-            searchPlaceholder="Search keywords…"
-            emptyTitle="No opt-in campaigns"
-            emptyDescription="Create a campaign with a keyword like BEACH and the fields to collect. Admin CRUD routes must exist on gcr-api-clean."
-            emptyAction={<Button variant="primary" onClick={openCreate}>Add campaign</Button>}
-          />
-        </div>
-      </Card>
+
+      {migrationMissing && (
+        <Notice tone="warning" title="Migration not applied yet">
+          The optin_campaigns tables are not on the database. Apply
+          {' '}<code>sql/optin/2026-10-29-optin-campaigns.sql</code> on gcr-api-clean
+          (PR #64) before this editor can load or save campaigns.
+        </Notice>
+      )}
+
+      {!migrationMissing && (
+        <Card padded={false}>
+          <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
+            <DataTable
+              rows={rows}
+              loading={loading}
+              error={error}
+              onRetry={reload}
+              columns={tableColumns}
+              rowKey="id"
+              initialSort={{ key: 'keyword', direction: 'asc' }}
+              searchPlaceholder="Search keywords…"
+              emptyTitle="No opt-in campaigns"
+              emptyDescription="Create a campaign with a keyword like BEACH and the fields to collect."
+              emptyAction={<Button variant="primary" onClick={openCreate}>Add campaign</Button>}
+            />
+          </div>
+        </Card>
+      )}
 
       <Modal
         open={Boolean(editing)}

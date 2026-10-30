@@ -699,8 +699,7 @@ const definitions = [
     icon: '📝',
     group: 'tripswipe',
     path: '/tripswipe/optin-forms',
-    description: 'Keyword → magic-link opt-in campaigns (optin_campaigns via gcr-api-clean).',
-    status: 'partial',
+    description: 'Keyword → magic-link opt-in campaigns via gcr-api-clean (wired; pending API PR #64 merge).',
     load: () => import('./tripswipe/OptInForms.jsx'),
   },
   {

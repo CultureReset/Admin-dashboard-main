@@ -421,21 +421,10 @@ deliberately commented out (`messaging`, `modules`, `google-business`,
 
 ## Opt-in campaigns (dashboard PR #8 / API PR #64)
 
-Tourist routes live on gcr-api-clean PR #64 (`feat/data-driven-optin-campaigns`):
+Wired to gcr-api-clean PR #64 admin CRUD (`/api/admin/optin-campaigns`).
+Pending that PR's merge/deploy (and applying
+`sql/optin/2026-10-29-optin-campaigns.sql`). A 503 from the API means the
+migration is not applied yet; the editor shows that notice.
 
-- `GET /api/tourist-auth/optin-config`
-- `GET /api/tourist-auth/sms-cta`
-- `POST /api/tourist-auth/optin-submit`
-
-**Admin CRUD is not in PR #64.** The Opt-In Forms editor needs these routes
-added to gcr-api-clean (tables `optin_campaigns` + `optin_campaign_fields`):
-
-- `GET /api/admin/optin-campaigns`
-- `POST /api/admin/optin-campaigns`
-- `GET /api/admin/optin-campaigns/:id`
-- `PUT /api/admin/optin-campaigns/:id`
-- `DELETE /api/admin/optin-campaigns/:id`
-
-Create/update should accept a nested `fields` array and upsert into
-`optin_campaign_fields`. Until those exist, the editor shows the shared
-missing-endpoint notice (404). Do not call Supabase from the dashboard.
+Shapes: list `{campaigns,total}`; create `201 {campaign}`; get/put
+`{campaign}`; delete `{success,id}`. PUT `fields` replaces the set.

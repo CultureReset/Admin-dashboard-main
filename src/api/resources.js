@@ -182,8 +182,8 @@ export const optinCampaignsResource = createResource({
   listPath: () => ep.optinCampaigns.list(),
   createPath: () => ep.optinCampaigns.create(),
   itemPath: (id) => ep.optinCampaigns.update(id),
-  listKeys: ['campaigns', 'optin_campaigns', 'forms', 'optin_forms'],
-  itemKeys: ['campaign', 'form'],
+  listKeys: ['campaigns'],
+  itemKeys: ['campaign'],
 });
 
 export const smsQrResource = createResource({
