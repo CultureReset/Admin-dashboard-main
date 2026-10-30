@@ -11,6 +11,7 @@
  *
  *   /api/admin        → routes/admin.js
  *   /api/admin/tourists      → routes/admin-tourists.js
+ *   /api/admin/impersonate  → routes/admin-impersonate.js
  *   /api/admin/setup-questions → routes/setup-questions.js
  *   /api/gcr          → routes/gcr.js
  *   /api/qr           → routes/qr.js
@@ -46,6 +47,15 @@ export const endpoints = {
     /** Cheap authenticated GET used to prove a token is real and admin-role. */
     verify: () => `${ADMIN}/gcr/claims?limit=1`,
     users: () => `${ADMIN}/users`,
+  },
+
+  /**
+   * Open a business dashboard as admin.
+   * POST { slug } → { pass, expires_at, slug, dashboard_url }
+   * Separate mount from the catch-all admin.js router.
+   */
+  admin: {
+    impersonate: () => `${ADMIN}/impersonate`,
   },
 
   // ------------------------------------------------------------ entities ---

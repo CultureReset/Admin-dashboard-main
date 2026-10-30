@@ -22,6 +22,7 @@ import {
   catalogLabel,
   extractCatalog,
 } from '../../lib/moduleCatalog.js';
+import { openDashboardAsAdmin } from '../../lib/openDashboardAsAdmin.js';
 
 function normalizeCatalog(rows) {
   return (rows || []).map((row) => {
@@ -43,6 +44,7 @@ export default function BusinessApps() {
   const [managing, setManaging] = useState(null);
   const [confirm, confirmElement] = useConfirm();
   const [manageBusy, setManageBusy] = useState(null);
+  const [openingSlug, setOpeningSlug] = useState(null);
 
   const dataQuery = useAsync(
     async () => {
@@ -99,6 +101,26 @@ export default function BusinessApps() {
 
   const totalInstalls = dataQuery.data?.totalInstalls
     ?? rows.reduce((sum, row) => sum + row.__count, 0);
+
+  const handleOpenDashboard = async (business) => {
+    const slug = business?.slug || business?.subdomain || '';
+    if (!slug) {
+      toast.error('That row has no slug to open.');
+      return;
+    }
+    setOpeningSlug(slug);
+    try {
+      const result = await openDashboardAsAdmin(slug);
+      if (!result.ok) {
+        toast.error(result.error || 'Could not open dashboard.');
+        return;
+      }
+      if (result.warning) toast.info(result.warning, 'Opened');
+      else toast.success(`Opening ${slug}…`);
+    } finally {
+      setOpeningSlug(null);
+    }
+  };
 
   const setEnabled = async (business, key, enabled) => {
     const slug = business?.slug;
@@ -193,9 +215,24 @@ export default function BusinessApps() {
                 sortable: false,
                 searchable: false,
                 stopPropagation: true,
-                render: (row) => (
-                  <Button size="sm" onClick={() => setManaging(row)}>Manage</Button>
-                ),
+                render: (row) => {
+                  const slug = row.slug || row.subdomain || '';
+                  const opening = openingSlug && openingSlug === slug;
+                  return (
+                    <span className="ui-cell-actions" style={{ display: 'inline-flex', gap: 6 }}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={!slug || Boolean(opening)}
+                        title={slug ? `Open ${slug} in the business dashboard as admin` : 'No slug'}
+                        onClick={() => handleOpenDashboard(row)}
+                      >
+                        {opening ? 'Opening…' : 'Open dashboard'}
+                      </Button>
+                      <Button size="sm" onClick={() => setManaging(row)}>Manage</Button>
+                    </span>
+                  );
+                },
               },
             ]}
             rows={rows}

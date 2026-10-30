@@ -44,7 +44,7 @@ import { Sparkline, BreakdownBars } from '../engagement/charts.jsx';
 import { fields } from '../../lib/fields.jsx';
 import '../engagement/charts.css';
 import '../../ui/chips.css';
-import { businessDashboardViewUrl } from '../../config/env.js';
+import { openDashboardAsAdmin } from '../../lib/openDashboardAsAdmin.js';
 import BusinessAppsPanel from './BusinessAppsPanel.jsx';
 import './BusinessProfile.css';
 
@@ -548,6 +548,7 @@ export default function BusinessProfile() {
   const [addingSection, setAddingSection] = useState(false);
   const [sectionFilter, setSectionFilter] = useState('');
   const toast = useToast();
+  const [openingDashboard, setOpeningDashboard] = useState(false);
 
   /* business picker — only when no slug is chosen */
   const list = useAsync(
@@ -706,7 +707,27 @@ export default function BusinessProfile() {
 
   const entity = profile.data?.entity;
 
+  const handleOpenDashboard = async () => {
+    if (!slugParam) {
+      toast.error('No business slug on this page.');
+      return;
+    }
+    setOpeningDashboard(true);
+    try {
+      const result = await openDashboardAsAdmin(slugParam);
+      if (!result.ok) {
+        toast.error(result.error || 'Could not open dashboard.');
+        return;
+      }
+      if (result.warning) toast.info(result.warning, 'Opened');
+      else toast.success(`Opening ${slugParam}…`);
+    } finally {
+      setOpeningDashboard(false);
+    }
+  };
+
   return (
+
     <div>
       <PageHeader
         title={entity?.name || slugParam}
@@ -720,17 +741,14 @@ export default function BusinessProfile() {
             <Button variant="ghost" onClick={() => navigate('/directory/profile')}>
               All businesses
             </Button>
-            {businessDashboardViewUrl(slugParam) && (
+            {slugParam && (
               <Button
                 variant="ghost"
-                title={`Open ${slugParam} in the business dashboard`}
-                onClick={() => window.open(
-                  businessDashboardViewUrl(slugParam),
-                  '_blank',
-                  'noopener,noreferrer',
-                )}
+                disabled={openingDashboard}
+                title={`Open ${slugParam} in the business dashboard as admin`}
+                onClick={handleOpenDashboard}
               >
-                View as this business
+                {openingDashboard ? 'Opening…' : 'Open dashboard'}
               </Button>
             )}
             <Button variant="ghost" onClick={() => setShowEmpty((v) => !v)}>

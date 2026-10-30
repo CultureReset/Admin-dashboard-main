@@ -116,16 +116,17 @@ export function apiUrl(path) {
 }
 
 /**
- * Open the business dashboard as an admin for one listing.
- * Dashboards-users- AuthContext reads `?business=<slug>` and sets actingSlug.
- * Do not invent headers — that app already attaches the slug as a query on
- * /api/business/* calls when an admin is viewing-as.
+ * Legacy deep-link into the business dashboard for one listing (`?business=`).
+ * Prefer `openDashboardAsAdmin` (src/lib/openDashboardAsAdmin.js), which mints
+ * a one-time pass via POST /api/admin/impersonate and opens the signed URL.
+ * This helper remains for fallbacks when that API is not available yet.
  */
-export function businessDashboardViewUrl(slug) {
+export function businessDashboardViewUrl(slug, { pass } = {}) {
   const base = config.businessDashboardUrl;
   if (!base || !slug) return null;
   const url = new URL(base.includes('://') ? base : `https://${base}`);
   url.searchParams.set('business', String(slug));
+  if (pass) url.searchParams.set('pass', String(pass));
   return url.toString();
 }
 
