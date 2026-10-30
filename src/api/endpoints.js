@@ -507,10 +507,10 @@ export const endpoints = {
     linkUser: () => `${ADMIN}/link-user`,
     invite: () => `${ADMIN}/invite-business`,
     /**
-     * Per-business module installs (entity_modules via Concierge).
-     * GET  → { modules: [{ key, enabled }] }
+     * Per-business module installs + catalog (entity_modules + module_catalog).
+     * GET  → { modules: [{ key, enabled }], catalog|module_catalog: [{ key, name, … }] }
      * POST → { key, enabled }  (install when enabled:true, uninstall when false)
-     * May 404 until gcr-api-clean ships the route — callers show a pending notice.
+     * Catalog is public.module_catalog — not the legacy empty apps table.
      */
     modules: (id) => `${ADMIN}/businesses/${seg(id)}/modules`,
   },
