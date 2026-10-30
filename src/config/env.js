@@ -87,9 +87,9 @@ export const config = {
 
   /**
    * Business-owner dashboard (Dashboards-users-). Used by the per-row
-   * "View as" action. The existing acting-slug mechanism there reads
-   * ?business=<slug> (not ?slug=). Override per deploy; never hardcode a
-   * business list here.
+   * "View as" action and "View as this business" on Business Profiles.
+   * Acting-slug mechanism reads ?business=<slug> (not ?slug=). Override
+   * per deploy; never hardcode a business list here.
    */
   businessDashboardUrl: normalizeBase(
     read('businessDashboardUrl', 'VITE_BUSINESS_DASHBOARD_URL', 'https://dashboards-users.vercel.app'),

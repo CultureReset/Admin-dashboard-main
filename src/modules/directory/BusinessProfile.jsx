@@ -44,6 +44,8 @@ import { Sparkline, BreakdownBars } from '../engagement/charts.jsx';
 import { fields } from '../../lib/fields.jsx';
 import '../engagement/charts.css';
 import '../../ui/chips.css';
+import { businessDashboardViewUrl } from '../../config/env.js';
+import BusinessAppsPanel from './BusinessAppsPanel.jsx';
 import './BusinessProfile.css';
 
 /* ── value rendering ─────────────────────────────────────────────────────── */
@@ -718,6 +720,19 @@ export default function BusinessProfile() {
             <Button variant="ghost" onClick={() => navigate('/directory/profile')}>
               All businesses
             </Button>
+            {businessDashboardViewUrl(slugParam) && (
+              <Button
+                variant="ghost"
+                title={`Open ${slugParam} in the business dashboard`}
+                onClick={() => window.open(
+                  businessDashboardViewUrl(slugParam),
+                  '_blank',
+                  'noopener,noreferrer',
+                )}
+              >
+                View as this business
+              </Button>
+            )}
             <Button variant="ghost" onClick={() => setShowEmpty((v) => !v)}>
               {showEmpty ? 'Hide empty' : 'Show what is missing'}
             </Button>
@@ -736,6 +751,13 @@ export default function BusinessProfile() {
             <Stat label="Total rows" value={profile.data.total_rows} />
             <Stat label="Database tables searched" value={profile.data.tables_scanned} hint="every table keyed by slug" />
             <Stat label="Type" value={entity?.entity_type || '—'} hint={entity?.city || ''} />
+          </div>
+
+          <div className="bp__apps-wrap">
+            <BusinessAppsPanel
+              businessId={entity?.id || entity?.site_id || slugParam}
+              onChanged={() => profile.reload()}
+            />
           </div>
 
           {!sections.length && (

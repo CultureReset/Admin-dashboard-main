@@ -285,3 +285,58 @@
 }
 
 .bp__module--off { opacity: 0.45; text-decoration: line-through; }
+
+/* ── Apps panel (catalog + install state) ───────────────────────────────── */
+
+.bp__apps-wrap {
+  margin: var(--space-4) 0;
+}
+
+.bp__apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bp__app {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.bp__app:last-child { border-bottom: none; }
+
+.bp__app-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.bp__app-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.bp__app-icon { font-size: 16px; }
+
+.bp__app-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bp__app-key {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: transparent;
+}
