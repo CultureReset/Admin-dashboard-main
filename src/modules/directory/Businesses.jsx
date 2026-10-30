@@ -18,7 +18,7 @@ import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { columns } from '../../lib/fields.jsx';
 import { entityInfoSchema, ENTITY_TYPES, pickEntityFields } from './entitySchema.js';
-import { businessDashboardViewUrl } from '../../config/env.js';
+import { openDashboardAsAdmin } from '../../lib/openDashboardAsAdmin.js';
 
 export default function Businesses() {
   const { entities, loading, error, reload } = useEntities();
@@ -28,6 +28,27 @@ export default function Businesses() {
   const [typeFilter, setTypeFilter] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
   const [confirm, confirmElement] = useConfirm();
+  const [openingSlug, setOpeningSlug] = useState(null);
+
+  const handleOpenDashboard = async (business) => {
+    const slug = business?.slug || '';
+    if (!slug) {
+      toast.error('That row has no slug to open.');
+      return;
+    }
+    setOpeningSlug(slug);
+    try {
+      const result = await openDashboardAsAdmin(slug);
+      if (!result.ok) {
+        toast.error(result.error || 'Could not open dashboard.');
+        return;
+      }
+      if (result.warning) toast.info(result.warning, 'Opened');
+      else toast.success(`Opening ${slug}…`);
+    } finally {
+      setOpeningSlug(null);
+    }
+  };
 
   const rows = useMemo(() => {
     let list = entities;
@@ -102,20 +123,22 @@ export default function Businesses() {
       searchable: false,
       stopPropagation: true,
       render: (row) => {
-        const viewAsUrl = businessDashboardViewUrl(row.slug);
+        const slug = row.slug || '';
+        const opening = openingSlug && openingSlug === slug;
         return (
           <span className="ui-cell-actions">
             <Button size="sm" onClick={() => navigate(`/directory/entity/${encodeURIComponent(row.slug)}`)}>
               Edit
             </Button>
-            {viewAsUrl && (
+            {slug && (
               <Button
                 size="sm"
                 variant="ghost"
-                title={`Open ${row.slug} in the business dashboard`}
-                onClick={() => window.open(viewAsUrl, '_blank', 'noopener,noreferrer')}
+                disabled={Boolean(opening)}
+                title={`Open ${slug} in the business dashboard as admin`}
+                onClick={() => handleOpenDashboard(row)}
               >
-                View as
+                {opening ? 'Opening…' : 'View as'}
               </Button>
             )}
             <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>
