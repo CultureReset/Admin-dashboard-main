@@ -1,24 +1,41 @@
 /**
  * SMS / messaging threads per business.
  *
- * The legacy dashboard called /api/admin/gcr/messaging/:slug. That route does
- * not exist in gcr-api-clean — routes/messaging.js is present but explicitly
- * unmounted in server.js, with a comment saying its backing tables are not in
- * the live database.
+ * Live API (gcr-api-clean routes/messaging.js, authRequired):
+ *   GET  /api/messaging/conversations/:entity_slug  → thread[]
+ *   GET  /api/messaging/conversations/:id/messages  → message[]
+ *   POST /api/messaging/messages                    → send
  *
- * Rather than hide the screen, it is wired to the path the legacy dashboard
- * used and states plainly why it is not returning anything. The SMS features
- * that do work live under Trip Swipe → SMS Blasts and Text Sign-Up QR Codes.
+ * Thread rows include live columns plus legacy aliases
+ * (business_id, participant_phone, conversation_id).
  */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Card, EmptyState, ErrorState, LoadingBlock, Notice, PageHeader } from '../../ui/primitives.jsx';
+import { Button, Card, EmptyState, ErrorState, LoadingBlock, Notice, PageHeader, Badge } from '../../ui/primitives.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
 import { api, unwrapList } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { formatDateTime } from '../../lib/fields.jsx';
+
+/** Normalize one API thread into the fields this screen renders. */
+function mapThread(row) {
+  if (!row || typeof row !== 'object') return null;
+  const id = row.id || row.conversation_id || row.thread_id;
+  const phone = row.participant_phone || row.customer_address || row.phone || null;
+  return {
+    id,
+    phone,
+    customer_name: row.customer_name || row.customer_label || null,
+    channel: row.channel || 'sms',
+    mode: row.mode || null,
+    last_message: row.last_message || row.subject || null,
+    last_message_at: row.last_message_at || row.updated_at || row.created_at || null,
+    is_active: row.is_active !== false,
+    raw: row,
+  };
+}
 
 export default function Messaging() {
   const [slug, setSlug] = useState(null);
@@ -26,11 +43,9 @@ export default function Messaging() {
   const { data, loading, error, reload } = useAsync(
     async () => {
       if (!slug) return [];
-      return unwrapList(await api.get(endpoints.unverified.messaging(slug)), [
-        'conversations',
-        'messages',
-        'threads',
-      ]);
+      const payload = await api.get(endpoints.messaging.conversations(slug));
+      const rows = unwrapList(payload, ['conversations', 'threads', 'messages']);
+      return rows.map(mapThread).filter(Boolean);
     },
     [slug],
     { initialData: [] },
@@ -46,15 +61,10 @@ export default function Messaging() {
         actions={<Button onClick={reload} disabled={!slug || loading}>Refresh</Button>}
       />
 
-      <Notice tone="warning" title="This feature's API route is not deployed">
+      <Notice tone="info" title="Live messaging API">
         <p>
-          The messaging router exists in <code>gcr-api-clean</code> but is commented out in{' '}
-          <code>server.js</code> — its tables are not in the live database. This screen calls the
-          same path the previous dashboard used, so it will start working the moment the route is
-          mounted.
-        </p>
-        <p style={{ marginTop: 8 }}>
-          The SMS features that <em>are</em> live are{' '}
+          Threads load from <code className="mono">GET /api/messaging/conversations/:entity_slug</code>
+          {' '}on gcr-api-clean (auth required). Outbound SMS blasts still live under{' '}
           <Link to="/tripswipe/sms-blasts">SMS Blasts</Link> and{' '}
           <Link to="/tripswipe/sms-qr">Text Sign-Up QR Codes</Link>.
         </p>
@@ -69,11 +79,15 @@ export default function Messaging() {
       {slug && (
         <>
           <div style={{ height: 'var(--space-4)' }} />
-          <Card title="Threads">
-            {loading && <LoadingBlock />}
-            {error && <ErrorState error={error} onRetry={reload} />}
+          <Card title="Threads" subtitle={`${threads.length} conversation${threads.length === 1 ? '' : 's'}`}>
+            {loading && <LoadingBlock label="Loading threads…" />}
+            {error && <ErrorState error={error} onRetry={reload} context="messaging" />}
             {!loading && !error && threads.length === 0 && (
-              <EmptyState icon="📨" title="No threads" description="Nothing returned for this business." />
+              <EmptyState
+                icon="📨"
+                title="No threads"
+                description="No message_threads rows for this business yet."
+              />
             )}
             {!loading && !error && threads.length > 0 && (
               <ul className="sec-editor__items">
@@ -82,12 +96,14 @@ export default function Messaging() {
                     <div className="sec-editor__itembody">
                       <div className="sec-editor__itemname">
                         {thread.customer_name || thread.phone || `Thread ${index + 1}`}
+                        {thread.channel && <Badge tone="neutral">{thread.channel}</Badge>}
+                        {!thread.is_active && <Badge tone="warning">Inactive</Badge>}
                       </div>
                       <div className="sec-editor__itemdesc">
-                        {thread.last_message || thread.body}
+                        {thread.last_message || (thread.phone ? `SMS · ${thread.phone}` : 'No preview')}
                       </div>
                     </div>
-                    <div className="faint mono">{formatDateTime(thread.updated_at || thread.created_at)}</div>
+                    <div className="faint mono">{formatDateTime(thread.last_message_at)}</div>
                   </li>
                 ))}
               </ul>
