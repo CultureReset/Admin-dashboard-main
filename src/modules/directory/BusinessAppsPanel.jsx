@@ -199,14 +199,16 @@ export default function BusinessAppsPanel({ businessId, onChanged }) {
                   <code className="bp__app-key">{key}</code>
                 </div>
                 {installed ? (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    disabled={pendingApi || busy || !businessId}
-                    onClick={() => setEnabled(app, false)}
-                  >
-                    {busy ? '…' : 'Uninstall'}
-                  </Button>
+                  app.is_core === true ? null : (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      disabled={pendingApi || busy || !businessId}
+                      onClick={() => setEnabled(app, false)}
+                    >
+                      {busy ? '…' : 'Uninstall'}
+                    </Button>
+                  )
                 ) : (
                   <Button
                     size="sm"

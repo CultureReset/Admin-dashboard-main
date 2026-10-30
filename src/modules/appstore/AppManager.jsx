@@ -2,7 +2,7 @@
  * App catalogue (read-only).
  *
  * Lists public.module_catalog via
- *   GET /api/admin/businesses/:id/modules → { catalog | module_catalog }
+ *   GET /api/admin/entity-modules/summary → { catalog | module_catalog }
  *
  * The legacy empty `apps` table / GET/POST /api/admin/apps is not used.
  * Installs: Business apps / Business Profile (entity_modules).
@@ -12,21 +12,27 @@
 import { Badge, Button, Card, Notice, PageHeader } from '../../ui/primitives.jsx';
 import { DataTable } from '../../ui/DataTable.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
-import { api, unwrapList } from '../../api/client.js';
+import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { columns } from '../../lib/fields.jsx';
-import { fetchModuleCatalog, normalizeBusiness } from '../../lib/moduleCatalog.js';
+import { catalogKey, catalogLabel, extractCatalog } from '../../lib/moduleCatalog.js';
 
 export default function AppManager() {
   const catalogQuery = useAsync(
     async () => {
-      const businesses = unwrapList(await api.get(endpoints.businesses.list()), ['businesses'])
-        .map(normalizeBusiness)
-        .filter(Boolean);
-      const seed = businesses[0];
-      const seedId = seed?.site_id || seed?.id || seed?.slug;
-      if (!seedId) return [];
-      return fetchModuleCatalog(api, endpoints, seedId);
+      const data = await api.get(endpoints.entityModules.summary());
+      return extractCatalog(data).map((row) => {
+        const key = catalogKey(row);
+        return {
+          ...row,
+          key,
+          app_id: row.app_id || key,
+          name: catalogLabel(row),
+          description: row.description || row.tagline || null,
+          active: row.active !== false,
+          is_core: row.is_core === true,
+        };
+      });
     },
     [],
     { initialData: [] },
@@ -38,18 +44,15 @@ export default function AppManager() {
     <>
       <PageHeader
         title="App manager"
-        description="module_catalog — the apps businesses can install."
+        description="Apps businesses can install (module catalog)."
         actions={<Button onClick={() => catalogQuery.reload()}>Refresh</Button>}
       />
 
       <div style={{ marginBottom: 'var(--space-4)' }}>
-        <Notice tone="info" title="Catalog is module_catalog">
+        <Notice tone="info" title="Catalog from module_catalog">
           <p>
-            This list comes from <code className="mono">GET /api/admin/businesses/:id/modules</code>
-            {' '}(<code className="mono">catalog</code> / <code className="mono">module_catalog</code>),
-            not the legacy empty <code className="mono">apps</code> table. Read-only here —
-            install on <strong>Business apps</strong> or a business profile; ship versions from
-            the <strong>Store</strong>.
+            Read-only list of installable apps. Install on <strong>Business apps</strong> or a
+            business profile; ship versions from the <strong>Store</strong>.
           </p>
         </Notice>
       </div>
@@ -87,7 +90,7 @@ export default function AppManager() {
             onRetry={catalogQuery.reload}
             searchPlaceholder="Search apps…"
             emptyTitle="No apps in the catalog"
-            emptyDescription="module_catalog is empty, or no business exists yet to resolve the modules route."
+            emptyDescription="module_catalog is empty."
           />
         </div>
       </Card>

@@ -516,6 +516,14 @@ export const endpoints = {
   },
 
   /**
+   * Bulk module_catalog + installs keyed by entity_slug
+   * (GET /api/admin/entity-modules/summary). Not the legacy businesses table.
+   */
+  entityModules: {
+    summary: () => `${ADMIN}/entity-modules/summary`,
+  },
+
+  /**
    * Legacy `apps` / `site_apps` table routes. The live catalogue is
    * module_catalog via businesses.modules(); App manager and Business apps
    * screens use that. These paths remain only for older references / audits.
