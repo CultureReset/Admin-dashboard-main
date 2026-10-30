@@ -108,8 +108,8 @@ export const endpoints = {
     update: (id) => `${ADMIN}/gcr/events/${seg(id)}`,
     remove: (id) => `${ADMIN}/gcr/events/${seg(id)}`,
     backfillTypes: () => `${ADMIN}/gcr/events/backfill-types`,
-    /** Events are read from the public router — admin.js has no list route. */
-    list: () => `${GCR}/events`,
+    /** Admin list over entity_events (same rows as public /api/gcr/events). */
+    list: () => `${ADMIN}/gcr/events`,
     importBulk: () => `${ADMIN}/gcr/import-events`,
   },
 
@@ -117,7 +117,7 @@ export const endpoints = {
     create: () => `${ADMIN}/gcr/specials`,
     update: (id) => `${ADMIN}/gcr/specials/${seg(id)}`,
     remove: (id) => `${ADMIN}/gcr/specials/${seg(id)}`,
-    list: () => `${GCR}/specials`,
+    list: () => `${ADMIN}/gcr/specials`,
     importBulk: () => `${ADMIN}/gcr/import-specials`,
   },
 
