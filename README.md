@@ -1,62 +1,50 @@
 # CyberCheck Admin Dashboard
 
-A modular React rebuild of the CyberCheck admin dashboard, wired to the
-`gcr-api-clean` API.
+> Status: current — last verified against code 2026-11-02 (commit a7add43)
 
-This replaces the single 23,000-line `admin.html` in `cybercheck-login` with 90+
-routed sections (95 in `src/modules/registry.js`, 87 of them in the sidebar), a
-shared UI kit, and one place that knows every API path. Nothing in
-`cybercheck-login` was removed — this is a new application alongside it.
+## What it is
 
-**This is the operator console: you, seeing every business at once.** The screen
-a business owner logs into is `Dashboards-users-`. Both talk to the same
-backend, `gcr-api-clean`. Production: `admin-dashboard-main.vercel.app`.
+The **operator console**: one person seeing every business at once. A browser-only
+React 19 / Vite 8 / React Router 7 app (no TypeScript, oxlint) with 101 routed
+sections in `src/modules/registry.js` (95 in the sidebar, 6 hidden detail pages),
+a shared UI kit, and one file, `src/api/endpoints.js`, that knows every API path.
+It replaces the single 23,000-line `admin.html` in `cybercheck-login`, which was
+not removed. Production: `admin-dashboard-main.vercel.app` (unverified from here).
 
-**Where it sits in the Ghost system.** A Ghost box is a Linux computer at a
-business running the blocks installed by `nextgent-ghost-image`. The cloud side
-is `gcr-api-clean` (the API, and the only thing that talks to the database), this
-operator console, and the business-owner dashboard `Dashboards-users-`. This
-app is a browser-only React app: it holds no database key and makes every
-request through `src/api/client.js` to `gcr-api-clean`. For Ghost it gives the
-operator the fleet view (Ghost boxes), the App Store control panel (Store) and
-the automation builder; the rest of the sections are the older directory,
-booking and Trip Swipe tooling that lives in the same API.
+The screen a business owner logs into is a different app, `Dashboards-users-`.
 
 ![Overview](docs/images/overview.png)
 
 *Overview. Captured against a test backend, so the counters read 0.*
 
+## Where it fits
 
+**Ecosystem rule: only `gcr-api-clean` touches the live cloud database** (Supabase
+project `cyber check`, ref `mkepugvdlktfsossumox`). This app, the owner dashboard
+and `gcr-unified` call only that API; none holds a database key. The home machine
+has its own local Supabase, separate from this one.
 
-<!-- branches:start -->
+- **Calls**: `gcr-api-clean`, through `src/api/client.js` (bearer admin JWT from
+  `POST /api/admin/login`, kept in browser `localStorage`). The one exception is
+  the **NEXT GENT** sidebar group (4 sections: Store publishing, Core menu,
+  Platform businesses, Platform users), which talks to a separate Paperclip
+  backend through the `api/paperclip/[...path].js` edge function (forwards
+  `/api/paperclip/*` to `PAPERCLIP_SERVER_URL`; 503 when unset) and
+  `src/api/paperclip.js`.
+- **Called by**: nobody; it is a static site plus that one edge function. "View as"
+  opens the owner dashboard (`VITE_BUSINESS_DASHBOARD_URL`) for a chosen business.
+- For Ghost it gives the operator the fleet view (Ghost boxes), the App Store
+  control panel (Store) and the automation builder; the other sections are the
+  older directory, booking and Trip Swipe tooling that lives in the same API.
+
+![Where this repo sits in the whole system](docs/images/where-it-fits.png)
+
 ## Branches
 
-*Read from GitHub on 2026-09-29. 12 branches.*
-
-- **Default branch on GitHub:** `claude/cybercheck-modular-react-dashboard-7on41c`. It does **not** yet have this README or the audit fixes; those are on `claude/repo-code-analysis-y4n1k7`, which contains every commit of `claude/cybercheck-modular-react-dashboard-7on41c` and more, so it can be fast-forwarded without losing anything.
-- **`claude/repo-code-analysis-y4n1k7`** is where the README audit, the screenshots and the fixes were made.
-- **5 other branches hold commits that `claude/repo-code-analysis-y4n1k7` does not have.** The newest is `claude/admin-dashboard-repo-review-47q2vc` (last commit 2026-09-13, 2 commits not in the work branch). Check those before assuming the work branch is the whole story.
-
-<details><summary>All 12 branches</summary>
-
-| Branch | Last commit | Not in the work branch | Last commit message |
-| --- | --- | --- | --- |
-| `claude/repo-code-analysis-y4n1k7` (work branch) | 2026-09-29 | - | this README and the audit fixes |
-| `claude/admin-dashboard-automation-builder-s0j5ht` | 2026-09-13 | 0 | Add the Automations group: list, builder, rollouts, run log |
-| `claude/admin-dashboard-repo-review-47q2vc` | 2026-09-13 | 2 | Make the Live Feed section somewhere you can actually write a post |
-| `claude/gcr-api-review-o45xml` | 2026-08-09 | 1 | Point the Square probe at a route that exists, drop three dead app paths |
-| `claude/gcr-api-claim-docs-g4e42t` | 2026-08-05 | 3 | Read the stylesheets |
-| `claude/platform-integration-launch-test-abi95i` | 2026-08-04 | 0 | Point the production build at the API instead of at itself |
-| `main` | 2026-08-04 | 0 | Trigger production deployment from current main |
-| `claude/new-session-1e1dj0` | 2026-08-04 | 1 | Make the App Store search find things |
-| `claude/tourist-dashboard-layout-hi2yxu` | 2026-08-04 | 1 | Move Connections out of Booking and into App Store |
-| `claude/dashboard-inventory-purposes-m5wtba` | 2026-08-04 | 0 | Show the invite link so it can be sent by hand |
-| `build/nextgent-map-control` | 2026-08-03 | 0 | Add Text the Dashboard |
-| `claude/cybercheck-modular-react-dashboard-7on41c` (default) | 2026-08-03 | 0 | Add Text the Dashboard |
-
-</details>
-
-<!-- branches:end -->
+The default branch on GitHub is `claude/cybercheck-modular-react-dashboard-7on41c`
+and it is the line this README describes. Branch counts drift; run
+`git ls-remote --heads origin` for the current list and check any branch you care
+about before assuming this one is the whole story.
 
 ## Store and Ghost boxes
 
@@ -86,42 +74,65 @@ version and pushes it to businesses.
 
 *Empty state, as it looks before the first automation is built.*
 
-![Where this repo sits in the whole system](docs/images/where-it-fits.png)
 
-## Running it
+## Run and test
 
 ```bash
-npm install
-cp .env.example .env      # set VITE_API_BASE_URL
+npm ci
+cp .env.example .env      # optional, see below
 npm run dev               # http://localhost:5173
 npm run build             # production build to dist/
 npm run preview           # serve the build
-npm run lint
+npm run lint              # oxlint src
+npm run audit:endpoints   # compares every dashboard path with gcr-api-clean's routes
+npm run sections:map      # regenerate src/modules/sectionMap.generated.json
+npm run sections:check
+npm run verify            # lint + audit:endpoints + sections:check + build
 ```
 
-Sign in with an admin account from the `admin_users` table —
-`POST /api/admin/login` returns the JWT the dashboard stores.
+`VITE_API_BASE_URL` is optional: if unset or empty, `src/config/env.js` falls back to
+`https://gcr-api-clean.vercel.app` (`DEFAULT_API_BASE`), and `.env.production`
+(tracked, public values only) also sets it. To call the dashboard's own origin you
+would have to set it to `/` explicitly.
+
+Sign in with an admin account from the `admin_users` table; `POST /api/admin/login`
+returns the JWT the dashboard stores.
+
+Results on 2026-11-02, Node 22 with `npm ci`, at commit a7add43:
+
+| Step | Result |
+| --- | --- |
+| `npm run lint` | passes, 0 errors, 6 warnings (unused imports and variables; a `body` on a GET in `src/api/paperclip.js`) |
+| `npm run audit:endpoints ../path-to-gcr-api-clean` against gcr-api-clean `main` 968f85c | passes: 370 endpoints reachable from the dashboard, 360 resolve, 10 declared known-missing (surfaced in the UI), 0 unexpected, 0 shadowed. The audit reads route source; it sends no request. By default it looks for a sibling `../gcr-api-clean` |
+| `npm run sections:check` | **fails**: "Section map is out of date" |
+| `npm run build` | passes |
+
+So **`npm run verify` is red as committed**: run `npm run sections:map` first (it
+rewrites `src/modules/sectionMap.generated.json`), then `verify` gets past that step.
+There is no unit-test runner and no CI workflow in this repo.
 
 ## Nothing is hardcoded
 
 That was the point of the rebuild, so it is worth being specific about what it
 means here.
 
-**No hostnames in source.** Every environment value resolves through
+**Few hostnames in source.** Every environment value resolves through
 `src/config/env.js`, in this order: `window.__ADMIN_CONFIG__` → `import.meta.env`
-→ a documented fallback (the one hostname in code is the default API base,
-`DEFAULT_API_BASE` in that file). A deployment can be repointed at a different API by
+→ a documented fallback (the default API base, `DEFAULT_API_BASE` in that file).
+`parse.gulfcoastradar.com` (the booking-email domain) is written into the text of
+`Integrations.jsx`, `Sources.jsx` and `endpoints.js`. A deployment can be repointed at a different API by
 defining `window.__ADMIN_CONFIG__` before the app loads, with no rebuild:
 `index.html` initialises it to an empty object, and a `config.js` would need a
 `<script>` tag added there (none is present today). Platform → Settings shows
 every resolved value and the variable that set it.
 
-**No API paths in components.** All 350+ paths (357 counted by
-`npm run audit:endpoints`) live in `src/api/endpoints.js` as
+**Almost no API paths in components.** About 370 paths (370 counted by
+`npm run audit:endpoints` against gcr-api-clean `main`) live in `src/api/endpoints.js` as
 functions of their parameters. A route change in `gcr-api-clean` is a one-line
-edit there, not a search across sixty files. The only literal `/api/...` paths
-outside that file are the health-probe URLs in
-`src/modules/platform/Integrations.jsx`.
+edit there, not a search across sixty files. The literal `/api/...`
+paths outside that file are the health-probe URLs in
+`src/modules/platform/Integrations.jsx` and the Paperclip proxy prefix in
+`src/api/paperclip.js`.
 
 **No hand-written navigation or routes.** `src/modules/registry.js` lists every
 section once; the sidebar, the router, and the Overview page's index are all
@@ -138,7 +149,7 @@ business gets it from `EntityPicker`, which loads the directory once and shares
 the selection across sections and across reloads.
 
 **No repeated CRUD plumbing.** `createResource` + `useResource` + `CrudSection`
-turn "list, create, edit, delete" into a descriptor. The 20 section modules that
+turn "list, create, edit, delete" into a descriptor. The 19 section modules that
 use them are short and behave identically; the larger sections (booking,
 automations, the Entity Editor) are hand-written.
 
@@ -167,79 +178,87 @@ src/
 └── modules/
     ├── registry.js          the one list of sections
     ├── home/ menu/ directory/ booking/ content/ ai/ engagement/ tripswipe/
-    │   automations/ appstore/ store/ platform/
+    │   automations/ appstore/ store/ platform/ nextgent/
     └── directory/tabs/      the Entity Editor's eleven tabs, themselves a registry
 ```
 
 ## Sections
 
-87 sidebar entries in eleven groups (`NAV_GROUPS` in `registry.js`). Eight
-further routes are hidden from the sidebar (detail pages such as the automation
-builder, and the two legacy App Store pages):
+101 routes in twelve groups (`NAV_GROUPS` in `registry.js`); 95 are in the sidebar and
+6 are hidden detail pages (Entity Editor and Business Profiles per business, the
+Business Calendar and Industry Calendar per slug, the automation builder, the store
+item page). Counts per group, including hidden:
 
-- **Overview** — Overview, All Sections
-- **Menu & QR** — Menu Builder, QR Menus, QR Tracker, Reviews, Referral
-  Partners, Daily SMS Links, Menu Editors Hub
-- **GCR Directory** — GCR Businesses, Entity Editor, Business Profiles, Site
-  Editor, Claims, Sign-ups
-- **Booking Platform** (backed by `/api/admin/platform`) — Overview, Offerings,
+- **NEXT GENT** (4): Store publishing, Core menu, Platform businesses, Platform users.
+  Paperclip backend, not `gcr-api-clean`.
+- **Overview** (2): Overview, All Sections
+- **Menu & QR** (7): Menu Builder, QR Menus, QR Tracker, Reviews, Referral Partners,
+  Daily SMS Links, Menu Editors Hub
+- **GCR Directory** (8): GCR Businesses, Entity Editor, Business Profiles, Site Editor,
+  Claims, Sign-ups
+- **Booking Platform** (17, backed by `/api/admin/platform`): Overview, Offerings,
   Bookings, Date Claims, Promos, Booking Sources, Calendar Feeds, Inventory &
   Capacity, Availability, Business Calendar, Industry Calendars, Find a Match,
   Availability Search, Website Calendar, Openings
-- **Content** — Events, Artists, Song Requests & Tips, Specials, Ad Network,
+- **Content** (11): Events, Artists, Song Requests & Tips, Specials, Ad Network,
   Page Rails, AI Config, Coupons, Tags & SEO, Bulk Upload, Bulk Events
-- **AI Tools** — AI Chat, AI Data Organizer, AI Index / RAG, AI Settings
-- **Engagement** — Visitor Behaviour, Analytics, Reviews, Customers, SMS /
-  Messaging, Social & Connections
-- **Trip Swipe** — Overview, Businesses, Tourists, Swipe Analytics, AI Feedback,
-  Concierge Test, Swipe Questions, Sponsored, Tonight Cards, Points & Rewards,
-  Text Sign-Up QR Codes, Auth Settings, Button Config, SMS Settings, SMS Blasts,
-  Business Leads, Guest Photos
-- **Automations** — Automations, Rollouts, Run log (the builder is a hidden
-  route opened from Automations). Build a trigger + steps, test against one
-  business, publish a version, push it to every business's dashboard. See
-  `src/modules/automations/`.
-- **App Store** — **Store**, Connections catalog (the Composio catalogue),
-  Connections. App Manager and Business Apps are the older pages: hidden but
-  still routable, replaced by **Store**.
-- **Platform** — Text the Dashboard, Intake, **Ghost boxes**, Businesses, Leads,
-  Bookings, Sales Pages, AR Hunts, Integrations, People, Users, API Keys,
-  Settings
+- **AI Tools** (4): AI Chat, AI Data Organizer, AI Index / RAG, AI Settings
+- **Engagement** (7): Visitor Behaviour, Analytics, Reviews, Customers, Message
+  Consent, SMS / Messaging, Social & Connections
+- **Trip Swipe** (18): Overview, Businesses, Tourists, Swipe Analytics, AI Feedback,
+  Concierge Test, Swipe Questions, Opt-In Forms, Sponsored, Tonight Cards, Points &
+  Rewards, Text Sign-Up QR Codes, Auth Settings, Button Config, SMS Settings, SMS
+  Blasts, Business Leads, Guest Photos
+- **Automations** (4): Automations, Rollouts, Run log (plus the hidden builder).
+  Build a trigger + steps, test against one business, publish a version, push it to
+  every business's dashboard. See `src/modules/automations/`.
+- **App Store** (6): **Store** (plus a hidden item page), Connections catalog,
+  Connections, App Manager, Business Apps. App Manager and Business Apps are in the
+  sidebar. App Manager shows the module summary from `endpoints.entityModules.summary()`;
+  the API still serves `/api/admin/apps` (in `routes/admin.js`) but this app's
+  `endpoints.apps.*` builders for it are used by no section.
+- **Platform** (13): Text the Dashboard, Intake, **Ghost boxes**, Businesses, Leads,
+  Bookings, Sales Pages, AR Hunts, Integrations, People, Users, API Keys, Settings
 
 The Entity Editor carries eleven tabs: Info, Hours, Photos, Tags, Features,
 Content (menu / drinks / happy hour / events / specials), Sections, Details
 (per-entity collections), Pages, Listing Data, and Calendar.
 
-## Honest failure
+## Known gaps
 
-Read `docs/ENDPOINT-STATUS.md` before assuming a screen is broken.
+- **Nothing here has been verified against production.** Every check above is offline
+  (lint, a source-reading endpoint audit, a build). An earlier headless-browser walk
+  covered 61 routes against a stubbed API and predates the current 101-route registry;
+  it has not been repeated. Request and response shapes were derived from the API's
+  route handlers, not from live traffic. See `HANDOFF.md`.
+- **Listing Data** (the Entity Editor's Attributes tab, `AttributesPanel.jsx`) and
+  **Find a Match** (`Match.jsx`) are built on a wrong schema assumption: they follow
+  `routes/capabilities.js`, which describes tables such as `units` and `species` that do
+  not exist on the live database (it has `bookable_resources`, `fish_species`, …). Both
+  need rebuilding against the real schema.
+- **Nine sections are marked `partial`** in `registry.js` (they depend on a route the API
+  does not serve or serves differently; an amber `!` in the sidebar, listed in Platform →
+  Settings): Site Editor, Integrations, API Keys, SMS / Messaging, Points & Rewards, Auth
+  Settings, SMS Settings, Business Leads, Guest Photos. Ten endpoints are declared
+  known-missing in `scripts/audit-endpoints.mjs`.
+- **Admin token is in `localStorage`** (`src/auth/tokenStore.js`), readable by any script
+  on the page. The NEXT GENT group uses a second login (Paperclip cookie session).
+- **No unsaved-changes guard** on forms (only the automation builder shows an
+  "unsaved changes" badge).
+- **Docs and the SQL they name are stale.** `docs/DEPLOY.md` section 1 lists six SQL files
+  from `gcr-api-clean/sql/`; all six carry a DO NOT RUN banner there. `docs/ENDPOINT-STATUS.md`
+  describes the 81-section state; it was not recounted.
+- The API's `main` line has open security gaps that this console inherits when it calls
+  them (see the `gcr-api-clean` README, Known gaps).
+- A merge of the API's `main` into its integration line with those protections is prepared
+  but not published; which API line production runs is unverified.
 
-When the rebuild was written, 34 of the 117 API paths the legacy dashboard calls
-had no matching route in `gcr-api-clean` (that count is recorded in
-`docs/ENDPOINT-STATUS.md` and was not re-derived). Measured today against the
-checked-out `gcr-api-clean`, `npm run audit:endpoints` finds 357 endpoints
-reachable from this dashboard, 346 resolving to a mounted route and 11 declared
-as known missing. Where a working route existed, this app uses it. Where none
-does, the screen is wired to the same path the old dashboard used and **says on
-screen** that the route is not deployed, naming the path — rather than showing a
-form that appears to save and does not. Nine sections are marked `partial` in
-`registry.js`; they carry an amber `!` in the sidebar and are listed in
-Platform → Settings.
+The API client distinguishes a missing endpoint (404/405) from a network failure from a
+server error, because those need different fixes. `PATCH` responses that return
+`207 { success: false }` are treated as failures, not successes.
 
-The API client distinguishes a missing endpoint (404/405) from a network failure
-from a server error, because those need different fixes. `PATCH` responses that
-return `207 { success: false }` are treated as failures, not successes — a 207
-passes `response.ok` and would otherwise look like a clean save.
+## Related repos
 
-## Verification
-
-`npm run build` passes and `npm run lint` reports no errors (five unused-variable
-or unused-import warnings). All 61 routes were walked in headless Chromium
-against a stubbed API: every section mounted and rendered with zero page errors
-and zero console errors. That walk predates the current registry, which defines
-95 routes.
-
-Live API calls could not be exercised from the build environment — outbound
-network access is sandboxed — so request/response shapes were derived from
-`gcr-api-clean`'s route handlers and `schema.sql` rather than from live traffic.
-Worth a pass against the real API before relying on the less-trafficked screens.
+`gcr-api-clean` (the API), `Dashboards-users-` (owner dashboard), `gcr-unified` (public
+tourist site), `node-foundation` (home-machine monorepo and index of the system), and the
+`nextgent-*` repos.

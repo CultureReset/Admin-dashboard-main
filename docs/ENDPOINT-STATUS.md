@@ -31,7 +31,7 @@ fails to save.
 ## Current state
 
 After the routes added on the `claude/cybercheck-modular-react-dashboard-7on41c`
-branch of `gcr-api-clean`, of 81 sections:
+branch of `gcr-api-clean`, of 81 sections (the registry now has 101 routes; this table was not recounted; on 2026-11-02 the audit against gcr-api-clean `main` finds 370 endpoints, 360 resolving, 10 declared known-missing):
 
 | | Count |
 |---|---|

@@ -8,7 +8,15 @@ Both repos use the same branch name: `claude/cybercheck-modular-react-dashboard-
 
 ## 1 · Database
 
-Three SQL files, all re-runnable. Run them against the **GCR Supabase** project
+> **Do not run these as written.** As of 2026-11-02 each of the six files below carries
+> a `DO NOT RUN` banner in `gcr-api-clean/sql/` (on `main`): they were written against
+> the wrong Supabase project and never validated against the real one (`cyber check`,
+> ref `mkepugvdlktfsossumox`). See `HANDOFF.md`. The commands are kept as a record of
+> what the dashboard expects, not as steps to follow. Check what the live database
+> already has, and which migrations in `gcr-api-clean/sql/` are current, before
+> applying anything.
+
+Six SQL files, written to be re-runnable. They target the **GCR Supabase** project
 (the one behind `GCR_SUPABASE_URL`).
 
 ```bash
@@ -31,9 +39,10 @@ Or paste each into the Supabase SQL editor.
 | `capability_seed.sql` | the catalogs they join to — 128 amenities, 20 fish species, 20 activities |
 | `menu_normalization.sql` | `service_periods`, `menu_item_prices`, `dietary_tags` + `menu_item_dietary`, and a nullable `menu_sections.service_period_id`. **Additive only** — it touches live menu tables and drops nothing |
 
-Every SQL file is checked by `npm run check:sql` in gcr-api-clean, which fails
-on a `drop table`, `drop column`, `truncate` or `delete from` anywhere in
-`sql/`. These tables hold live menus and bookings; the rule is add, never
+Every top-level `sql/*.sql` file is checked by `npm run check:sql` in gcr-api-clean
+(subfolders and `migrations/` are not scanned), which flags rules such as renames,
+`update auth.users`, `grant ... to anon`, `drop policy` and `drop function` that are
+not on its reviewed allowlist. These tables hold live menus and bookings; the rule is add, never
 replace.
 
 `booking_ingestion.sql` deliberately creates no tables. The ingestion views read
@@ -124,20 +133,17 @@ answering or reissue the snippets from Booking Platform → Website Calendar.
 
 ```bash
 npm install
-cp .env.example .env      # set VITE_API_BASE_URL
+cp .env.example .env      # optional, see below
 npm run build             # → dist/
 ```
 
-> **Do not skip the `.env` step.** `VITE_API_BASE_URL` has no default — it
-> falls back to the empty string, which means *same origin*. There is no
-> `.env` checked into this repo and no hostname baked into `dist/`, so a build
-> made without it will send every request to whatever domain the dashboard
-> itself is served from and get 404 on all of them. On Vercel, set
-> `VITE_API_BASE_URL` in the project's build environment variables — a `.env`
-> on your laptop does not travel with a git push.
->
-> Same origin is only correct when the dashboard sits behind the same domain
-> as the API. Anything else needs the variable set.
+`VITE_API_BASE_URL` is optional. If it is unset or empty, `src/config/env.js` falls back
+to `https://gcr-api-clean.vercel.app` (`DEFAULT_API_BASE`), and `.env.production`, which
+is tracked in this repo (public values only), sets it for production builds. Set it (in
+`.env`, or in the Vercel project's build environment variables, since a `.env` on your
+laptop does not travel with a git push) only to point somewhere else. To call the same
+origin the dashboard is served from, set it to `/` explicitly: an empty value means
+"use the default", not "same origin".
 
 Deploy `dist/` as a static site. Set `VITE_PUBLIC_SITE_URL` too if you want the
 claim, preview and QR-menu links on Sales Pages / QR Menus / Menu Editors Hub.
@@ -155,7 +161,7 @@ This is the step that matters, because nothing in this repo has been run
 against your live database.
 
 ```bash
-npm run smoke -- --base https://YOUR-API --email you@example.com --password '…'
+node scripts/smoke-test.mjs --base https://YOUR-API --email you@example.com --password '…'
 ```
 
 It signs in, calls every read endpoint it has a declared expectation for, and
