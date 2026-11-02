@@ -45,6 +45,8 @@ The default branch on GitHub is `claude/cybercheck-modular-react-dashboard-7on41
 and it is the line this README describes. Branch counts drift; run
 `git ls-remote --heads origin` for the current list and check any branch you care
 about before assuming this one is the whole story.
+Unmerged work exists on other branches (listed under Inside this repo); `main` is stale
+(2026-08-04, 30 commits behind the default).
 
 ## Store and Ghost boxes
 
@@ -156,8 +158,8 @@ automations, the Entity Editor) are hand-written.
 **Almost no colour literals in components.** Colours route through the design
 tokens in `src/styles/theme.css`, which is also what makes the light/dark toggle
 a single attribute flip. The exceptions are the embeddable-calendar preview in
-`src/modules/booking/WebsiteCalendar.jsx` and a few values in
-`src/components/AppStoreView.css` and `src/modules/appstore/Connections.css`.
+`src/modules/booking/WebsiteCalendar.jsx` and values in
+`src/components/AppStoreView.css`, `src/modules/appstore/Connections.css`, `BusinessProfile.css`, `src/ui/primitives.css` and `src/modules/nextgent/StorePublishing.jsx`.
 
 ## Layout
 
@@ -236,18 +238,21 @@ Content (menu / drinks / happy hour / events / specials), Sections, Details
   `routes/capabilities.js`, which describes tables such as `units` and `species` that do
   not exist on the live database (it has `bookable_resources`, `fish_species`, …). Both
   need rebuilding against the real schema.
-- **Nine sections are marked `partial`** in `registry.js` (they depend on a route the API
-  does not serve or serves differently; an amber `!` in the sidebar, listed in Platform →
+- **Nine sections are marked `partial`** in `registry.js` (the flag is a static label, not computed, so some are stale: `sms.config`, `leads.businessLeads` and `photos.community` now resolve on `main`; they were set for a route the API
+  did not serve or served differently; an amber `!` in the sidebar, listed in Platform →
   Settings): Site Editor, Integrations, API Keys, SMS / Messaging, Points & Rewards, Auth
   Settings, SMS Settings, Business Leads, Guest Photos. Ten endpoints are declared
   known-missing in `scripts/audit-endpoints.mjs`.
+- **The Paperclip proxy is open.** `api/paperclip/[...path].js` forwards any request to `PAPERCLIP_SERVER_URL` with its cookies and `Authorization` header and checks no login of its own, so anyone who can reach the deployed origin can reach that backend. Open PR #6 (`security/paperclip-proxy-auth`) is the fix; it is not on this branch.
+- **The integration API line lacks 14 routes this UI needs** (see Inside this repo); the endpoint audit passes against `gcr-api-clean` `main` only.
+- **Screens that depend on API routes with weak or no auth**: Referral Partners uses `/api/qr/partners*`, which has no authentication on either API line.
 - **Admin token is in `localStorage`** (`src/auth/tokenStore.js`), readable by any script
   on the page. The NEXT GENT group uses a second login (Paperclip cookie session).
 - **No unsaved-changes guard** on forms (only the automation builder shows an
   "unsaved changes" badge).
 - **Docs and the SQL they name are stale.** `docs/DEPLOY.md` section 1 lists six SQL files
   from `gcr-api-clean/sql/`; all six carry a DO NOT RUN banner there. `docs/ENDPOINT-STATUS.md`
-  describes the 81-section state; it was not recounted.
+  describes the 81-section state ("62 wired, 18 need a branch merged"); it was not recounted and is stale against the measured audit. `docs/DEPLOY.md` says "three SQL files" then lists six, and its `psql "$GCR_DATABASE_URL"` step does not say which Supabase project that is (see Inside this repo).
 - The API's `main` line has open security gaps that this console inherits when it calls
   them (see the `gcr-api-clean` README, Known gaps).
 - A merge of the API's `main` into its integration line with those protections is prepared
@@ -256,6 +261,35 @@ Content (menu / drinks / happy hour / events / specials), Sections, Details
 The API client distinguishes a missing endpoint (404/405) from a network failure from a
 server error, because those need different fixes. `PATCH` responses that return
 `207 { success: false }` are treated as failures, not successes.
+
+## Inside this repo (from the code)
+
+From a code-only review on 2026-11-02 of default-branch tip a7add43. Lint, build and the audit were run on a scratch copy; nothing was run against a live backend (unverified).
+
+**Directory map.** About 200 files, JSX 137 files / 27k lines, JS 23 / 4.5k, CSS 30 / 3.6k, no TypeScript. The import graph from `main.jsx` reaches all 189 `src` files, so there are no dead files.
+
+| Path | What is in it |
+| --- | --- |
+| `src/modules/` | 133 files: about 98 section files, `registry.js` (1,065 lines, the one list of sections), `sectionMap.generated.json`, `directory/tabs/` (the Entity Editor's 11 tabs). Largest: `BusinessProfile.jsx` (1,007 lines), `automations/Builder.jsx`, `booking/Openings.jsx` |
+| `src/api/` | `client.js` (fetch wrapper), `endpoints.js` (894 lines, 370 path builders), `createResource.js`, `resources.js`, `bookingResources.js`, `paperclip.js` (a second backend, raw `fetch`) |
+| `src/ui/`, `src/components/`, `src/shell/`, `src/lib/`, `src/auth/`, `src/hooks/`, `src/config/` | UI kit, `EntityPicker`, app shell and sidebar, helpers (`openDashboardAsAdmin.js` builds the "View as" URL), login and token store, `env.js` (the only place env is read) |
+| `api/paperclip/[...path].js` | Vercel edge function, the only server code here |
+| `scripts/` | `audit-endpoints.mjs`, `generate-section-map.mjs`, `smoke-test.mjs` (needs `ADMIN_EMAIL`/`ADMIN_PASSWORD`, hits a live API; not run) |
+| `docs/` | `DEPLOY.md`, `ENDPOINT-STATUS.md`, 5 screenshots |
+
+**Start.** `npm run dev` serves Vite on `PORT` or 5173. The dev server proxies `/api/paperclip` to `PAPERCLIP_DEV_SERVER` (default `localhost:3100`) and `/api` to `VITE_DEV_API_PROXY` when set. `vercel.json`: Vite framework, SPA rewrite except `assets/` and `api/`, immutable cache on assets. Env names read: `VITE_API_BASE_URL`, `VITE_AUTH_TOKEN_KEY`, `VITE_REQUIRED_ROLE`, `VITE_PUBLIC_SITE_URL`, `VITE_BUSINESS_DASHBOARD_URL`, `VITE_APP_NAME`, `VITE_APP_SHORT_NAME`, `VITE_DEFAULT_PAGE_SIZE`, `VITE_REQUEST_TIMEOUT_MS`; the edge function reads `PAPERCLIP_SERVER_URL`. `.env.production` holds public values only. No cron, no Dockerfile, no CI.
+
+**Interfaces.** 101 routed sections (95 in the sidebar, 6 hidden). Outbound only: `/api/admin/**` on `gcr-api-clean` plus `/api/gcr`, `/api/qr`, `/api/sms`, `/api/ar-hunts`, `/api/artists`, `/api/bookings`, `/api/reviews`, `/api/analytics`, `/api/menu-editor`, `/api/update`, `/api/embed`, `/api/messaging`, `/api/dashboard-sms`, `/api/tourist/ai-chat`, `/api/connections`. Browser storage: `localStorage` keys `cc_admin_token`, `cc_admin_token_user`, `cc_admin_entity_tab` and the theme.
+
+**Data.** None. No database SDK or key in `src`, `api` or `scripts`; no SQL or migrations here. `docs/DEPLOY.md` tells the operator to run SQL files that live in `gcr-api-clean/sql/` with `psql "$GCR_DATABASE_URL"` against "the GCR Supabase project" without naming a ref; check the ref is `mkepugvdlktfsossumox` before following it.
+
+**Against the API (path-level, read from route source).** Of 370 builders, 254 are used by a section and 116 are reached by none. Against `gcr-api-clean` `main`: 360 resolve, 10 are declared known-missing (all under `endpoints.unverified.*`, none used by a section). **Against the integration API line (`codex/nextgent-integration-20261005`) the audit fails with 14 unexpected endpoints**: `admin.impersonate`, `optinCampaigns.{list,create,detail,update,remove}`, `messageConsent.list`, `guests.summary`, `businesses.modules`, `entityModules.summary` and four `messaging.*`. On that line these screens cannot load: Opt-In Forms, Message Consent, Tourists/People, App Manager, Business Apps, the Business Profile apps panel, Messaging, and "View as" (falls back to the URL without a pass). Events and Specials lists also cannot load there (`GET /api/admin/gcr/events` and `/specials` have no GET handler). The audit therefore passes on `main` only. Method gaps on both lines: `PUT /api/qr/locations/:id`, `DELETE /api/qr/partners/:id`, `DELETE /api/admin/business-leads/:id` are called but not served. Of the API's `routes/admin.js` (188 routes), 74 are called by no section (legacy per-table CRUD superseded by `business-profile.js`).
+
+**Tests.** No test files, framework or CI. Checks on the scratch copy: `oxlint src` 0 errors / 6 warnings; `vite build` passes (1.2 MB output, 144 assets, main chunk 288 kB); `audit:endpoints` passes against `main`, fails against the integration line; `sections:check` fails because the committed map lacks `admin.impersonate`, `messageConsent.list`, `guests.summary` and `entityModules.summary`. So `verify` is red as committed.
+
+**Stubbed or dead.** No TODO/FIXME/mock markers and no hardcoded demo data in `src`. The `partial` flag on nine sections is a static label, not computed, and some of those now resolve on `main` (`sms.config`, `leads.businessLeads`, `photos.community`), so the amber `!` is stale. Duplicated screens: Entity Editor vs Business Profile; App Manager / Business Apps vs Store; `/nextgent` Store publishing vs `/store`. The section map over-credits six booking screens with 16 to 19 endpoints each. Listing Data and Find a Match target tables that do not exist live.
+
+**Unmerged work on other branches** (commit counts ahead of the default, 2026-11-02): `feat/optin-forms` +3, `feat/business-profile-apps-panel` +2, `feat/view-as-business` +1, `admin/profile-history` +3 (PR #7), `security/paperclip-proxy-auth` +3 (PR #6), `paperclip/droplet-jarvis` +2, `auth/supabase-oauth` +2 (draft). `main` is dead (2026-08-04, 30 behind the default).
 
 ## Related repos
 
