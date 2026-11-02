@@ -27,6 +27,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Field } from './Field.jsx';
 import { Button, ErrorState } from './primitives.jsx';
 import './SchemaForm.css';
+import { normalizeOptionalValue } from './formValues.js';
 
 /** Normalize `fields` or `groups` into a single grouped shape. */
 function toGroups(schema) {
@@ -150,6 +151,7 @@ export function SchemaForm({
       if (field.type === 'json' && typeof value === 'string') {
         value = value.trim() ? JSON.parse(value) : null;
       }
+      value = normalizeOptionalValue(field.type, value);
       if (typeof field.transform === 'function') value = field.transform(value, values);
       if (field.omitWhenEmpty && (value === '' || value === null || value === undefined)) continue;
       out[field.name] = value;
