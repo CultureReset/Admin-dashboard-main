@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/node",
+      "destination": "https://steve-ms-7c02.tail1af4f2.ts.net:10000/"
+    },
+    {
+      "source": "/node/",
+      "destination": "https://steve-ms-7c02.tail1af4f2.ts.net:10000/"
+    },
+    {
       "source": "/node/:path*",
       "destination": "https://steve-ms-7c02.tail1af4f2.ts.net:10000/:path*"
     },
