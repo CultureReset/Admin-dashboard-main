@@ -60,6 +60,7 @@
       "menu.editorData"
     ],
     "gcr-businesses": [
+      "admin.impersonate",
       "entities.create",
       "entities.list",
       "entities.remove"
@@ -478,6 +479,9 @@
     "gcr-customers": [
       "customers.list"
     ],
+    "message-consent": [
+      "messageConsent.list"
+    ],
     "gcr-messaging": [
       "entities.list",
       "messaging.conversations"
@@ -501,6 +505,7 @@
       "tripswipe.settingsForSlug"
     ],
     "tripswipe-tourists": [
+      "guests.summary",
       "tourists.detail",
       "tourists.list",
       "tourists.preferences",
@@ -641,13 +646,14 @@
       "entities.list"
     ],
     "app-manager": [
-      "businesses.list",
-      "businesses.modules"
+      "businesses.modules",
+      "entityModules.summary"
     ],
     "biz-apps": [
       "admin.impersonate",
-      "businesses.list",
-      "businesses.modules"
+      "businesses.modules",
+      "entities.list",
+      "entityModules.summary"
     ],
     "ghost-boxes": [
       "ghost.nodes",
@@ -689,6 +695,7 @@
       "claims.list",
       "customers.list",
       "entities.list",
+      "guests.summary",
       "tourists.list"
     ],
     "users": [
