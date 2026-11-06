@@ -8,6 +8,8 @@
  *   POST /mutate            preview (diff) then commit with reason + expected_version
  *   GET  /audit             who/when/what/why
  *   POST /owner-links/preview | /owner-links/commit   CSV owner→slug linking
+ *   GET  /api/admin/owner-link-requests               pending ownership claims
+ *   POST /api/admin/owner-link-requests/:id/decide    approve/reject (audited)
  */
 import { useState } from 'react';
 import { api } from '../../api/client.js';
@@ -165,6 +167,109 @@ function AuditPanel() {
   );
 }
 
+
+function LinkRequestsPanel() {
+  const [status, setStatus] = useState('pending');
+  const [q, setQ] = useState('');
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState({ number: 1, size: 50, total: 0, has_more: false });
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [slug, setSlug] = useState('');
+  const [reason, setReason] = useState('');
+  const [key, setKey] = useState(newKey());
+  const [msg, setMsg] = useState(null);
+  const BASE_LR = '/api/admin/owner-link-requests';
+
+  const load = async (pageNumber = 1) => {
+    setBusy(true); setError(null);
+    try {
+      const params = new URLSearchParams({ status, page: String(pageNumber), size: '50' });
+      if (q.trim()) params.set('q', q.trim());
+      const r = await api.get(`${BASE_LR}?${params.toString()}`);
+      setRows(r.rows || []);
+      setPage(r.page || { number: pageNumber, size: 50, total: 0, has_more: false });
+    } catch (e) { setError(errText(e)); }
+    finally { setBusy(false); }
+  };
+
+  const decide = async (decision) => {
+    if (!selected) return;
+    setError(null); setMsg(null);
+    try {
+      const body = {
+        decision,
+        reason,
+        expected_version: selected.expected_version || selected.updated_at,
+        confirm: true,
+      };
+      if (decision === 'approve') body.slug = slug.trim().toLowerCase();
+      const r = await api.post(`${BASE_LR}/${selected.id}/decide`, body, { headers: { 'Idempotency-Key': key } });
+      setMsg(`${r.status}${r.replayed ? ' (replayed)' : ''}. Audit ${r.audit_id}`);
+      setSelected(null); setReason(''); setSlug(''); setKey(newKey());
+      await load(page.number);
+    } catch (e) { setError(errText(e)); setKey(newKey()); }
+  };
+
+  return (
+    <Card title="Ownership link requests" subtitle="Owners file a request from Setup. Approving links THEIR stored account to a business you pick — never a client-supplied owner id. Reason + confirmation required. No iCal secrets here.">
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          {['pending', 'approved', 'rejected', 'withdrawn', 'all'].map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <input style={{ flex: 1, minWidth: 180 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search email, slug, business, phone" onKeyDown={(e) => e.key === 'Enter' && load(1)} />
+        <Button onClick={() => load(1)} disabled={busy}>{busy ? 'Loading…' : 'Search'}</Button>
+      </div>
+      {error && <Notice tone="danger">{error}</Notice>}
+      {msg && <Notice tone="success">{msg}</Notice>}
+      <DataTable
+        rows={rows}
+        rowKey="id"
+        searchable={false}
+        onRowClick={(row) => { setSelected(row); setSlug(row.requested_slug || ''); setReason(''); setKey(newKey()); setMsg(null); }}
+        columns={[
+          { key: 'created_at', header: 'Filed' },
+          { key: 'status', header: 'Status', render: (r) => <Badge tone={r.status === 'pending' ? 'warning' : r.status === 'approved' ? 'success' : 'default'}>{r.status}</Badge> },
+          { key: 'user_email', header: 'Account' },
+          { key: 'provider', header: 'Provider' },
+          { key: 'requested_slug', header: 'Requested slug' },
+          { key: 'business_name', header: 'Business name' },
+          { key: 'phone', header: 'Phone' },
+          { key: 'reason', header: 'Owner reason' },
+          { key: 'linked_slug', header: 'Linked' },
+        ]}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button disabled={page.number <= 1 || busy} onClick={() => load(page.number - 1)}>Previous</Button>
+        <span>page {page.number} · {page.total ?? rows.length} total</span>
+        <Button disabled={!page.has_more || busy} onClick={() => load(page.number + 1)}>Next</Button>
+      </div>
+      {selected && selected.status === 'pending' && (
+        <Card title="Review request" subtitle={`Account ${selected.user_email || selected.user_id}. The linked owner is always this account — you only choose the business slug.`}>
+          <p>Requested slug: <code>{selected.requested_slug || '—'}</code> · listing: <code>{selected.listing_url || '—'}</code></p>
+          <input style={{ width: '100%' }} placeholder="Business slug to link (required for approve)" value={slug} onChange={(e) => setSlug(e.target.value)} />
+          <input style={{ width: '100%' }} placeholder="Review reason (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="danger" disabled={reason.trim().length < 3 || !slug.trim()} onClick={() => {
+              if (!window.confirm(`Approve and link ${selected.user_email || selected.user_id} → ${slug.trim().toLowerCase()}?`)) return;
+              decide('approve');
+            }}>Approve &amp; link</Button>
+            <Button disabled={reason.trim().length < 3} onClick={() => {
+              if (!window.confirm('Reject this ownership link request?')) return;
+              decide('reject');
+            }}>Reject</Button>
+            <Button variant="ghost" onClick={() => setSelected(null)}>Cancel</Button>
+          </div>
+        </Card>
+      )}
+      {selected && selected.status !== 'pending' && (
+        <Notice tone="info">Already {selected.status}. Decision reason: {selected.decision_reason || '—'}. Linked: {selected.linked_slug || '—'}</Notice>
+      )}
+    </Card>
+  );
+}
+
 export default function UniversalQuery() {
   const schema = useAsync(() => api.get(`${BASE}/schema`), []);
   const [tab, setTab] = useState('ask');
@@ -182,7 +287,7 @@ export default function UniversalQuery() {
       {schema.data && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            {['ask', 'edit', 'owners', 'audit'].map((t) => <Button key={t} variant={tab === t ? 'primary' : 'ghost'} onClick={() => setTab(t)}>{t === 'owners' ? 'Owner links' : t[0].toUpperCase() + t.slice(1)}</Button>)}
+            {[['ask','Ask'],['edit','Edit'],['owners','Owner links'],['requests','Link requests'],['audit','Audit']].map(([t,label]) => <Button key={t} variant={tab === t ? 'primary' : 'ghost'} onClick={() => setTab(t)}>{label}</Button>)}
           </div>
           {Object.entries(schema.data.external_sources || {}).some(([, s]) => !s.enabled) && (
             <Notice tone="warning" title="Paperclip / Jarvis not connected">{Object.entries(schema.data.external_sources).filter(([, s]) => !s.enabled).map(([k, s]) => <div key={k}><b>{k}</b>: {s.blocker}</div>)}</Notice>
@@ -190,6 +295,7 @@ export default function UniversalQuery() {
           {tab === 'ask' && <QueryPanel schema={schema.data} onEdit={onEdit} />}
           {tab === 'edit' && <EditPanel key={JSON.stringify(seed)} schema={schema.data} seed={seed} />}
           {tab === 'owners' && <OwnerImport />}
+          {tab === 'requests' && <LinkRequestsPanel />}
           {tab === 'audit' && <AuditPanel />}
         </>
       )}
