@@ -11,7 +11,7 @@
  *   GET  /api/admin/owner-link-requests               pending ownership claims
  *   POST /api/admin/owner-link-requests/:id/decide    approve/reject (audited)
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../api/client.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { PageHeader, Card, Badge, Button, Notice, LoadingBlock, ErrorState } from '../../ui/primitives.jsx';
@@ -181,6 +181,8 @@ function LinkRequestsPanel() {
   const [key, setKey] = useState(newKey());
   const [msg, setMsg] = useState(null);
   const BASE_LR = '/api/admin/owner-link-requests';
+
+  useEffect(() => { load(1); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial pending load only
 
   const load = async (pageNumber = 1) => {
     setBusy(true); setError(null);
