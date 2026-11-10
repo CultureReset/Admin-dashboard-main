@@ -203,6 +203,16 @@ const definitions = [
     load: () => import('./directory/BusinessProfile.jsx'),
   },
   {
+    id: 'platform-business-logins',
+    label: 'Business logins',
+    icon: '🔑',
+    group: 'platform',
+    path: '/platform/business-logins',
+    description:
+      'Hand any business its dashboard: a one-time link you can email, text, or copy and deliver yourself.',
+    load: () => import('./platform/BusinessLogins.jsx'),
+  },
+  {
     id: 'platform-text-dashboard',
     label: 'Text the Dashboard',
     icon: '💬',
