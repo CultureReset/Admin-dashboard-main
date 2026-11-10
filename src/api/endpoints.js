@@ -197,6 +197,13 @@ export const endpoints = {
     log: () => '/api/dashboard-sms/log',
   },
 
+  /** Handing a business its dashboard: one-time links, by email, text or copy. */
+  businessInvites: {
+    coverage: () => `${ADMIN}/business-invites/coverage`,
+    list: () => `${ADMIN}/business-invites`,
+    create: () => `${ADMIN}/business-invites`,
+  },
+
   /** Collections that each have their own dedicated route pair. */
   collections: {
     pricingItems: {
