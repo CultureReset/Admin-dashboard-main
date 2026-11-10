@@ -90,7 +90,9 @@ export default function BusinessLogins() {
     catch { toast.error('Copy failed — select the link and copy it by hand.'); }
   };
 
-  const c = coverage.data;
+  // Only draw the counts when the answer has the shape we expect; a partial
+  // response should read as "no numbers", not throw.
+  const c = coverage.data && typeof coverage.data === 'object' && coverage.data.reachable ? coverage.data : null;
 
   return (
     <>
