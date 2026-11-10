@@ -10,7 +10,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 /**
  * Run an async function on mount and whenever `deps` change.
  *
- * @returns {{data, error, loading, reload, setData}}
+ * @returns {{data, error, loading, reload, run, setData}} — `run` is an alias of
+ *   `reload`; ten call sites across three screens already call `.run()` and
+ *   used to throw a TypeError right after every successful save.
  */
 export function useAsync(fn, deps = [], { immediate = true, initialData = null } = {}) {
   const [data, setData] = useState(initialData);
@@ -52,7 +54,7 @@ export function useAsync(fn, deps = [], { immediate = true, initialData = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, immediate]);
 
-  return { data, error, loading, reload: run, setData };
+  return { data, error, loading, reload: run, run, setData };
 }
 
 /**
