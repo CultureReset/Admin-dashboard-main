@@ -10,7 +10,7 @@
 
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Badge, Notice } from '../../ui/primitives.jsx';
+import { Notice } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
 import { promosResource } from '../../api/bookingResources.js';
@@ -39,11 +39,8 @@ const promoSchema = {
       fields: [
         fields.date('starts', 'Valid from'),
         fields.date('ends', 'Valid until'),
-        fields.number('max_uses', 'Maximum uses', {
-          min: 0,
-          step: 1,
-          help: 'Leave blank for unlimited.',
-        }),
+        // No max_uses field: the API forwards it, but the live `promos` table
+        // has no max_uses / used columns, so sending it fails the whole save.
         fields.bool('active', 'Active', { defaultValue: true }),
       ],
     },
@@ -105,22 +102,6 @@ export default function Promos() {
           },
           columns.date('starts', 'From'),
           columns.date('ends', 'Until'),
-          {
-            key: 'used',
-            header: 'Used',
-            align: 'right',
-            render: (row) => {
-              const used = Number(row.used || 0);
-              const max = row.max_uses;
-              if (!max) return used;
-              const spent = used >= max;
-              return (
-                <Badge tone={spent ? 'danger' : used / max > 0.8 ? 'warning' : 'neutral'}>
-                  {used} / {max}
-                </Badge>
-              );
-            },
-          },
           columns.bool('active', 'Active'),
         ]}
         formSchema={promoSchema}
