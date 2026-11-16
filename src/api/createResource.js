@@ -24,6 +24,12 @@ import { api, unwrapList, unwrapItem } from './client.js';
  * @param {'PUT'|'PATCH'} [spec.updateMethod='PUT']
  * @param {function} [spec.normalize]     (row) => row, applied to every row read.
  * @param {function} [spec.serialize]     (values) => body, applied before write.
+ * @param {function} [spec.fromList]      (payload) => rows, for a list route whose
+ *                                        response is not an array or an object
+ *                                        holding one (e.g. a map keyed by id).
+ * @param {boolean} [spec.upsert=false]   The API has no item update route; saving
+ *                                        an existing row POSTs it to the create
+ *                                        path, which upserts on the id.
  */
 export function createResource(spec) {
   const {
@@ -37,6 +43,8 @@ export function createResource(spec) {
     updateMethod = 'PUT',
     normalize,
     serialize,
+    fromList,
+    upsert = false,
   } = spec;
 
   const applyNormalize = (rows) => (normalize ? rows.map(normalize) : rows);
@@ -58,7 +66,7 @@ export function createResource(spec) {
     async list({ params, query, signal } = {}) {
       const path = requirePath(listPath, 'list')(params);
       const payload = await api.get(path, { query, signal });
-      return applyNormalize(unwrapList(payload, listKeys));
+      return applyNormalize(fromList ? fromList(payload) : unwrapList(payload, listKeys));
     },
 
     /** Read one row. Falls back to filtering the list when there is no item GET. */
@@ -87,7 +95,7 @@ export function createResource(spec) {
     /** Create when the row has no id yet, update when it does. */
     async save(values, { params, signal } = {}) {
       const id = values?.[idField];
-      if (id === undefined || id === null || id === '') {
+      if (upsert || id === undefined || id === null || id === '') {
         return this.create(values, { params, signal });
       }
       const { [idField]: _omit, ...rest } = values;
