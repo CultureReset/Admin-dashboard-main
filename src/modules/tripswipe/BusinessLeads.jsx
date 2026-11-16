@@ -1,11 +1,11 @@
 /**
  * Business leads surfaced by Trip Swipe activity.
  *
- * /api/admin/business-leads is called by the legacy dashboard but is not in
- * gcr-api-clean. The screen is wired to it and reports the gap.
+ * GET   /api/admin/business-leads       → { leads: [...] }
+ * PATCH /api/admin/business-leads/:id   status, notes
  *
- * The sales pipeline that does work is Platform → Leads
- * (/api/admin/sales-leads).
+ * Served by routes/admin-settings.js over the same `leads` table as
+ * Platform → Leads (/api/admin/sales-leads). There is no DELETE route.
  */
 
 import { Link } from 'react-router-dom';
@@ -29,9 +29,8 @@ export default function BusinessLeads() {
         description="Listings getting enough Trip Swipe attention to be worth a sales call."
       />
 
-      <Notice tone="warning" title="This screen's API route is not deployed">
-        <code className="mono">/api/admin/business-leads</code> is called by the previous dashboard
-        but does not exist in <code>gcr-api-clean</code>. The working sales pipeline is{' '}
+      <Notice tone="info" title="Same records as Platform → Leads">
+        These come from the shared <code>leads</code> table; the full sales pipeline is in{' '}
         <Link to="/platform/leads">Platform → Leads</Link>.
       </Notice>
 
@@ -42,9 +41,9 @@ export default function BusinessLeads() {
         resource={businessLeadsResource}
         labelFor={(row) => row.business_name || row.entity_slug}
         canCreate={false}
+        canDelete={false}
         emptyTitle="No business leads"
         searchPlaceholder="Search leads…"
-        unavailableNotice="Nothing can load until the business-leads route exists on the API."
         columns={[
           columns.primary('business_name', 'Business', 'entity_slug'),
           columns.number('swipe_count', 'Swipes'),

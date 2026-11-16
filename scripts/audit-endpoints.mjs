@@ -36,11 +36,8 @@ const apiRoot = resolve(process.argv[2] || join(here, '..', '..', 'gcr-api-clean
  * Keep this list short — every entry is a feature that does not work.
  */
 const KNOWN_MISSING = new Set([
-  'endpoints.sms.config',
-  'endpoints.leads.businessLeads',
-  'endpoints.leads.businessLead',
-  'endpoints.photos.community',
-  'endpoints.photos.communityItem',
+  // business-leads, community-photos and the settings keys used to be listed
+  // here; gcr-api-clean serves all of them now (routes/admin-settings.js).
 ]);
 
 /* ── read the API's real route table, in registration order ──────────────── */
