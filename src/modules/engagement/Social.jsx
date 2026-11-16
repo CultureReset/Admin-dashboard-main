@@ -42,7 +42,7 @@ const postSchema = {
       fields: [
         fields.bool('show_on_home', 'Show on home feed', { defaultValue: true }),
         fields.sortOrder(),
-        fields.datetime('posted_at', 'Posted at'),
+        fields.datetime('post_date', 'Posted at'),
       ],
     },
   ],
@@ -131,10 +131,10 @@ export default function Social() {
             render: (row) =>
               row.show_on_home ? <Badge tone="success">Shown</Badge> : <Badge>Hidden</Badge>,
           },
-          columns.dateTime('posted_at', 'Posted'),
+          columns.dateTime('post_date', 'Posted'),
         ]}
         formSchema={postSchema}
-        initialSort={{ key: 'posted_at', direction: 'desc' }}
+        initialSort={{ key: 'post_date', direction: 'desc' }}
       />
 
       <Modal

@@ -5,42 +5,24 @@
  * PUT/DELETE /api/admin/tripswipe/sponsored/:id
  */
 
+import { Notice } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { sponsoredResource } from '../../api/resources.js';
 import { columns, fields } from '../../lib/fields.jsx';
 
-const schema = {
-  groups: [
-    {
-      title: 'Business',
-      fields: [
-        fields.text('business_name', 'Business name', { required: true, span: 2 }),
-        fields.text('entity_slug', 'Entity slug', {
-          help: 'Links the placement to a GCR listing.',
-        }),
-        fields.textarea('description', 'Description', { rows: 3 }),
-      ],
-    },
-    {
-      title: 'Creative',
-      fields: [
-        fields.tags('images', 'Image URLs', {
-          span: 'full',
-          help: 'Comma-separated. Shown as a card carousel.',
-        }),
-        fields.text('cta_text', 'Button text', { placeholder: 'Book now' }),
-        fields.url('cta_url', 'Button URL'),
-      ],
-    },
-    {
-      title: 'Flight dates',
-      fields: [
-        fields.date('start_date', 'Starts'),
-        fields.date('end_date', 'Ends'),
-      ],
-    },
-  ],
-};
+// `tripswipe_sponsored` on the live database: entity_slug, entity_name, label,
+// image_url, priority, active. PUT writes the body as-is, so the form uses
+// exactly those columns. POST is not offered: the API's create handler inserts
+// business_name / images / description / cta_* / dates, none of which are
+// columns, so every create fails until routes/admin.js is fixed.
+const schema = [
+  fields.text('entity_name', 'Business name', { required: true }),
+  fields.text('entity_slug', 'Entity slug', { help: 'Links the placement to a GCR listing.' }),
+  fields.text('label', 'Label', { placeholder: 'Sponsored', span: 2 }),
+  fields.image('image_url', 'Image URL'),
+  fields.number('priority', 'Priority', { step: 1, help: 'Higher shows first.' }),
+  fields.bool('active', 'Active', { defaultValue: true }),
+];
 
 export default function Sponsored() {
   return (
@@ -48,34 +30,26 @@ export default function Sponsored() {
       title="Sponsored placements"
       description="Paid cards injected into the Trip Swipe deck."
       resource={sponsoredResource}
-      labelFor={(row) => row.business_name}
-      createLabel="Add placement"
-      modalSize="lg"
+      labelFor={(row) => row.entity_name || row.entity_slug}
+      canCreate={false}
       emptyTitle="No sponsored placements"
       searchPlaceholder="Search placements…"
       columns={[
-        {
-          key: 'images',
-          header: '',
-          width: '56px',
-          sortable: false,
-          searchable: false,
-          render: (row) => {
-            const first = Array.isArray(row.images) ? row.images[0] : row.images;
-            return first ? (
-              <img className="ui-cell-thumb" src={first} alt="" loading="lazy" />
-            ) : (
-              <div className="ui-cell-thumb" />
-            );
-          },
-        },
-        columns.primary('business_name', 'Business', 'entity_slug'),
-        columns.text('cta_text', 'CTA'),
-        columns.date('start_date', 'Starts'),
-        columns.date('end_date', 'Ends'),
+        columns.thumb('image_url'),
+        columns.primary('entity_name', 'Business', 'entity_slug'),
+        columns.text('label', 'Label'),
+        columns.number('priority', 'Priority'),
+        columns.bool('active', 'Active'),
       ]}
       formSchema={schema}
-      initialSort={{ key: 'start_date', direction: 'desc' }}
-    />
+      initialSort={{ key: 'priority', direction: 'desc' }}
+    >
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <Notice tone="warning" title="New placements cannot be created yet">
+          The API's create handler writes fields the sponsored table does not have, so it fails.
+          Existing placements can be edited and removed here.
+        </Notice>
+      </div>
+    </CrudSection>
   );
 }

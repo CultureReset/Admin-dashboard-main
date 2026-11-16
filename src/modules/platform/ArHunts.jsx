@@ -18,39 +18,49 @@ import { api, unwrapList } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { columns, fields } from '../../lib/fields.jsx';
 
+// The API speaks its own client shape (routes/ar-hunts.js toClientShape):
+// GET returns, and POST / PATCH accept, camelCase fields — brandName,
+// imageData, latitude, longitude, reward, points, maxCaptures, startsAt,
+// endsAt, active, captureRadiusMeters (5–500 m). POST requires brandName and
+// both coordinates.
 const schema = {
   groups: [
     {
       title: 'Hunt',
       fields: [
-        fields.text('name', 'Name', { required: true, span: 2 }),
-        fields.textarea('description', 'Description', { rows: 3 }),
-        fields.image('image_url', 'Image URL'),
-        fields.text('entity_slug', 'Business slug'),
+        fields.text('brandName', 'Brand / name', { required: true, span: 2 }),
+        fields.textarea('hint', 'Hint', { rows: 2 }),
+        fields.image('imageData', 'Image URL'),
+        fields.select('difficulty', 'Difficulty', ['easy', 'medium', 'hard'], { defaultValue: 'medium' }),
       ],
     },
     {
       title: 'Location',
       fields: [
-        fields.number('latitude', 'Latitude', { step: 'any' }),
-        fields.number('longitude', 'Longitude', { step: 'any' }),
-        fields.number('radius_meters', 'Radius (metres)', { min: 1, step: 1 }),
+        fields.number('latitude', 'Latitude', { step: 'any', required: true }),
+        fields.number('longitude', 'Longitude', { step: 'any', required: true }),
+        fields.number('captureRadiusMeters', 'Capture radius (metres)', {
+          min: 5,
+          max: 500,
+          step: 1,
+          help: 'Between 5 and 500. Leave blank for the default.',
+        }),
       ],
     },
     {
       title: 'Reward',
       fields: [
-        fields.text('reward_text', 'Reward', { span: 2 }),
-        fields.number('points', 'Points', { min: 0, step: 1 }),
-        fields.number('max_captures', 'Max captures', { min: 0, step: 1 }),
+        fields.text('reward', 'Reward', { span: 2 }),
+        fields.number('points', 'Points', { min: 0, step: 1, defaultValue: 100 }),
+        fields.number('maxCaptures', 'Max captures', { min: 0, step: 1 }),
       ],
     },
     {
       title: 'Schedule',
       fields: [
-        fields.date('starts_at', 'Starts'),
-        fields.date('ends_at', 'Ends'),
-        fields.bool('is_active', 'Active', { defaultValue: true }),
+        fields.date('startsAt', 'Starts'),
+        fields.date('endsAt', 'Ends'),
+        fields.bool('active', 'Active', { defaultValue: true }),
       ],
     },
   ],
@@ -65,18 +75,23 @@ export default function ArHunts() {
         title="AR hunts"
         description="Location-based scavenger hunts and the rewards they hand out."
         resource={arHuntsResource}
-        labelFor={(row) => row.name}
+        labelFor={(row) => row.brandName}
         createLabel="Add hunt"
         modalSize="lg"
         emptyTitle="No AR hunts"
         searchPlaceholder="Search hunts…"
         columns={[
-          columns.thumb('image_url'),
-          columns.primary('name', 'Hunt', 'entity_slug'),
-          columns.text('reward_text', 'Reward'),
+          columns.thumb('imageData'),
+          columns.primary('brandName', 'Hunt', 'hint'),
+          columns.text('reward', 'Reward'),
           columns.number('points', 'Points'),
-          columns.number('capture_count', 'Captures'),
-          columns.bool('is_active', 'Active'),
+          {
+            key: 'captures',
+            header: 'Captures',
+            align: 'right',
+            render: (row) => `${row.captures ?? 0}${row.maxCaptures != null ? ` / ${row.maxCaptures}` : ''}`,
+          },
+          columns.bool('active', 'Active'),
           {
             key: '__captures',
             header: '',
@@ -96,7 +111,7 @@ export default function ArHunts() {
         open={Boolean(capturesFor)}
         onClose={() => setCapturesFor(null)}
         size="lg"
-        title={capturesFor ? `Captures — ${capturesFor.name}` : ''}
+        title={capturesFor ? `Captures — ${capturesFor.brandName}` : ''}
       >
         {capturesFor && <CaptureList huntId={capturesFor.id} />}
       </Modal>
@@ -122,15 +137,16 @@ function CaptureList({ huntId }) {
   return (
     <DataTable
       columns={[
-        columns.dateTime('created_at', 'When'),
+        columns.dateTime('captured_at', 'When'),
         columns.text('user_id', 'User'),
-        columns.text('user_email', 'Email'),
-        columns.bool('redeemed', 'Redeemed'),
+        columns.text('reward_code', 'Reward code'),
+        columns.number('distance_meters', 'Distance (m)'),
+        columns.dateTime('redeemed_at', 'Redeemed'),
       ]}
       rows={captures}
       rowKey={(row, index) => row.id ?? index}
       dense
-      initialSort={{ key: 'created_at', direction: 'desc' }}
+      initialSort={{ key: 'captured_at', direction: 'desc' }}
     />
   );
 }

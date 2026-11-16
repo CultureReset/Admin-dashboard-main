@@ -23,11 +23,9 @@ const schema = [
     span: 2,
     help: 'Where this code will be placed — “Front desk”, “Table tent”.',
   }),
-  fields.text('keyword', 'SMS keyword', { help: 'What the visitor texts to sign up.' }),
-  fields.text('location', 'Location'),
-  fields.text('entity_slug', 'Business slug'),
-  fields.url('redirect_url', 'Redirect URL', { span: 2 }),
 ];
+// POST /api/sms/qr-codes takes only a label; the API generates the keyword
+// and answers each row with its scan count and the sms: link to encode.
 
 export default function SmsQr() {
   const [scansFor, setScansFor] = useState(null);
@@ -46,9 +44,9 @@ export default function SmsQr() {
         canEdit={false}
         columns={[
           columns.primary('label', 'Label', 'keyword'),
-          columns.text('location', 'Location'),
-          columns.text('entity_slug', 'Business'),
-          columns.number('scan_count', 'Scans'),
+          columns.text('sms_body', 'Visitor texts'),
+          columns.link('sms_link', 'QR target', { label: 'sms: link' }),
+          columns.number('scans', 'Scans'),
           columns.dateTime('created_at', 'Created'),
           {
             key: '__scans',
@@ -97,8 +95,7 @@ function ScanList({ qrId }) {
       columns={[
         columns.dateTime('created_at', 'When'),
         columns.text('phone', 'Phone'),
-        columns.text('source', 'Source'),
-        columns.text('user_agent', 'Device'),
+        columns.text('name', 'Name'),
       ]}
       rows={scans}
       rowKey={(row, index) => row.id ?? index}
