@@ -9,13 +9,33 @@
 import { useId } from 'react';
 import './Field.css';
 
+const pad = (n) => String(n).padStart(2, '0');
+
+/**
+ * Date inputs only accept their own formats: `YYYY-MM-DD` for date and
+ * `YYYY-MM-DDTHH:mm` (local time) for datetime-local. The API returns full
+ * timestamps (`2026-11-20T18:00:00+00:00`), which the browser rejects and
+ * shows as an empty box — so an edit form looked as if the date were unset.
+ */
+function toInputValue(inputType, value) {
+  if (value === null || value === undefined) return '';
+  const text = String(value);
+  if (inputType === 'date' && /^\d{4}-\d{2}-\d{2}T/.test(text)) return text.slice(0, 10);
+  if (inputType === 'datetime-local' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(text)) {
+    const d = new Date(text);
+    if (Number.isNaN(d.getTime())) return text.slice(0, 16);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  return text;
+}
+
 function TextControl({ id, value, onChange, field, disabled }) {
   return (
     <input
       id={id}
       className="ui-input"
       type={field.inputType || 'text'}
-      value={value ?? ''}
+      value={toInputValue(field.inputType, value)}
       placeholder={field.placeholder || ''}
       disabled={disabled}
       autoComplete={field.autoComplete}

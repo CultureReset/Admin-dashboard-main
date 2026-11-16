@@ -41,6 +41,8 @@ function allFields(groups) {
 }
 
 /** Build the initial values object from defaults + the row being edited. */
+const DATE_TYPES = new Set(['date', 'time', 'datetime']);
+
 function buildInitial(fields, initialValues) {
   const out = {};
   for (const field of fields) {
@@ -149,6 +151,16 @@ export function SchemaForm({
       let value = values[field.name];
       if (field.type === 'json' && typeof value === 'string') {
         value = value.trim() ? JSON.parse(value) : null;
+      }
+      // An empty date/time is "no value", not the string '' — Postgres rejects
+      // '' for date, time and timestamp columns, and several admin routes
+      // insert the body as-is.
+      if (DATE_TYPES.has(field.type) && value === '') value = null;
+      // datetime-local is wall-clock time with no zone; send an absolute
+      // instant so the API does not read it as UTC.
+      if (field.type === 'datetime' && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+        const instant = new Date(value);
+        if (!Number.isNaN(instant.getTime())) value = instant.toISOString();
       }
       if (typeof field.transform === 'function') value = field.transform(value, values);
       if (field.omitWhenEmpty && (value === '' || value === null || value === undefined)) continue;
