@@ -3,7 +3,12 @@
  *
  * GET/POST /api/qr, PATCH/DELETE /api/qr/:id
  * GET /api/qr/:id/scans, GET /api/qr/stats/summary
- * GET/POST /api/qr/locations
+ * GET/POST /api/qr/locations, DELETE /api/qr/locations/:id
+ *
+ * Field names follow the `qr_codes` row the API reads and writes:
+ * `destination_url` and `active` (POST takes label, destination_url, type,
+ * location, notes; PATCH also takes active). `stats/summary` is a list of
+ * codes with their scan counts, not a totals object, so totals are summed here.
  */
 
 import { useState } from 'react';
@@ -24,28 +29,48 @@ const qrSchema = {
       title: 'Code',
       fields: [
         fields.text('label', 'Label', { required: true, span: 2 }),
-        fields.url('target_url', 'Destination URL', { span: 2, required: true }),
-        fields.text('entity_slug', 'Business slug'),
-        fields.text('location', 'Placement'),
+        fields.url('destination_url', 'Destination URL', {
+          span: 2,
+          help: 'Where a scan lands. Leave blank to send scans to the default site.',
+        }),
+        fields.text('location', 'Placement', { placeholder: 'e.g. Table 4, front window' }),
+        fields.text('type', 'Type', { placeholder: 'general' }),
       ],
     },
     {
-      title: 'Campaign',
+      title: 'Status',
       fields: [
-        fields.text('campaign', 'Campaign'),
-        fields.text('partner_id', 'Partner ID'),
-        fields.bool('is_active', 'Active', { defaultValue: true }),
+        fields.bool('active', 'Active', { defaultValue: true }),
+        fields.textarea('notes', 'Notes', { rows: 3 }),
       ],
     },
   ],
 };
 
 const locationSchema = [
-  fields.text('name', 'Location name', { required: true, span: 2 }),
-  fields.text('address', 'Address', { span: 2 }),
-  fields.text('city', 'City'),
-  fields.text('contact', 'Contact'),
+  fields.number('id', 'Location ID', {
+    required: true,
+    min: 1,
+    max: 9999,
+    step: 1,
+    help: 'The number printed on the sticker (1–9999). Saving an existing ID renames it.',
+  }),
+  fields.text('name', 'Location name', { required: true }),
+  fields.textarea('notes', 'Notes', { rows: 3 }),
 ];
+
+/** `stats/summary` returns one row per code; older builds returned totals. */
+function summarize(payload) {
+  if (Array.isArray(payload)) {
+    return {
+      codes: payload.length,
+      active_codes: payload.filter((row) => row.active).length,
+      total_scans: payload.reduce((sum, row) => sum + (Number(row.scan_count) || 0), 0),
+      never_scanned: payload.filter((row) => !Number(row.scan_count)).length,
+    };
+  }
+  return payload && typeof payload === 'object' ? payload : {};
+}
 
 const TABS = [
   { id: 'codes', label: 'QR codes' },
@@ -62,7 +87,7 @@ export default function QrTracker() {
     { initialData: null },
   );
 
-  const summary = summaryQuery.data || {};
+  const summary = summarize(summaryQuery.data);
 
   return (
     <>
@@ -109,11 +134,12 @@ export default function QrTracker() {
           searchPlaceholder="Search codes…"
           columns={[
             columns.primary('label', 'Label', 'code'),
+            columns.number('seq_number', '#'),
             columns.text('location', 'Placement'),
-            columns.text('campaign', 'Campaign'),
-            columns.link('target_url', 'Destination', { label: 'Open' }),
+            columns.text('type', 'Type'),
+            columns.link('destination_url', 'Destination', { label: 'Open' }),
             columns.number('scan_count', 'Scans'),
-            columns.bool('is_active', 'Active'),
+            columns.bool('active', 'Active'),
             {
               key: '__scans',
               header: '',
@@ -140,11 +166,11 @@ export default function QrTracker() {
           emptyTitle="No locations"
           searchPlaceholder="Search locations…"
           columns={[
-            columns.primary('name', 'Location', 'address'),
-            columns.text('city', 'City'),
-            columns.text('contact', 'Contact'),
-            columns.number('qr_count', 'Codes'),
+            columns.number('id', 'ID'),
+            columns.primary('name', 'Location'),
+            columns.text('notes', 'Notes'),
           ]}
+          initialSort={{ key: 'id', direction: 'asc' }}
           formSchema={locationSchema}
         />
       )}
@@ -179,15 +205,14 @@ function ScanLog({ qrId }) {
   return (
     <DataTable
       columns={[
-        columns.dateTime('created_at', 'When'),
-        columns.text('city', 'City'),
-        columns.text('referrer', 'Referrer'),
-        columns.text('user_agent', 'Device'),
+        columns.dateTime('scanned_at', 'When'),
+        columns.text('device_type', 'Device'),
+        columns.text('user_agent', 'Browser'),
       ]}
       rows={scans}
       rowKey={(row, index) => row.id ?? index}
       dense
-      initialSort={{ key: 'created_at', direction: 'desc' }}
+      initialSort={{ key: 'scanned_at', direction: 'desc' }}
     />
   );
 }

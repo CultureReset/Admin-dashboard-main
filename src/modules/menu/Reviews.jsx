@@ -54,7 +54,8 @@ export default function Reviews() {
   const stats = statsQuery.data || {};
 
   const average = useMemo(() => {
-    if (typeof stats.average === 'number') return stats.average;
+    // The stats route sends `average` as a string (toFixed) — "4.3".
+    if (stats.total > 0 && Number.isFinite(Number(stats.average))) return Number(stats.average);
     if (reviews.length === 0) return null;
     const total = reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0);
     return total / reviews.length;
@@ -62,7 +63,7 @@ export default function Reviews() {
 
   const breakdown = useMemo(() => {
     // Prefer the API's own breakdown; fall back to counting what we loaded.
-    if (stats.breakdown && typeof stats.breakdown === 'object') return stats.breakdown;
+    if (stats.distribution && typeof stats.distribution === 'object') return stats.distribution;
     const out = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     for (const review of reviews) {
       const bucket = Math.round(Number(review.rating) || 0);
@@ -145,7 +146,7 @@ export default function Reviews() {
               {!reviewsQuery.loading && !reviewsQuery.error && reviews.length > 0 && (
                 <DataTable
                   columns={[
-                    columns.primary('author_name', 'Author', 'source'),
+                    columns.primary('reviewer_name', 'Reviewer', 'title'),
                     {
                       key: 'rating',
                       header: 'Rating',
@@ -167,7 +168,7 @@ export default function Reviews() {
                           <span className="faint">—</span>
                         ),
                     },
-                    columns.text('review_text', 'Review'),
+                    columns.text('body', 'Review'),
                     columns.dateTime('created_at', 'Received'),
                   ]}
                   rows={reviews}
