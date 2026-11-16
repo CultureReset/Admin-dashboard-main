@@ -92,8 +92,8 @@ export default function PlatformBusinesses() {
       <div className="grid-auto" style={{ marginBottom: 'var(--space-5)' }}>
         <Stat label="Accounts" value={businesses.length} tone="primary" />
         <Stat
-          label="With a linked entity"
-          value={businesses.filter((b) => b.entity_slug || b.gcr_slug).length}
+          label="With apps installed"
+          value={businesses.filter((b) => Array.isArray(b.installed_apps) && b.installed_apps.length > 0).length}
         />
       </div>
 
@@ -123,29 +123,26 @@ export default function PlatformBusinesses() {
         <div style={{ padding: 'var(--space-4) var(--space-5)' }}>
           <DataTable
             columns={[
-              columns.primary('name', 'Business', 'domain'),
-              columns.text('email', 'Email'),
-              columns.text('entity_slug', 'GCR listing'),
-              columns.text('plan', 'Plan'),
+              // GET /api/admin/businesses → [{ site_id, subdomain, name, type, installed_apps }]
+              columns.primary('name', 'Business', 'subdomain'),
+              columns.text('type', 'Type'),
               {
-                key: 'status',
-                header: 'Status',
-                render: (row) =>
-                  row.status ? (
-                    <Badge tone={row.status === 'active' ? 'success' : 'neutral'}>{row.status}</Badge>
-                  ) : (
-                    <span className="faint">—</span>
-                  ),
+                key: 'installed_apps',
+                header: 'Apps installed',
+                align: 'right',
+                sortable: false,
+                searchable: false,
+                render: (row) => (Array.isArray(row.installed_apps) ? row.installed_apps.length : 0),
               },
-              columns.dateTime('created_at', 'Created'),
             ]}
             rows={businesses}
+            rowKey={(row, index) => row.site_id ?? index}
             loading={loading}
             error={error}
             onRetry={reload}
             searchPlaceholder="Search accounts…"
             emptyTitle="No business accounts"
-            initialSort={{ key: 'created_at', direction: 'desc' }}
+            initialSort={{ key: 'name', direction: 'asc' }}
           />
         </div>
       </Card>
