@@ -471,6 +471,15 @@ const definitions = [
     load: () => import('./content/ArtistProfiles.jsx'),
   },
   {
+    id: 'live-vote',
+    label: 'Live Voting',
+    icon: '🗳️',
+    group: 'content',
+    path: '/content/live-vote',
+    description: 'Let the room vote on the next song. Settings and tonight\'s ranked queue for one business.',
+    load: () => import('./content/LiveVote.jsx'),
+  },
+  {
     id: 'gcr-specials',
     label: 'Specials',
     icon: '🏷️',

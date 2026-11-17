@@ -507,6 +507,12 @@ export const endpoints = {
   },
 
   // ---------------------------------------------------------- artists ---
+  liveVote: {
+    board: (slug) => `/api/apps/live-vote/${seg(slug)}/board`,
+    settings: (slug) => `/api/apps/live-vote/${seg(slug)}/settings`,
+    summary: (slug) => `/api/apps/live-vote/${seg(slug)}/summary`,
+    tonight: (slug) => `/api/apps/live-vote/${seg(slug)}/tonight`,
+  },
   artists: {
     list: () => `${ADMIN}/artists`,
     detail: (id) => `${ADMIN}/artists/${seg(id)}`,
