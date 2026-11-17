@@ -13,6 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Badge, Button, ErrorState, LoadingBlock, PageHeader } from '../../ui/primitives.jsx';
 import { Tabs } from '../../ui/Tabs.jsx';
 import { EntityPicker, useEntities } from '../../components/EntityPicker.jsx';
+import { OpenOwnerDashboard } from '../../components/OpenOwnerDashboard.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
@@ -70,6 +71,7 @@ export default function EntityEditor() {
           slug && (
             <>
               <Button onClick={reload} disabled={loading}>Refresh</Button>
+              <OpenOwnerDashboard slug={slug} name={entity?.name} />
               <Button onClick={reindex} loading={reindexing}>Reindex for AI</Button>
               <Button onClick={() => navigate('/directory/businesses')}>All businesses</Button>
             </>

@@ -14,6 +14,7 @@ import { SchemaForm } from '../../ui/SchemaForm.jsx';
 import { Modal, useConfirm } from '../../ui/Modal.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { useEntities } from '../../components/EntityPicker.jsx';
+import { OpenOwnerDashboard } from '../../components/OpenOwnerDashboard.jsx';
 import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
 import { columns } from '../../lib/fields.jsx';
@@ -105,6 +106,7 @@ export default function Businesses() {
           <Button size="sm" onClick={() => navigate(`/directory/entity/${encodeURIComponent(row.slug)}`)}>
             Edit
           </Button>
+          <OpenOwnerDashboard slug={row.slug} name={row.name} size="sm" label="View as owner" />
           <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>
             Delete
           </Button>
