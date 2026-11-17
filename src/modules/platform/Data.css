@@ -1,0 +1,71 @@
+.data-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.data-picker__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.data-picker__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.data-restrictions {
+  margin: 0 0 var(--space-3);
+  font-size: 13px;
+}
+
+.data-card {
+  padding: var(--space-4) var(--space-5);
+}
+
+.data-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.data-meta dt {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.data-meta dd {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .data-card {
+    padding: var(--space-3);
+  }
+}
+
+/* Long text stays on one line in the table; the full value is in the title and the edit form. */
+.data-clip {
+  display: block;
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.data-gap {
+  margin-bottom: var(--space-4);
+}

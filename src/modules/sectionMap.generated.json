@@ -649,6 +649,12 @@
     "users": [
       "auth.users"
     ],
+    "data": [
+      "adminData.create",
+      "adminData.item",
+      "adminData.list",
+      "adminData.resources"
+    ],
     "api-keys": [
       "settings.providerStatus"
     ],

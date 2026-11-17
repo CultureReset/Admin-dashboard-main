@@ -57,9 +57,25 @@ export function DataTable({
   toolbar,
   dense = false,
   initialSort,
+  /**
+   * Server-driven sorting: pass `sortState` ({ key, direction } or null) and
+   * `onSortChange`, and the table shows that state and reports header clicks
+   * instead of sorting the rows itself.
+   */
+  sortState,
+  onSortChange,
+  /**
+   * Server-driven paging: { offset, limit, total, onChange(nextOffset) }. The
+   * rows passed in are already the current page; `total` may be null when the
+   * server did not count.
+   */
+  serverPage,
 }) {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState(initialSort || null);
+  const [localSort, setLocalSort] = useState(initialSort || null);
+  const serverSort = typeof onSortChange === 'function';
+  const sort = serverSort ? sortState || null : localSort;
+  const setSort = serverSort ? (next) => onSortChange(typeof next === 'function' ? next(sort) : next) : setLocalSort;
   const [page, setPage] = useState(0);
 
   const usingExternalSearch = typeof onExternalSearchChange === 'function';
@@ -79,7 +95,7 @@ export function DataTable({
   }, [rows, query, columns, searchable, usingExternalSearch]);
 
   const sorted = useMemo(() => {
-    if (!sort) return filtered;
+    if (!sort || serverSort) return filtered;
     const column = columns.find((c) => (c.key || c.header) === sort.key);
     if (!column) return filtered;
     const copy = [...filtered];
@@ -88,11 +104,12 @@ export function DataTable({
       return sort.direction === 'desc' ? -result : result;
     });
     return copy;
-  }, [filtered, sort, columns]);
+  }, [filtered, sort, columns, serverSort]);
 
-  const totalPages = paginate ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
+  const clientPaging = paginate && !serverPage;
+  const totalPages = clientPaging ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
   const safePage = Math.min(page, totalPages - 1);
-  const visible = paginate ? sorted.slice(safePage * pageSize, safePage * pageSize + pageSize) : sorted;
+  const visible = clientPaging ? sorted.slice(safePage * pageSize, safePage * pageSize + pageSize) : sorted;
 
   const toggleSort = (column) => {
     if (column.sortable === false) return;
@@ -197,7 +214,11 @@ export function DataTable({
         </div>
       ) : null}
 
-      {paginate && !loading && !error && sorted.length > pageSize && (
+      {serverPage && !loading && !error && sorted.length > 0 && (
+        <ServerPager page={serverPage} shown={sorted.length} />
+      )}
+
+      {clientPaging && !loading && !error && sorted.length > pageSize && (
         <div className="ui-table__pager">
           <span className="muted">
             {safePage * pageSize + 1}–{Math.min((safePage + 1) * pageSize, sorted.length)} of {sorted.length}
@@ -214,6 +235,29 @@ export function DataTable({
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ServerPager({ page, shown }) {
+  const { offset, limit, total, onChange } = page;
+  const known = typeof total === 'number';
+  const hasNext = known ? offset + shown < total : shown >= limit;
+  if (offset === 0 && !hasNext) return null;
+  return (
+    <div className="ui-table__pager">
+      <span className="muted">
+        {offset + 1}–{offset + shown}
+        {known ? ` of ${total}` : ''}
+      </span>
+      <div className="spacer" />
+      <Button size="sm" disabled={offset === 0} onClick={() => onChange(Math.max(0, offset - limit))}>
+        Previous
+      </Button>
+      <span className="muted">Page {Math.floor(offset / limit) + 1}{known ? ` / ${Math.max(1, Math.ceil(total / limit))}` : ''}</span>
+      <Button size="sm" disabled={!hasNext} onClick={() => onChange(offset + limit)}>
+        Next
+      </Button>
     </div>
   );
 }
