@@ -28,13 +28,13 @@ const schema = [
   }),
   fields.text('question_type', 'Type', {
     placeholder: 'text',
-    help: 'How the answer is collected, e.g. text, radio, tags, daterange.',
+    help: 'How the answer is collected, e.g. text, single_choice, multi_select, daterange.',
   }),
   fields.sortOrder(),
   fields.json('options', 'Options', {
     rows: 5,
     placeholder: '["Beach", "Food", "Nightlife"]',
-    help: 'Choices for radio / tags questions, as a JSON list. Leave blank for none.',
+    help: 'Choices for single_choice / multi_select questions, as a JSON list. Leave blank for none.',
     validate: (value) => {
       if (value == null || (typeof value === 'string' && !value.trim())) return null;
       if (typeof value === 'string') {
