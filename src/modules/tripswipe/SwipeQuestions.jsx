@@ -31,20 +31,18 @@ const schema = [
     help: 'How the answer is collected, e.g. text, single_choice, multi_select, daterange.',
   }),
   fields.sortOrder(),
-  fields.json('options', 'Options', {
-    rows: 5,
-    placeholder: '["Beach", "Food", "Nightlife"]',
-    help: 'Choices for single_choice / multi_select questions, as a JSON list. Leave blank for none.',
+  fields.json('options', 'Settings and choices', {
+    rows: 7,
+    placeholder: '{"field_name": "budget", "input_type": "radio", "options": ["Budget friendly", "Splurge worthy"]}',
+    help: 'JSON. Existing questions keep field_name (where the answer is stored), input_type, placeholder and options (the choices) inside it; a plain list of choices also works. Leave blank for none.',
     validate: (value) => {
       if (value == null || (typeof value === 'string' && !value.trim())) return null;
+      const bad = 'Must be a JSON object like {"field_name": "...", "options": [...]} or a list of choices.';
+      const ok = (v) => (v && typeof v === 'object' ? null : bad);
       if (typeof value === 'string') {
-        try {
-          return Array.isArray(JSON.parse(value)) ? null : 'Options must be a JSON list, e.g. ["a", "b"].';
-        } catch {
-          return null; // reported as "Not valid JSON" by the form
-        }
+        try { return ok(JSON.parse(value)); } catch { return null; } // reported as "Not valid JSON" by the form
       }
-      return Array.isArray(value) ? null : 'Options must be a JSON list, e.g. ["a", "b"].';
+      return ok(value);
     },
   }),
   fields.bool('is_active', 'Active', { defaultValue: true }),
@@ -111,7 +109,7 @@ export default function SwipeQuestions() {
           ...columns.tags('options', 'Options'),
           searchable: false,
           render: (row) => {
-            const list = Array.isArray(row.options) ? row.options : [];
+            const list = Array.isArray(row.options) ? row.options : Array.isArray(row.options?.options) ? row.options.options : [];
             if (list.length === 0) return <span className="faint">—</span>;
             const label = (o) => (o && typeof o === 'object' ? o.label ?? o.value ?? '' : String(o));
             return (
