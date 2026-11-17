@@ -11,6 +11,7 @@
  *
  *   /api/admin        → routes/admin.js
  *   /api/admin/tourists      → routes/admin-tourists.js
+ *   /api/admin/data          → routes/admin-data.js
  *   /api/admin/setup-questions → routes/setup-questions.js
  *   /api/gcr          → routes/gcr.js
  *   /api/qr           → routes/qr.js
@@ -775,6 +776,18 @@ export const endpoints = {
     list: () => `${ADMIN}/gcr/category-cards`,
     create: () => `${ADMIN}/gcr/category-cards`,
     item: (id) => `${ADMIN}/gcr/category-cards/${seg(id)}`,
+  },
+
+  /**
+   * Generic admin editor (routes/admin-data.js). Which lists exist, and their
+   * id/label columns, come from the `admin_data_resources` registry via
+   * `resources` — `key` is a registry key, never a table name.
+   */
+  adminData: {
+    resources: () => `${ADMIN}/data/resources`,
+    list: (key) => `${ADMIN}/data/${seg(key)}`,
+    create: (key) => `${ADMIN}/data/${seg(key)}`,
+    item: (key, id) => `${ADMIN}/data/${seg(key)}/${seg(id)}`,
   },
 
   // ------------------------------------ paths with no route in the API ---
