@@ -164,7 +164,9 @@ export function toFormValues(columns, row) {
   for (const c of columns) {
     const v = row?.[c.name];
     if (isJson(c)) out[c.name] = v == null ? '' : typeof v === 'string' ? v : JSON.stringify(v, null, 2);
-    else if (isBool(c)) out[c.name] = Boolean(v);
+    // A new row starts from the column's own database default (the API passes it along), so a toggle never
+    // silently creates something switched off that the database would have switched on.
+    else if (isBool(c)) out[c.name] = row == null && c.default != null ? c.default === true || c.default === 'true' : Boolean(v);
     else if (v === null || v === undefined) out[c.name] = isArray(c) ? [] : isNumber(c) ? null : '';
     else out[c.name] = v;
   }
