@@ -204,6 +204,31 @@ export const endpoints = {
     create: () => `${ADMIN}/business-invites`,
   },
 
+  /**
+   * "View as" — mint a one-time pass for one business's owner dashboard.
+   * The API checks the caller against platform_admins, audits every mint, and
+   * returns the dashboard URL (`?pass=…&business=<slug>`) to open.
+   */
+  impersonation: {
+    mint: () => `${ADMIN}/impersonate`,
+  },
+
+  /**
+   * The facts system. What can be asked and how complete it is is public
+   * registry data; the fill-in queue, review queue and evidence are admin
+   * routes that name the business explicitly (`slug`).
+   */
+  facts: {
+    registry: () => '/api/facts',
+    coverage: () => '/api/facts/coverage',
+    questions: () => `${ADMIN}/facts/questions`,
+    answers: () => `${ADMIN}/facts/answers`,
+    proposed: () => `${ADMIN}/facts/proposed`,
+    decide: (id) => `${ADMIN}/facts/proposed/${seg(id)}`,
+    evidence: () => `${ADMIN}/facts/evidence`,
+    propose: () => `${ADMIN}/facts/propose`,
+  },
+
   /** Collections that each have their own dedicated route pair. */
   collections: {
     pricingItems: {

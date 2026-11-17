@@ -31,6 +31,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { endpoints } from '../../api/endpoints.js';
+import { OpenOwnerDashboard } from '../../components/OpenOwnerDashboard.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import {
   PageHeader, Card, Stat, Badge, Notice, Button,
@@ -721,6 +722,7 @@ export default function BusinessProfile() {
             <Button variant="ghost" onClick={() => setShowEmpty((v) => !v)}>
               {showEmpty ? 'Hide empty' : 'Show what is missing'}
             </Button>
+            <OpenOwnerDashboard slug={slugParam} name={entity?.name} />
             <Button onClick={() => profile.reload()}>Refresh</Button>
           </>
         }
