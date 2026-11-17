@@ -903,6 +903,16 @@ const definitions = [
     load: () => import('./platform/Users.jsx'),
   },
   {
+    id: 'data',
+    label: 'Data',
+    icon: '🗃️',
+    group: 'platform',
+    path: '/platform/data',
+    description:
+      'Browse and edit the lists the API registers for admins: visitor groups, itineraries, fact definitions and sources.',
+    load: () => import('./platform/Data.jsx'),
+  },
+  {
     id: 'api-keys',
     label: 'API Keys',
     icon: '🔑',
