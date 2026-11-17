@@ -9,7 +9,6 @@
  * business at a time rather than pretending to show everything.
  */
 
-import { useState } from 'react';
 import { PageHeader, Notice } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { EntityPicker } from '../../components/EntityPicker.jsx';
@@ -17,17 +16,21 @@ import { entityReviewsResource } from '../../api/resources.js';
 import { columns, fields } from '../../lib/fields.jsx';
 import { usePersistentState } from '../../hooks/useAsync.js';
 
+// Columns of `entity_reviews` on the live database. The admin routes pass the
+// body straight to insert/update, so a field name that is not a column fails
+// the whole save. `rating` is an integer constrained to 1–5.
 const reviewSchema = [
-  fields.text('author_name', 'Author', { required: true, span: 2 }),
-  fields.number('rating', 'Rating', { min: 0, max: 5, step: 0.5 }),
-  fields.text('source', 'Source', { placeholder: 'Google, Yelp, direct…' }),
-  fields.textarea('review_text', 'Review', { rows: 5 }),
-  fields.date('review_date', 'Date'),
+  fields.text('reviewer_name', 'Reviewer', { required: true }),
+  fields.email('reviewer_email', 'Reviewer email', { omitWhenEmpty: true }),
+  fields.number('rating', 'Rating (1–5)', { required: true, min: 1, max: 5, step: 1 }),
+  fields.text('source_system', 'Source', { placeholder: 'Google, Yelp, direct…', omitWhenEmpty: true }),
+  fields.text('title', 'Title', { span: 'full' }),
+  fields.textarea('body', 'Review', { rows: 5 }),
+  fields.bool('approved', 'Approved for public display', { defaultValue: true }),
 ];
 
 export default function GcrReviews() {
   const [slug, setSlug] = usePersistentState('cc_admin_entity', null);
-  const [touched, setTouched] = useState(false);
 
   return (
     <>
@@ -39,10 +42,7 @@ export default function GcrReviews() {
       <div style={{ marginBottom: 'var(--space-5)', maxWidth: 460 }}>
         <EntityPicker
           value={slug}
-          onChange={(next) => {
-            setSlug(next);
-            setTouched(true);
-          }}
+          onChange={setSlug}
           label="Business"
         />
       </div>
@@ -55,17 +55,17 @@ export default function GcrReviews() {
       ) : (
         <CrudSection
           key={slug}
-          title={touched ? 'Reviews' : 'Reviews'}
+          title="Reviews"
           description="Attached to the selected business."
           resource={entityReviewsResource}
           params={{ slug }}
-          labelFor={(row) => row.author_name || 'Review'}
+          labelFor={(row) => row.reviewer_name || 'Review'}
           createLabel="Add review"
           modalSize="lg"
           emptyTitle="No reviews"
           searchPlaceholder="Search reviews…"
           columns={[
-            columns.primary('author_name', 'Author', 'source'),
+            columns.primary('reviewer_name', 'Reviewer', 'source_system'),
             {
               key: 'rating',
               header: 'Rating',
@@ -73,11 +73,12 @@ export default function GcrReviews() {
               render: (row) =>
                 row.rating != null ? `${Number(row.rating).toFixed(1)} ★` : <span className="faint">—</span>,
             },
-            columns.text('review_text', 'Review'),
-            columns.date('review_date', 'Date'),
+            columns.text('body', 'Review'),
+            columns.bool('approved', 'Public'),
+            columns.date('created_at', 'Date'),
           ]}
           formSchema={reviewSchema}
-          initialSort={{ key: 'review_date', direction: 'desc' }}
+          initialSort={{ key: 'created_at', direction: 'desc' }}
         />
       )}
     </>

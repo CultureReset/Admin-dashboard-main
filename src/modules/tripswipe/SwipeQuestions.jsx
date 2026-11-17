@@ -4,45 +4,22 @@
  * GET/POST /api/admin/setup-questions
  * PUT/DELETE /api/admin/setup-questions/:id
  * PUT /api/admin/setup-questions/reorder
+ *
+ * Read-only apart from ordering and delete. `tourist_setup_questions` on the
+ * live database has question_text / question_type / options / sort_order /
+ * is_active, but the API's POST and PUT write key / label / input_type /
+ * required / active — columns that do not exist — so a create or a text edit
+ * from here cannot succeed until routes/setup-questions.js is fixed. A PUT
+ * carrying only `sort_order` touches a real column, which is what Renumber
+ * sends.
  */
 
 import { useState } from 'react';
-import { Button } from '../../ui/primitives.jsx';
+import { Button, Notice } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { setupQuestionsResource } from '../../api/resources.js';
-import { columns, fields } from '../../lib/fields.jsx';
-
-const schema = {
-  groups: [
-    {
-      title: 'Question',
-      fields: [
-        fields.textarea('question', 'Question text', { required: true, rows: 2 }),
-        fields.select('question_type', 'Answer type', [
-          { value: 'single', label: 'Pick one' },
-          { value: 'multi', label: 'Pick several' },
-          { value: 'text', label: 'Free text' },
-          { value: 'scale', label: 'Scale' },
-        ]),
-        fields.tags('options', 'Options', {
-          span: 'full',
-          help: 'Comma-separated. Ignored for free-text questions.',
-          visible: (values) => values.question_type !== 'text',
-        }),
-      ],
-    },
-    {
-      title: 'Behaviour',
-      fields: [
-        fields.text('category', 'Category'),
-        fields.sortOrder(),
-        fields.bool('is_active', 'Active', { defaultValue: true }),
-        fields.bool('is_required', 'Required'),
-      ],
-    },
-  ],
-};
+import { columns } from '../../lib/fields.jsx';
 
 export default function SwipeQuestions() {
   const toast = useToast();
@@ -68,7 +45,7 @@ export default function SwipeQuestions() {
       let changed = 0;
       for (const [index, row] of ordered.entries()) {
         if (row.sort_order === index) continue;
-        await setupQuestionsResource.update(row.id, { ...row, sort_order: index });
+        await setupQuestionsResource.update(row.id, { sort_order: index });
         changed += 1;
       }
 
@@ -85,15 +62,15 @@ export default function SwipeQuestions() {
 
   return (
     <CrudSection
+      canCreate={false}
+      canEdit={false}
       key={reloadKey}
       title="Swipe questions"
       description="What new tourists are asked during onboarding. Answers drive their recommendations."
       resource={setupQuestionsResource}
-      labelFor={(row) => row.question}
-      createLabel="Add question"
-      modalSize="lg"
+      labelFor={(row) => row.question_text || 'this question'}
       emptyTitle="No questions"
-      emptyDescription="Add the questions shown when someone first opens Trip Swipe."
+      emptyDescription="No onboarding questions are stored yet."
       searchPlaceholder="Search questions…"
       headerActions={
         <Button onClick={normalizeOrder} loading={reordering}>
@@ -102,13 +79,20 @@ export default function SwipeQuestions() {
       }
       columns={[
         columns.number('sort_order', '#'),
-        columns.primary('question', 'Question', 'category'),
+        columns.primary('question_text', 'Question'),
         columns.text('question_type', 'Type'),
         columns.tags('options', 'Options'),
         columns.bool('is_active', 'Active'),
       ]}
-      formSchema={schema}
       initialSort={{ key: 'sort_order', direction: 'asc' }}
-    />
+    >
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <Notice tone="warning" title="Adding and editing questions is unavailable">
+          The API's create and update handlers for <code className="mono">/api/admin/setup-questions</code>{' '}
+          write fields (<code>key</code>, <code>label</code>, <code>input_type</code>) that the questions
+          table does not have, so they cannot save. Ordering and delete work.
+        </Notice>
+      </div>
+    </CrudSection>
   );
 }

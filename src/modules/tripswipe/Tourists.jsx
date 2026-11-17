@@ -66,7 +66,7 @@ export default function Tourists() {
               columns.text('email', 'Email'),
               columns.text('phone', 'Phone'),
               columns.number('saves_count', 'Saves'),
-              columns.number('points', 'Points'),
+              columns.number('itineraries_count', 'Itineraries'),
               columns.dateTime('created_at', 'Joined'),
               {
                 key: '__actions',

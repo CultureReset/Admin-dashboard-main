@@ -266,12 +266,22 @@ export const qrPartnersResource = createResource({
   listKeys: ['partners'],
 });
 
+// GET /api/qr/locations answers with a map keyed by location id —
+// `{ "1": { name, notes }, … }` — not a list, so unwrapList would find nothing.
+// There is no PUT: POST upserts on `id`, so saving an edit goes through it too.
 export const qrLocationsResource = createResource({
   name: 'Location',
   listPath: () => ep.qr.locations(),
   createPath: () => ep.qr.locations(),
   itemPath: (id) => ep.qr.location(id),
-  listKeys: ['locations'],
+  fromList: (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return [];
+    return Object.entries(payload)
+      .filter(([, value]) => value && typeof value === 'object')
+      .map(([id, value]) => ({ ...value, id: Number(id) }));
+  },
+  upsert: true,
 });
 
 export const socialPostsResource = createResource({

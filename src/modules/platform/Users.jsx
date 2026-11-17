@@ -30,9 +30,8 @@ export default function Users() {
               <span className="faint">—</span>
             ),
         },
-        columns.text('site_id', 'Site'),
+        columns.text('entity_slug', 'Business'),
         columns.dateTime('created_at', 'Created'),
-        columns.dateTime('last_login', 'Last seen'),
       ]}
       initialSort={{ key: 'created_at', direction: 'desc' }}
     />

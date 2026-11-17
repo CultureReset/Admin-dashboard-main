@@ -1,9 +1,13 @@
 /**
  * Guest photo moderation.
  *
- * /api/admin/community-photos is called by the legacy dashboard but is absent
- * from gcr-api-clean, so this reports the gap rather than showing an empty
- * queue that looks like "nothing to moderate".
+ * GET   /api/admin/community-photos?status=   → { photos: [...] }
+ * PATCH /api/admin/community-photos/:id        { status }
+ *
+ * Served by routes/admin-settings.js over `tourist_photos`, with url /
+ * submitted_by / created_at aliased onto each row. If the route ever goes
+ * missing, the screen says so rather than showing an empty queue that looks
+ * like "nothing to moderate".
  */
 
 import { useState } from 'react';

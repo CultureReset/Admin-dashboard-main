@@ -20,8 +20,9 @@ const couponSchema = [
     transform: (value) => (typeof value === 'string' ? value.trim().toUpperCase() : value),
   }),
   fields.select('type', 'Type', [
-    { value: 'percent', label: 'Percent off' },
-    { value: 'amount', label: 'Amount off' },
+    // The API stores exactly these two; anything else is saved as 'percentage'.
+    { value: 'percentage', label: 'Percent off' },
+    { value: 'fixed', label: 'Amount off' },
   ], { required: true }),
   fields.number('amount', 'Amount', { required: true, min: 0, step: '0.01' }),
   fields.number('max_uses', 'Max uses', { min: 0, step: 1, help: 'Leave blank for unlimited.' }),
@@ -52,10 +53,10 @@ export default function Coupons() {
           header: 'Value',
           align: 'right',
           render: (row) =>
-            row.type === 'percent' ? `${row.amount}%` : `$${Number(row.amount ?? 0).toFixed(2)}`,
+            row.type === 'fixed' ? `$${Number(row.amount ?? 0).toFixed(2)}` : `${row.amount}%`,
         },
         columns.number('max_uses', 'Max uses'),
-        columns.number('times_used', 'Used'),
+        columns.number('uses_count', 'Used'),
         columns.date('expires_at', 'Expires'),
         columns.text('description', 'Description'),
       ]}

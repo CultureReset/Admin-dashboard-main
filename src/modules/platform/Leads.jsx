@@ -3,6 +3,9 @@
  *
  * GET   /api/admin/sales-leads
  * PATCH /api/admin/sales-leads/:id
+ *
+ * The PATCH writes the body straight to `leads`, so the form only carries
+ * real columns of that table (it has no owner or follow-up date).
  */
 
 import { CrudSection } from '../../ui/CrudSection.jsx';
@@ -17,8 +20,7 @@ const schema = {
       title: 'Pipeline',
       fields: [
         fields.select('status', 'Status', LEAD_STATUSES, { required: true }),
-        fields.text('owner', 'Assigned to'),
-        fields.date('follow_up_at', 'Follow up on'),
+        fields.text('plan', 'Plan'),
       ],
     },
     {
@@ -42,8 +44,8 @@ export default function Leads() {
       emptyDescription="Nothing in the pipeline yet."
       searchPlaceholder="Search leads…"
       columns={[
-        columns.primary('business_name', 'Business', 'entity_slug'),
-        columns.text('contact_name', 'Contact'),
+        columns.primary('business_name', 'Business', 'category'),
+        columns.text('name', 'Contact'),
         columns.text('email', 'Email'),
         columns.text('phone', 'Phone'),
         columns.status('status', 'Status', {
@@ -54,7 +56,8 @@ export default function Leads() {
           won: 'success',
           lost: 'danger',
         }),
-        columns.text('owner', 'Owner'),
+        columns.text('plan', 'Plan'),
+        columns.text('source', 'Source'),
         columns.dateTime('created_at', 'Created'),
       ]}
       formSchema={schema}

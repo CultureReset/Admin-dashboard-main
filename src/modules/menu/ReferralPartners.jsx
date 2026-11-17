@@ -4,12 +4,18 @@
  * GET/POST /api/qr/partners, PUT /api/qr/partners/:id
  * GET /api/qr/partners/:id/stats
  * GET /api/qr/partner-portal/:code  the partner's own view
+ *
+ * Fields mirror `referral_partners` as the API writes it: POST takes name,
+ * email, phone, type, referral_rate (a fraction — 0.05 is 5%) and
+ * incentive_text; PUT additionally takes total_paid. There is no DELETE route,
+ * so partners cannot be removed from here.
  */
 
 import { useState } from 'react';
 import { Button, ErrorState, LoadingBlock, Stat } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { Modal } from '../../ui/Modal.jsx';
+import { DataTable } from '../../ui/DataTable.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { qrPartnersResource } from '../../api/resources.js';
 import { api } from '../../api/client.js';
@@ -24,23 +30,30 @@ const schema = {
         fields.text('name', 'Name', { required: true, span: 2 }),
         fields.email('email', 'Email'),
         fields.tel('phone', 'Phone'),
-        fields.text('company', 'Company'),
+        fields.text('type', 'Type', { placeholder: 'rental', help: 'Defaults to rental when left blank.', omitWhenEmpty: true }),
       ],
     },
     {
       title: 'Commercials',
       fields: [
-        fields.number('commission_rate', 'Commission rate (%)', { min: 0, max: 100, step: 0.1 }),
-        fields.money('commission_per_scan', 'Per-scan payout'),
-        fields.bool('is_active', 'Active', { defaultValue: true }),
+        fields.number('referral_rate', 'Referral rate', {
+          min: 0,
+          max: 1,
+          step: 0.01,
+          defaultValue: 0.05,
+          help: 'A fraction of each booking: 0.05 is 5%.',
+        }),
+        fields.money('total_paid', 'Paid out to date'),
+        fields.textarea('incentive_text', 'Offer shown to guests', {
+          rows: 2,
+          placeholder: 'Welcome to the Gulf Coast! Get $10 off your first activity booking.',
+        }),
       ],
-    },
-    {
-      title: 'Notes',
-      fields: [fields.textarea('notes', 'Notes', { rows: 3 })],
     },
   ],
 };
+
+const percent = (value) => (value == null || value === '' ? null : `${Math.round(Number(value) * 1000) / 10}%`);
 
 export default function ReferralPartners() {
   const [statsFor, setStatsFor] = useState(null);
@@ -52,30 +65,26 @@ export default function ReferralPartners() {
         description="Who distributes QR codes on your behalf, and what they are owed."
         resource={qrPartnersResource}
         labelFor={(row) => row.name}
+        canDelete={false}
         createLabel="Add partner"
         modalSize="lg"
         emptyTitle="No partners"
         emptyDescription="Add a partner to start tracking referrals."
         searchPlaceholder="Search partners…"
         columns={[
-          columns.primary('name', 'Partner', 'company'),
+          columns.primary('name', 'Partner', 'qr_code'),
+          columns.text('type', 'Type'),
           columns.text('email', 'Email'),
           columns.text('phone', 'Phone'),
           {
-            key: 'commission_rate',
-            header: 'Commission',
+            key: 'referral_rate',
+            header: 'Rate',
             align: 'right',
-            render: (row) =>
-              row.commission_rate != null ? (
-                `${row.commission_rate}%`
-              ) : row.commission_per_scan != null ? (
-                `${formatMoney(row.commission_per_scan)}/scan`
-              ) : (
-                <span className="faint">—</span>
-              ),
+            render: (row) => percent(row.referral_rate) || <span className="faint">—</span>,
           },
-          columns.number('scan_count', 'Scans'),
-          columns.bool('is_active', 'Active'),
+          columns.number('total_signups', 'Sign-ups'),
+          columns.money('total_paid', 'Paid'),
+          columns.bool('active', 'Active'),
           {
             key: '__stats',
             header: '',
@@ -112,25 +121,38 @@ function PartnerStats({ partnerId }) {
 
   if (loading) return <LoadingBlock />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
-  if (!data) return <p className="muted">No statistics available.</p>;
+
+  // { partner, stats: { total_signups, total_bookings, total_earned,
+  //   last_30_days: { signups, bookings, earned } }, recent_events: [...] }
+  const stats = data?.stats || {};
+  const recent = stats.last_30_days || {};
+  const events = Array.isArray(data?.recent_events) ? data.recent_events : [];
 
   return (
-    <div className="grid-auto">
-      {Object.entries(data)
-        .filter(([, value]) => typeof value !== 'object')
-        .map(([key, value]) => (
-          <Stat
-            key={key}
-            label={key.replace(/_/g, ' ')}
-            value={
-              /amount|payout|earned|commission|revenue/.test(key)
-                ? formatMoney(value)
-                : typeof value === 'number'
-                  ? formatNumber(value)
-                  : String(value)
-            }
-          />
-        ))}
+    <div className="stack">
+      <div className="grid-auto">
+        <Stat label="Sign-ups" value={formatNumber(stats.total_signups)} />
+        <Stat label="Bookings" value={formatNumber(stats.total_bookings)} />
+        <Stat label="Earned" value={formatMoney(stats.total_earned) || '—'} />
+        <Stat label="Sign-ups, 30 days" value={formatNumber(recent.signups)} />
+        <Stat label="Bookings, 30 days" value={formatNumber(recent.bookings)} />
+        <Stat label="Earned, 30 days" value={formatMoney(recent.earned) || '—'} />
+      </div>
+      {events.length > 0 ? (
+        <DataTable
+          columns={[
+            columns.dateTime('created_at', 'When'),
+            columns.text('event_type', 'Event'),
+            columns.money('commission', 'Commission'),
+          ]}
+          rows={events}
+          rowKey={(row, index) => row.id ?? index}
+          dense
+          pageSize={10}
+        />
+      ) : (
+        <p className="muted">No referral activity yet.</p>
+      )}
     </div>
   );
 }
