@@ -204,10 +204,6 @@ function ResourceView({ resource }) {
       else await reload().catch(() => {});
     } catch (err) {
       setActionError(err);
-<<<<<<< HEAD
-=======
-      toast.error(err);
->>>>>>> origin/claude/vibrant-mccarthy-1v6i5s
     }
   }
 
@@ -220,7 +216,6 @@ function ResourceView({ resource }) {
   return (
     <>
       {note && (
-<<<<<<< HEAD
         <div className="data-gap">
           <Notice tone="info" title="Heads up">
             {note}
@@ -231,14 +226,6 @@ function ResourceView({ resource }) {
         <div className="data-gap">
           <ErrorState error={actionError} context="The row was not deleted." />
         </div>
-=======
-        <Notice tone="info" title="Heads up">
-          {note}
-        </Notice>
-      )}
-      {actionError && (
-        <ErrorState error={actionError} context="The row was not deleted." />
->>>>>>> origin/claude/vibrant-mccarthy-1v6i5s
       )}
       {restrictions.length > 0 && (
         <p className="data-restrictions muted">
