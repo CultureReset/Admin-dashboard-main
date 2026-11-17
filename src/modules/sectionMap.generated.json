@@ -58,7 +58,8 @@
     "gcr-businesses": [
       "entities.create",
       "entities.list",
-      "entities.remove"
+      "entities.remove",
+      "impersonation.mint"
     ],
     "gcr-entity-editor": [
       "bookingPlatform.businessCalendar",
@@ -100,6 +101,7 @@
       "happyHour.item",
       "happyHour.items",
       "happyHour.sections",
+      "impersonation.mint",
       "menu.item",
       "menu.items",
       "menu.section",
@@ -150,6 +152,7 @@
       "happyHour.item",
       "happyHour.items",
       "happyHour.sections",
+      "impersonation.mint",
       "menu.item",
       "menu.items",
       "menu.section",
@@ -166,7 +169,8 @@
       "businessProfile.get",
       "businessProfile.ingest",
       "businessProfile.row",
-      "entities.list"
+      "entities.list",
+      "impersonation.mint"
     ],
     "platform-business-logins": [
       "businessInvites.coverage",
@@ -198,7 +202,8 @@
       "businessProfile.get",
       "businessProfile.ingest",
       "businessProfile.row",
-      "entities.list"
+      "entities.list",
+      "impersonation.mint"
     ],
     "gcr-site-editor": [
       "categoryCards.create",
@@ -206,6 +211,16 @@
       "categoryCards.list",
       "settings.get",
       "settingsKeys.siteHero"
+    ],
+    "gcr-facts": [
+      "entities.list",
+      "facts.answers",
+      "facts.coverage",
+      "facts.decide",
+      "facts.evidence",
+      "facts.propose",
+      "facts.proposed",
+      "facts.questions"
     ],
     "gcr-claims": [
       "claims.list",

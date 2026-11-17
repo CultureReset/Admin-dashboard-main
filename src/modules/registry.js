@@ -223,6 +223,16 @@ const definitions = [
     load: () => import('./directory/SiteEditor.jsx'),
   },
   {
+    id: 'gcr-facts',
+    label: 'Facts',
+    icon: '🧠',
+    group: 'directory',
+    path: '/directory/facts',
+    description:
+      'Fill in what is unknown about a business, review proposed answers, and see fact coverage.',
+    load: () => import('./directory/Facts.jsx'),
+  },
+  {
     id: 'gcr-claims',
     label: 'Claims',
     icon: '🔑',
