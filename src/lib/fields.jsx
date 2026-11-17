@@ -80,6 +80,30 @@ export function pick(row, ...keys) {
   return undefined;
 }
 
+/**
+ * Request-body helper for forms over tables with optional columns: trims text
+ * and turns blank strings into null, so an untouched optional field is sent as
+ * null rather than ''. Numbers, booleans, arrays and objects pass through.
+ */
+export function blankToNull(values) {
+  const out = {};
+  for (const [key, value] of Object.entries(values || {})) {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      out[key] = trimmed === '' ? null : trimmed;
+    } else if (value === undefined) {
+      out[key] = null;
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+/** Field validator: a text value that is only whitespace counts as empty. */
+export const notBlank = (message) => (value) =>
+  String(value ?? '').trim() === '' ? message : null;
+
 /* --------------------------------------------------------- column makers -- */
 
 export const columns = {
