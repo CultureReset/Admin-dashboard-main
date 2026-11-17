@@ -56,6 +56,7 @@
     padding: var(--space-3);
   }
 }
+<<<<<<< HEAD
 
 /* Long text stays on one line in the table; the full value is in the title and the edit form. */
 .data-clip {
@@ -69,3 +70,5 @@
 .data-gap {
   margin-bottom: var(--space-4);
 }
+=======
+>>>>>>> origin/claude/vibrant-mccarthy-1v6i5s
