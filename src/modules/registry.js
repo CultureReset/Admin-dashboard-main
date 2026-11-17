@@ -195,6 +195,15 @@ const definitions = [
     load: () => import('./platform/Intake.jsx'),
   },
   {
+    id: 'platform-universal-query',
+    label: 'Universal Query',
+    icon: '🔎',
+    group: 'platform',
+    path: '/platform/query',
+    description: 'Ask about any business data and make previewed, reasoned, audited edits through gcr-api-clean.',
+    load: () => import('./platform/UniversalQuery.jsx'),
+  },
+  {
     id: 'engagement-behaviour',
     label: 'Visitor Behaviour',
     icon: '📈',
