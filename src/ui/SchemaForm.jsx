@@ -84,6 +84,8 @@ export function SchemaForm({
   extraActions,
   /** Render just the fields; the caller supplies its own submit control. */
   headless = false,
+  /** Messages from the server keyed by field name, shown under those fields. */
+  fieldErrors,
 }) {
   const groups = useMemo(() => toGroups(schema), [schema]);
   const fields = useMemo(() => allFields(groups), [groups]);
@@ -102,6 +104,11 @@ export function SchemaForm({
     // `initialKey` stands in for a deep compare of initialValues.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialKey, fields]);
+
+  // Server-reported problems (a 400 naming a column) land beside the field.
+  useEffect(() => {
+    if (fieldErrors && Object.keys(fieldErrors).length) setErrors((prev) => ({ ...prev, ...fieldErrors }));
+  }, [fieldErrors]);
 
   const setValue = useCallback((name, value) => {
     setValues((prev) => ({ ...prev, [name]: value }));
