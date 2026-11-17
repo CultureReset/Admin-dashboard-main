@@ -62,8 +62,12 @@ function loadRoutes() {
 
   // Only mounts that are actually live — several routers exist in the repo but
   // are deliberately commented out because their tables are not in the DB.
-  const mounts = [...server.matchAll(/^mount\('([^']+)',\s*\(\)\s*=>\s*require\('\.\/(routes\/[^']+)'\)/gm)]
-    .map((m) => ({ prefix: m[1], file: join(apiRoot, `${m[2]}.js`) }));
+  const mounts = [...server.matchAll(/^mount\('([^']+)',\s*\(\)\s*=>\s*require\('\.\/((?:routes|apps)\/[^']+)'\)/gm)]
+    .map((m) => ({
+      prefix: m[1],
+      // Built-in apps keep their routes in apps/<id>/routes.js.
+      file: join(apiRoot, m[2].startsWith('apps/') ? `${m[2]}/routes.js` : `${m[2]}.js`),
+    }));
 
   const routes = [];
   for (const mount of mounts) {
