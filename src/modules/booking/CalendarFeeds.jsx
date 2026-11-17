@@ -136,7 +136,7 @@ export default function CalendarFeeds() {
   const remove = async (row) => {
     const ok = await confirm({
       title: 'Remove calendar feed',
-      message: `Remove "${row.source_label || row.ical_url}"? The dates it claimed are freed up, so anything booked through that system stops being blocked here.`,
+      message: `Remove "${row.source_label || 'External Calendar'}"? The dates it claimed are freed up, so anything booked through that system stops being blocked here.`,
       confirmLabel: 'Remove feed',
     });
     if (!ok) return;
@@ -219,7 +219,7 @@ export default function CalendarFeeds() {
                       <div className="ui-cell-primary">{row.source_label || 'External calendar'}</div>
                       {/* The URL is a bearer secret — show enough to identify it, never the whole thing. */}
                       <div className="ui-cell-sub mono" title="URL truncated deliberately">
-                        {String(row.ical_url || '').slice(0, 48)}…
+                        {(() => { try { return new URL(row.ical_url).hostname; } catch { return 'Private calendar feed'; } })()}
                       </div>
                     </div>
                   ),
