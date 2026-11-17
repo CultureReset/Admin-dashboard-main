@@ -5,21 +5,48 @@
  * PUT/DELETE /api/admin/setup-questions/:id
  * PUT /api/admin/setup-questions/reorder
  *
- * Read-only apart from ordering and delete. `tourist_setup_questions` on the
- * live database has question_text / question_type / options / sort_order /
- * is_active, but the API's POST and PUT write key / label / input_type /
- * required / active — columns that do not exist — so a create or a text edit
- * from here cannot succeed until routes/setup-questions.js is fixed. A PUT
- * carrying only `sort_order` touches a real column, which is what Renumber
- * sends.
+ * `tourist_setup_questions` on the live database: question_text,
+ * question_type, options (jsonb), sort_order, is_active. The API writes only
+ * those columns and requires question_text. A blank sort_order on create is
+ * stored as 100 by the API (the end of the list).
  */
 
 import { useState } from 'react';
-import { Button, Notice } from '../../ui/primitives.jsx';
+import { Badge, Button } from '../../ui/primitives.jsx';
 import { CrudSection } from '../../ui/CrudSection.jsx';
 import { useToast } from '../../ui/Toast.jsx';
 import { setupQuestionsResource } from '../../api/resources.js';
-import { columns } from '../../lib/fields.jsx';
+import { blankToNull, columns, fields, notBlank } from '../../lib/fields.jsx';
+
+// Options is jsonb. It is edited as JSON so whatever shape a question already
+// has (a list of strings, or {value,label} objects) survives an edit untouched.
+const schema = [
+  fields.textarea('question_text', 'Question', {
+    required: true,
+    rows: 2,
+    validate: notBlank('Question is required'),
+  }),
+  fields.text('question_type', 'Type', {
+    placeholder: 'text',
+    help: 'How the answer is collected, e.g. text, single_choice, multi_select, daterange.',
+  }),
+  fields.sortOrder(),
+  fields.json('options', 'Settings and choices', {
+    rows: 7,
+    placeholder: '{"field_name": "budget", "input_type": "radio", "options": ["Budget friendly", "Splurge worthy"]}',
+    help: 'JSON. Existing questions keep field_name (where the answer is stored), input_type, placeholder and options (the choices) inside it; a plain list of choices also works. Leave blank for none.',
+    validate: (value) => {
+      if (value == null || (typeof value === 'string' && !value.trim())) return null;
+      const bad = 'Must be a JSON object like {"field_name": "...", "options": [...]} or a list of choices.';
+      const ok = (v) => (v && typeof v === 'object' ? null : bad);
+      if (typeof value === 'string') {
+        try { return ok(JSON.parse(value)); } catch { return null; } // reported as "Not valid JSON" by the form
+      }
+      return ok(value);
+    },
+  }),
+  fields.bool('is_active', 'Active', { defaultValue: true }),
+];
 
 export default function SwipeQuestions() {
   const toast = useToast();
@@ -29,12 +56,10 @@ export default function SwipeQuestions() {
   /**
    * Renumber sort_order to a clean 0..n-1 sequence, one row at a time.
    *
-   * The API has a bulk `PUT /api/admin/setup-questions/reorder`, but it is
-   * registered *after* `PUT /:id` in routes/setup-questions.js. Express matches
-   * in registration order, so a call to /reorder lands in the `:id` handler
-   * with id="reorder" and silently updates nothing. Until that ordering is
-   * fixed in the API, updating each row individually is the path that actually
-   * works.
+   * Row by row on purpose: it works whether or not the deployed API has the
+   * bulk `PUT /reorder` ahead of `PUT /:id` (it used to be shadowed by it), and
+   * it keeps the existing 0..n-1 numbering rather than the bulk route's steps
+   * of ten.
    */
   const normalizeOrder = async () => {
     setReordering(true);
@@ -62,15 +87,14 @@ export default function SwipeQuestions() {
 
   return (
     <CrudSection
-      canCreate={false}
-      canEdit={false}
+      createLabel="Add question"
       key={reloadKey}
       title="Swipe questions"
       description="What new tourists are asked during onboarding. Answers drive their recommendations."
       resource={setupQuestionsResource}
       labelFor={(row) => row.question_text || 'this question'}
       emptyTitle="No questions"
-      emptyDescription="No onboarding questions are stored yet."
+      emptyDescription="Add the first onboarding question."
       searchPlaceholder="Search questions…"
       headerActions={
         <Button onClick={normalizeOrder} loading={reordering}>
@@ -81,18 +105,28 @@ export default function SwipeQuestions() {
         columns.number('sort_order', '#'),
         columns.primary('question_text', 'Question'),
         columns.text('question_type', 'Type'),
-        columns.tags('options', 'Options'),
+        {
+          ...columns.tags('options', 'Options'),
+          searchable: false,
+          render: (row) => {
+            const list = Array.isArray(row.options) ? row.options : Array.isArray(row.options?.options) ? row.options.options : [];
+            if (list.length === 0) return <span className="faint">—</span>;
+            const label = (o) => (o && typeof o === 'object' ? o.label ?? o.value ?? '' : String(o));
+            return (
+              <span className="row-wrap" style={{ gap: 4 }}>
+                {list.slice(0, 4).map((o, i) => (
+                  <Badge key={i}>{label(o)}</Badge>
+                ))}
+                {list.length > 4 && <span className="faint">+{list.length - 4}</span>}
+              </span>
+            );
+          },
+        },
         columns.bool('is_active', 'Active'),
       ]}
+      formSchema={schema}
+      fromFormValues={blankToNull}
       initialSort={{ key: 'sort_order', direction: 'asc' }}
-    >
-      <div style={{ marginBottom: 'var(--space-4)' }}>
-        <Notice tone="warning" title="Adding and editing questions is unavailable">
-          The API's create and update handlers for <code className="mono">/api/admin/setup-questions</code>{' '}
-          write fields (<code>key</code>, <code>label</code>, <code>input_type</code>) that the questions
-          table does not have, so they cannot save. Ordering and delete work.
-        </Notice>
-      </div>
-    </CrudSection>
+    />
   );
 }
